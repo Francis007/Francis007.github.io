@@ -677,6 +677,12 @@ html[data-lang="zh"] .only-en {
 .photo-open img.pos-tasa-booth { object-position: center 42%; }
 .photo-open img.pos-tasa-demo { object-position: center 46%; }
 .photo-open img.pos-tasa-stage { object-position: center 55%; }
+.photo-open img.pos-chuangyi-trophy { object-position: center 86%; }
+.photo-open img.pos-industry-paper { object-position: center 26%; }
+.photo-open img.pos-aerospace,
+.photo-wide img.pos-aerospace { object-position: center 62%; }
+.photo-open img.pos-ieee-stage { object-position: center center; }
+.photo-open img.pos-ieee-members { object-position: center 42%; }
 
 .cert-layout {
   display: grid;
