@@ -660,6 +660,16 @@ html[data-lang="zh"] .only-en {
 .photo-open img.pos-aps-talk { object-position: center 42%; }
 .photo-open img.pos-aegis,
 .photo-wide img.pos-aegis { object-position: center 42%; }
+.photo-open img.pos-pingye-booth { object-position: center 42%; }
+.photo-open img.pos-pingye-portrait { object-position: center 72%; }
+.photo-open img.pos-tsf-nameplate { object-position: center 46%; }
+.photo-open img.pos-tsf-panel { object-position: center 42%; }
+.photo-open img.pos-train-demo { object-position: center 34%; }
+.photo-open img.pos-train-group { object-position: center 38%; }
+.photo-open img.pos-icobm-banner { object-position: center center; }
+.photo-open img.pos-icobm-poster { object-position: center top; }
+.photo-open img.pos-nursing-talk,
+.photo-wide img.pos-nursing-talk { object-position: center 58%; }
 
 .cert-layout {
   display: grid;
