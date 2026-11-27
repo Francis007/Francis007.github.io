@@ -674,6 +674,9 @@ html[data-lang="zh"] .only-en {
 .photo-open img.pos-iwem-mimo { object-position: center 8%; }
 .photo-open img.pos-iwem-banquet { object-position: center 42%; }
 .photo-open img.pos-iwem-hall { object-position: center 36%; }
+.photo-open img.pos-tasa-booth { object-position: center 42%; }
+.photo-open img.pos-tasa-demo { object-position: center 46%; }
+.photo-open img.pos-tasa-stage { object-position: center 55%; }
 
 .cert-layout {
   display: grid;
