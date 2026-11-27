@@ -670,6 +670,10 @@ html[data-lang="zh"] .only-en {
 .photo-open img.pos-icobm-poster { object-position: center top; }
 .photo-open img.pos-nursing-talk,
 .photo-wide img.pos-nursing-talk { object-position: center 58%; }
+.photo-open img.pos-iwem-rcs { object-position: center 28%; }
+.photo-open img.pos-iwem-mimo { object-position: center 8%; }
+.photo-open img.pos-iwem-banquet { object-position: center 42%; }
+.photo-open img.pos-iwem-hall { object-position: center 36%; }
 
 .cert-layout {
   display: grid;
