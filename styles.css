@@ -270,10 +270,11 @@ html[data-lang="zh"] .only-en {
   padding: 2.6rem 0 2.15rem;
 }
 
+/* The hero photo is 724 x 690 px. The frame keeps that ratio so the whole image shows, uncropped. */
 .portrait {
   width: 280px;
   height: auto;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 724 / 690;
   object-fit: contain;
   object-position: center center;
   display: block;
@@ -346,6 +347,13 @@ html[data-lang="zh"] .only-en {
   line-height: 1.75;
   color: #2c2c2c;
   margin: 0 0 0.85rem;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Chinese has no spaces between words, so it justifies between characters instead. */
+html[data-lang="zh"] .bio p {
+  text-justify: auto;
 }
 
 .bio p:last-child {
@@ -650,6 +658,24 @@ html[data-lang="zh"] .only-en {
   aspect-ratio: 4 / 3;
 }
 
+/* A single photo shown whole at its own proportions (wide screenshots and group shots). */
+.photo-wide.photo-natural {
+  aspect-ratio: auto;
+}
+
+.photo-wide.photo-natural img {
+  height: auto;
+}
+
+/* A portrait photo leading two landscape photos: one row, equal heights, nothing cropped. */
+.photo-strip-portrait-lead {
+  grid-template-columns: minmax(0, 9fr) minmax(0, 16fr) minmax(0, 16fr);
+}
+
+.photo-open.is-portrait {
+  aspect-ratio: 3 / 4;
+}
+
 .photo-open img.pos-award { object-position: center 18%; }
 .photo-open img.pos-pitch { object-position: center 62%; }
 .photo-open img.pos-poster { object-position: center 16%; }
@@ -683,6 +709,8 @@ html[data-lang="zh"] .only-en {
 .photo-wide img.pos-aerospace { object-position: center 62%; }
 .photo-open img.pos-ieee-stage { object-position: center center; }
 .photo-open img.pos-ieee-members { object-position: center 42%; }
+.photo-open img.pos-agm25-speaker { object-position: center 12%; }
+.photo-open img.pos-mmwave-cert { object-position: center 45%; }
 
 .cert-layout {
   display: grid;
@@ -724,6 +752,11 @@ html[data-lang="zh"] .only-en {
   color: #666;
   font-size: 0.85rem;
   overflow-wrap: anywhere;
+}
+
+.pub .eyebrow {
+  color: var(--link-deep);
+  font-size: 0.85rem;
 }
 
 .patent-no {
@@ -905,7 +938,7 @@ html[data-lang="zh"] .only-en {
   .portrait {
     width: min(250px, 68vw);
     height: auto;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 724 / 690;
   }
 
   .hero-copy h1 {
@@ -921,9 +954,21 @@ html[data-lang="zh"] .only-en {
 
   .photo-strip,
   .photo-strip-pair,
+  .photo-strip-portrait-lead,
   .cert-grid,
   .cards {
     grid-template-columns: 1fr;
+  }
+
+  .photo-open.is-portrait {
+    max-width: 24rem;
+  }
+}
+
+/* Justified English opens wide word gaps in a phone-width column. Chinese stays justified. */
+@media (max-width: 480px) {
+  html:not([data-lang="zh"]) .bio p {
+    text-align: start;
   }
 }
 
