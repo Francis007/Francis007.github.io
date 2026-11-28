@@ -247,6 +247,8 @@ html[data-lang="zh"] .only-en {
   border: 0;
   padding: 0.2rem 0.05rem;
   cursor: pointer;
+  /* Keeps 繁中 on one line when the nav links wrap to a second row. */
+  white-space: nowrap;
 }
 
 .lang-switch button[aria-pressed="true"] {
@@ -728,6 +730,38 @@ html[data-lang="zh"] .bio p {
 .photo-open img.pos-ieee-members { object-position: center 42%; }
 .photo-open img.pos-agm25-speaker { object-position: center 12%; }
 .photo-open img.pos-mmwave-cert { object-position: center 45%; }
+
+/* Teaching animations: lecture GIFs stacked in one column, each shown whole at its own proportions (never cropped).
+   The column stops at the width of the narrowest GIF (880 px, plus the 1 px border on each side),
+   so the figures share one width and none is enlarged. */
+.fig-stack {
+  max-width: 882px;
+  margin-top: 0.75rem;
+}
+
+.fig {
+  margin: 0;
+}
+
+.fig + .fig {
+  margin-top: 1.6rem;
+}
+
+.fig img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.fig figcaption {
+  margin-top: 0.45rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
 
 .cert-layout {
   display: grid;
