@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Prof. Chien-Hung Chen">
+<title>Ch06 磁場 3D 互動模擬 Magnetic 3D Simulation</title>
+<link rel="stylesheet" href="tailwind-frozen.css">
+<script>
+MathJax = { tex:{inlineMath:[['$','$'],['\\(','\\)']]}, svg:{fontCache:'global'} };
+</script>
+<script src="../vendor/mathjax/es5/tex-mml-chtml.js" async></script>
+<script src="../vendor/three/three.min.js"></script>
+<style>
+  html,body{margin:0;padding:0;background:#04070d;color:#eaf2ff;font-family:"Noto Sans TC",system-ui,sans-serif;height:100%;overflow:hidden;}
+  #root{position:relative;width:100vw;height:100vh;display:grid;grid-template-rows:auto 1fr auto;}
+  header{padding:10px 16px;background:linear-gradient(180deg,rgba(10,16,30,.85),rgba(10,16,30,.6));border-bottom:1px solid rgba(255,255,255,.08);z-index:5;}
+  header h1{background:linear-gradient(90deg,#00d4ff,#8b5cf6,#ff3d7f);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  #canvasWrap{position:relative;}
+  canvas{display:block;width:100%;height:100%;}
+  #sim-buttons{display:flex;gap:8px;flex-wrap:wrap;}
+  .sim-btn{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#eaf2ff;cursor:pointer;font-size:13px;transition:all .15s;}
+  .sim-btn:hover{background:rgba(0,212,255,.1);}
+  .sim-btn.active{background:linear-gradient(135deg,#00d4ff,#8b5cf6);color:#06131c;border-color:transparent;font-weight:700;}
+  #paramPanel{position:absolute;right:14px;top:70px;width:300px;max-height:calc(100vh - 200px);overflow:auto;background:rgba(10,16,30,.75);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px;z-index:3;}
+  #paramPanel h3{margin:0 0 4px 0;font-size:15px;}
+  #paramPanel .desc{font-size:12px;color:#9fb3d3;margin-bottom:10px;}
+  .ctrl{margin:8px 0;}
+  .ctrl label{font-size:12px;color:#c9d6ef;display:flex;justify-content:space-between;}
+  .ctrl input[type=range]{width:100%;accent-color:#00d4ff;}
+  .ctrl .val{color:#ffd166;font-family:ui-monospace,monospace;}
+  .toggle-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .toggle{padding:4px 10px;border-radius:8px;font-size:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#eaf2ff;cursor:pointer;}
+  .toggle.on{background:rgba(0,212,255,.2);border-color:#00d4ff;color:#bff3ff;}
+  footer{padding:10px 16px;background:linear-gradient(0deg,rgba(10,16,30,.9),rgba(10,16,30,.6));border-top:1px solid rgba(255,255,255,.08);z-index:5;font-size:13px;}
+  .chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);}
+  .kbd{background:#0b1322;border:1px solid #29324a;border-radius:6px;padding:1px 6px;font-family:ui-monospace,monospace;font-size:12px;}
+  #loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,7,13,.6);z-index:10;}
+  #loader.hide{display:none;}
+  .formula{font-size:12px;color:#9bb4d6;}
+  #panel-toggle{position:absolute;right:14px;top:12px;z-index:4;padding:6px 10px;border-radius:10px;background:rgba(10,16,30,.7);border:1px solid rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:13px;display:none;}
+  @media (max-width:900px){
+    #paramPanel{top:auto;bottom:60px;right:8px;width:240px;max-height:44vh;}
+    #panel-toggle{display:block;}
+    #paramPanel.hidden{display:none;}
+  }
+  .err-banner{position:absolute;left:10px;bottom:80px;background:rgba(90,0,0,.9);color:#fff;padding:10px 14px;border-radius:8px;z-index:20;}
+</style>
+</head>
+<body>
+<div id="root">
+
+  <header>
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold">Ch06 磁場 3D 互動模擬 Magnetic 3D Simulation</h1>
+        <p class="text-xs text-slate-300 mt-0.5">Prof. Chien-Hung Chen　·　Static Magnetic Fields</p>
+      </div>
+      <div id="sim-buttons">
+        <button class="sim-btn active" data-sim="wire">① 直導線 Long Wire</button>
+        <button class="sim-btn" data-sim="loop">② 圓形電流環 Circular Loop</button>
+        <button class="sim-btn" data-sim="solenoid">③ 螺線管 Solenoid</button>
+        <button class="sim-btn" data-sim="dipole">④ 磁偶極 Magnetic Dipole</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="canvasWrap">
+    <button id="panel-toggle">⚙ 參數</button>
+    <div id="paramPanel"></div>
+    <div id="loader"><div class="chip">正在初始化 3D 場景…</div></div>
+  </div>
+
+  <footer>
+    <div id="footText"></div>
+    <div class="mt-1 text-xs text-slate-400">
+      操作：<span class="kbd">左鍵拖曳</span> 旋轉　<span class="kbd">右鍵拖曳</span> 平移　<span class="kbd">滾輪</span> 縮放
+      　｜　μ₀ = 4π×10⁻⁷ T·m/A
+    </div>
+  </footer>
+
+</div>
+
+<script>
+try{
+
+/* =================== SimpleOrbitControls (custom, no external) =================== */
+class SimpleOrbitControls {
+  constructor(camera, dom){
+    this.camera = camera; this.dom = dom;
+    this.target = new THREE.Vector3(0,0,0);
+    this.minDistance = 2; this.maxDistance = 200;
+    this.rotateSpeed = 0.005; this.panSpeed = 0.0025; this.zoomSpeed = 0.1;
+    this._spherical = new THREE.Spherical();
+    this._state = "none"; this._prev = {x:0,y:0};
+    this._setFromCamera();
+    this._bind();
+  }
+  _setFromCamera(){
+    const offset = new THREE.Vector3().subVectors(this.camera.position, this.target);
+    this._spherical.setFromVector3(offset);
+  }
+  _bind(){
+    const d = this.dom;
+    d.addEventListener("contextmenu", e=>e.preventDefault());
+    d.addEventListener("mousedown", e=>{
+      if(e.button===0) this._state="rotate";
+      else if(e.button===2) this._state="pan";
+      this._prev.x=e.clientX; this._prev.y=e.clientY;
+    });
+    window.addEventListener("mousemove", e=>{
+      if(this._state==="none") return;
+      const dx=e.clientX-this._prev.x, dy=e.clientY-this._prev.y;
+      this._prev.x=e.clientX; this._prev.y=e.clientY;
+      if(this._state==="rotate"){
+        this._spherical.theta -= dx*this.rotateSpeed;
+        this._spherical.phi   -= dy*this.rotateSpeed;
+        this._spherical.phi = Math.max(0.05, Math.min(Math.PI-0.05, this._spherical.phi));
+      } else if(this._state==="pan"){
+        const offset = new THREE.Vector3();
+        const te = this.camera.matrix.elements;
+        const xAxis = new THREE.Vector3(te[0],te[1],te[2]);
+        const yAxis = new THREE.Vector3(te[4],te[5],te[6]);
+        const dist = this._spherical.radius;
+        offset.addScaledVector(xAxis, -dx*this.panSpeed*dist);
+        offset.addScaledVector(yAxis,  dy*this.panSpeed*dist);
+        this.target.add(offset);
+      }
+      this.update();
+    });
+    window.addEventListener("mouseup", ()=>{ this._state="none"; });
+    d.addEventListener("wheel", e=>{
+      e.preventDefault();
+      const factor = Math.exp(e.deltaY*0.001);
+      this._spherical.radius *= factor;
+      this._spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this._spherical.radius));
+      this.update();
+    }, {passive:false});
+
+    // Touch basic
+    let touchPrev = null, pinchPrev = null;
+    d.addEventListener("touchstart", e=>{
+      if(e.touches.length===1){ this._state="rotate"; touchPrev={x:e.touches[0].clientX,y:e.touches[0].clientY}; }
+      else if(e.touches.length===2){
+        this._state="pinch";
+        const dx=e.touches[0].clientX-e.touches[1].clientX;
+        const dy=e.touches[0].clientY-e.touches[1].clientY;
+        pinchPrev = Math.hypot(dx,dy);
+      }
+    }, {passive:true});
+    d.addEventListener("touchmove", e=>{
+      if(this._state==="rotate" && e.touches.length===1){
+        const dx = e.touches[0].clientX-touchPrev.x;
+        const dy = e.touches[0].clientY-touchPrev.y;
+        touchPrev={x:e.touches[0].clientX,y:e.touches[0].clientY};
+        this._spherical.theta -= dx*this.rotateSpeed*1.5;
+        this._spherical.phi -= dy*this.rotateSpeed*1.5;
+        this._spherical.phi = Math.max(0.05, Math.min(Math.PI-0.05, this._spherical.phi));
+        this.update();
+      } else if(this._state==="pinch" && e.touches.length===2){
+        const dx=e.touches[0].clientX-e.touches[1].clientX;
+        const dy=e.touches[0].clientY-e.touches[1].clientY;
+        const cur = Math.hypot(dx,dy);
+        const ratio = pinchPrev/cur;
+        pinchPrev = cur;
+        this._spherical.radius *= ratio;
+        this._spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this._spherical.radius));
+        this.update();
+      }
+    }, {passive:true});
+    d.addEventListener("touchend", ()=>{ this._state="none"; touchPrev=null; pinchPrev=null; });
+  }
+  update(){
+    const offset = new THREE.Vector3().setFromSpherical(this._spherical);
+    this.camera.position.copy(this.target).add(offset);
+    this.camera.lookAt(this.target);
+  }
+}
+
+/* =================== Scene Setup =================== */
+const canvasWrap = document.getElementById("canvasWrap");
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(window.devicePixelRatio);
+canvasWrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x04070d, 0.012);
+
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 2000);
+camera.position.set(18, 14, 22);
+
+const controls = new SimpleOrbitControls(camera, renderer.domElement);
+controls.target.set(0,0,0);
+controls.update();
+
+// Lights
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const dl = new THREE.DirectionalLight(0xffffff, 0.7);
+dl.position.set(10,20,10); scene.add(dl);
+const dl2 = new THREE.DirectionalLight(0x6699ff, 0.4);
+dl2.position.set(-15,-10,-8); scene.add(dl2);
+
+// Grid
+const grid = new THREE.GridHelper(40, 20, 0x2a3a5a, 0x1b2438);
+grid.position.y = -8;
+scene.add(grid);
+
+// Root for scene swap
+const simRoot = new THREE.Group();
+scene.add(simRoot);
+
+// Size
+function resize(){
+  const w = canvasWrap.clientWidth, h = canvasWrap.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize);
+setTimeout(()=>{ resize(); document.getElementById("loader").classList.add("hide"); }, 50);
+
+/* =================== Helpers =================== */
+function disposeGroup(g){
+  while(g.children.length){
+    const c = g.children.pop();
+    c.traverse && c.traverse(o=>{
+      if(o.geometry) o.geometry.dispose();
+      if(o.material){ if(Array.isArray(o.material)) o.material.forEach(m=>m.dispose()); else o.material.dispose(); }
+    });
+  }
+}
+function makeArrow(from, to, color, headScale=0.18){
+  const dir = new THREE.Vector3().subVectors(to, from);
+  const len = dir.length();
+  if(len<1e-5) return null;
+  const arrow = new THREE.ArrowHelper(dir.normalize(), from, len, color, Math.min(len*0.3, headScale*len+0.1), Math.min(len*0.2, 0.08+headScale*len*0.5));
+  return arrow;
+}
+function colorForMag(mag, maxMag){
+  const t = Math.min(1, mag/maxMag);
+  // blue -> cyan -> yellow -> red
+  const c = new THREE.Color();
+  c.setHSL(0.66*(1-t), 1.0, 0.55);
+  return c;
+}
+
+/* =================== SIM 1: Long Wire =================== */
+function buildWireSim(params){
+  disposeGroup(simRoot);
+  const { I } = params;
+  const mu0 = 4*Math.PI*1e-7;
+
+  // Wire along Y axis
+  const wireGeom = new THREE.CylinderGeometry(0.2, 0.2, 14, 24);
+  const wireMat = new THREE.MeshStandardMaterial({ color: 0xffcc55, emissive: 0x552200, metalness:0.3, roughness:0.4 });
+  const wire = new THREE.Mesh(wireGeom, wireMat);
+  simRoot.add(wire);
+
+  // Current arrow (along +Y)
+  const currentArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,-7.5,0), 15, 0xff4466, 0.8, 0.4);
+  simRoot.add(currentArrow);
+
+  // B arrows: rings at several y heights
+  const yHeights = [-5,-2.5,0,2.5,5];
+  const radii = [1.5, 3, 5];
+  const N = 16;
+  // normalization: B ~ I/r
+  const maxMag = I / 1.5;
+  yHeights.forEach(y=>{
+    radii.forEach(r=>{
+      for(let k=0;k<N;k++){
+        const ang = 2*Math.PI*k/N;
+        const x = r*Math.cos(ang), z = r*Math.sin(ang);
+        // B direction: I along +y, then B = (I × r̂) ∝ (+ŷ × r̂) = tangent (counter-clockwise viewed from +y)
+        const tang = new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang));
+        const mag = I/r;
+        const len = Math.min(2.0, Math.max(0.15, 0.15 + mag*0.12));
+        const from = new THREE.Vector3(x,y,z);
+        const to = from.clone().addScaledVector(tang, len);
+        const col = colorForMag(mag, maxMag);
+        const arr = makeArrow(from, to, col.getHex(), 0.18);
+        if(arr) simRoot.add(arr);
+      }
+      // field line ring
+      const ringGeo = new THREE.TorusGeometry(r, 0.015, 6, 64);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x4fd1ff, transparent:true, opacity:0.35 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI/2;
+      ring.position.y = y;
+      simRoot.add(ring);
+    });
+  });
+
+  // Label readout
+  return {
+    info: ()=>{
+      const r = 1.5;
+      const B = mu0*I/(2*Math.PI*(r*0.01)); // if r in meters interpret scene unit as cm
+      return {
+        r_cm:(r).toFixed(1),
+        formula:`B = μ₀I/(2πr) = ${(mu0*I/(2*Math.PI*(r*0.01))*1e6).toFixed(2)} μT @ r=${r} cm`
+      };
+    }
+  };
+}
+
+/* =================== SIM 2: Circular Loop =================== */
+function buildLoopSim(params){
+  disposeGroup(simRoot);
+  const { I, a, showLines } = params;
+  const mu0 = 4*Math.PI*1e-7;
+
+  // Loop in xz-plane, centered origin
+  const loopGeo = new THREE.TorusGeometry(a, 0.08, 16, 96);
+  const loopMat = new THREE.MeshStandardMaterial({ color: 0xffcc55, emissive:0x552200, metalness:0.3, roughness:0.4 });
+  const loop = new THREE.Mesh(loopGeo, loopMat);
+  loop.rotation.x = Math.PI/2;
+  simRoot.add(loop);
+
+  // Current direction arrows along the loop
+  const N = 12;
+  for(let k=0;k<N;k++){
+    const ang = 2*Math.PI*k/N;
+    const p = new THREE.Vector3(a*Math.cos(ang), 0, a*Math.sin(ang));
+    const tang = new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang));
+    const to = p.clone().addScaledVector(tang, 0.7);
+    const arr = makeArrow(p, to, 0xff4466, 0.3);
+    if(arr) simRoot.add(arr);
+  }
+
+  // B field: use on-axis exact, off-axis dipole approximation
+  const m = I*Math.PI*a*a; // dipole moment magnitude
+  function Bvec(p){
+    // Use current loop magnetic dipole approximation for far; near axis use exact Bz
+    const r = p.length();
+    if(r < 0.02) return new THREE.Vector3(0,0,0);
+    // dipole formula: B = (μ0/4π) [3(m·r̂)r̂ - m] / r³ , with m = m ŷ
+    const mvec = new THREE.Vector3(0,1,0).multiplyScalar(m);
+    const rhat = p.clone().normalize();
+    const term = rhat.clone().multiplyScalar(3*mvec.dot(rhat));
+    term.sub(mvec);
+    term.multiplyScalar(mu0/(4*Math.PI*r*r*r));
+    return term;
+  }
+
+  // Sample grid points
+  const points = [];
+  const extent = 4.5;
+  for(let x=-extent; x<=extent; x+=2){
+    for(let y=-extent; y<=extent; y+=2){
+      for(let z=-extent; z<=extent; z+=2){
+        if(Math.hypot(x,z) < a*1.2 && Math.abs(y)<0.3) continue; // skip loop plane inside
+        points.push(new THREE.Vector3(x,y,z));
+      }
+    }
+  }
+  // Axis extra samples
+  for(let y=-6;y<=6;y+=1){ if(Math.abs(y)<0.1) continue; points.push(new THREE.Vector3(0,y,0)); }
+
+  // Find max mag for color norm
+  let maxMag = 0;
+  const vecs = points.map(p=>{ const b = Bvec(p); maxMag = Math.max(maxMag, b.length()); return b; });
+
+  points.forEach((p,i)=>{
+    const b = vecs[i];
+    const mag = b.length(); if(mag<1e-12) return;
+    const dir = b.clone().normalize();
+    const len = 0.4 + 1.4*(mag/maxMag);
+    const col = colorForMag(mag, maxMag);
+    const to = p.clone().addScaledVector(dir, len);
+    const arr = makeArrow(p, to, col.getHex(), 0.25);
+    if(arr) simRoot.add(arr);
+  });
+
+  // Field lines (dipole approximation) for visualization
+  if(showLines){
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x6fd0ff, transparent:true, opacity:0.5 });
+    const streamStarts = [];
+    for(let phi=0; phi<Math.PI*2; phi+=Math.PI/4){
+      for(let r0 of [a*1.3, a*2.0, a*3.0]){
+        streamStarts.push(new THREE.Vector3(r0*Math.cos(phi), 0.05, r0*Math.sin(phi)));
+      }
+    }
+    streamStarts.forEach(start=>{
+      const positions = [start.clone()];
+      let p = start.clone();
+      for(let s=0;s<600;s++){
+        const b = Bvec(p);
+        const mag = b.length(); if(mag<1e-20) break;
+        const step = 0.05;
+        p = p.clone().addScaledVector(b.normalize(), step);
+        if(p.length()>10) break;
+        positions.push(p.clone());
+      }
+      const g = new THREE.BufferGeometry().setFromPoints(positions);
+      simRoot.add(new THREE.Line(g, lineMat));
+    });
+  }
+
+  // Axis indicator
+  const axisArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 4, 0x00d4ff, 0.4, 0.2);
+  simRoot.add(axisArrow);
+
+  return {
+    info: ()=>{
+      const Bcenter = mu0*I/(2*(a*0.01)); // scene unit ~ cm for display
+      return { formula:`軸心(z=0)：B_z = μ₀I/(2a) = ${(Bcenter*1e6).toFixed(2)} μT @ a=${a} cm` };
+    }
+  };
+}
+
+/* =================== SIM 3: Solenoid =================== */
+function buildSolenoidSim(params){
+  disposeGroup(simRoot);
+  const { N, I, Lsol, R } = params;
+  const mu0 = 4*Math.PI*1e-7;
+
+  // Helical coil along Y axis
+  const helixPoints = [];
+  const turns = N;
+  const segments = Math.max(200, N*40);
+  for(let i=0;i<=segments;i++){
+    const t = i/segments;
+    const y = -Lsol/2 + t*Lsol;
+    const ang = 2*Math.PI*turns*t;
+    helixPoints.push(new THREE.Vector3(R*Math.cos(ang), y, R*Math.sin(ang)));
+  }
+  const helixGeo = new THREE.BufferGeometry().setFromPoints(helixPoints);
+  const helixMat = new THREE.LineBasicMaterial({ color:0xffcc55 });
+  const helix = new THREE.Line(helixGeo, helixMat);
+  // Thicker: also add a tube
+  const curve = new THREE.CatmullRomCurve3(helixPoints);
+  const tubeGeo = new THREE.TubeGeometry(curve, Math.min(1000, segments), 0.08, 8, false);
+  const tubeMat = new THREE.MeshStandardMaterial({ color:0xffcc55, emissive:0x552200, metalness:0.3, roughness:0.4 });
+  const tube = new THREE.Mesh(tubeGeo, tubeMat);
+  simRoot.add(tube);
+
+  // Inside B: uniform B = μ0 n I along +y
+  const n = N / (Lsol*0.01); // if Lsol is in cm
+  const Binside = mu0*n*I;
+
+  // Inside arrows (dense)
+  for(let y=-Lsol/2+0.5; y<=Lsol/2-0.5; y+=1.2){
+    for(let x=-R*0.7; x<=R*0.7; x+=R*0.35){
+      for(let z=-R*0.7; z<=R*0.7; z+=R*0.35){
+        if(Math.hypot(x,z) > R*0.9) continue;
+        const from = new THREE.Vector3(x,y,z);
+        const to = from.clone().add(new THREE.Vector3(0,0.9,0));
+        const arr = makeArrow(from, to, 0x4fd1ff, 0.2);
+        if(arr) simRoot.add(arr);
+      }
+    }
+  }
+
+  // Outside: weak, showing return flux lines
+  const fieldLineMat = new THREE.LineBasicMaterial({ color:0x6fd0ff, transparent:true, opacity:0.35 });
+  // Simple heuristic return lines
+  for(let phi=0; phi<Math.PI*2; phi+=Math.PI/4){
+    const pts = [];
+    const startTop = new THREE.Vector3((R+0.1)*Math.cos(phi), Lsol/2, (R+0.1)*Math.sin(phi));
+    pts.push(startTop);
+    const arc = 60;
+    for(let i=1;i<=arc;i++){
+      const t=i/arc;
+      // bulge outward then back to bottom opposite
+      const rad = R + 0.1 + Math.sin(t*Math.PI)*(Lsol*0.4);
+      const y = Lsol/2 - t*Lsol;
+      pts.push(new THREE.Vector3(rad*Math.cos(phi), y, rad*Math.sin(phi)));
+    }
+    const endBot = new THREE.Vector3((R+0.1)*Math.cos(phi), -Lsol/2, (R+0.1)*Math.sin(phi));
+    pts.push(endBot);
+    // close through inside - straight up
+    for(let i=1;i<=20;i++){
+      const y = -Lsol/2 + i*Lsol/20;
+      pts.push(new THREE.Vector3(0.05*Math.cos(phi), y, 0.05*Math.sin(phi))); // slight offset to avoid clip
+    }
+    pts.push(startTop.clone());
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    simRoot.add(new THREE.Line(g, fieldLineMat));
+  }
+
+  // Axis marker
+  const axis = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,-Lsol/2-0.5,0), Lsol+1, 0x00d4ff, 0.3, 0.15);
+  simRoot.add(axis);
+
+  return {
+    info: ()=>({
+      formula:`B_inside = μ₀ n I = ${(Binside*1000).toFixed(3)} mT，n=${n.toFixed(1)} 匝/m，L_sol=${Lsol} cm`
+    })
+  };
+}
+
+/* =================== SIM 4: Magnetic Dipole =================== */
+function buildDipoleSim(params){
+  disposeGroup(simRoot);
+  const { m } = params;
+  const mu0 = 4*Math.PI*1e-7;
+
+  // Dipole as a small bar magnet (North red, South blue)
+  const barGeo = new THREE.BoxGeometry(0.8, 2.0, 0.8);
+  // Use two colored halves instead of a single material
+  const northMat = new THREE.MeshStandardMaterial({ color:0xff4466, emissive:0x330011, metalness:0.4, roughness:0.35 });
+  const southMat = new THREE.MeshStandardMaterial({ color:0x4fd1ff, emissive:0x001133, metalness:0.4, roughness:0.35 });
+  const halfGeo = new THREE.BoxGeometry(0.8, 1.0, 0.8);
+  const nhalf = new THREE.Mesh(halfGeo, northMat); nhalf.position.y = 0.5; simRoot.add(nhalf);
+  const shalf = new THREE.Mesh(halfGeo, southMat); shalf.position.y = -0.5; simRoot.add(shalf);
+
+  // m-vector arrow
+  const mArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,1,0), 2, 0xffd166, 0.4, 0.2);
+  simRoot.add(mArrow);
+
+  // Dipole field: B = (μ0 m / 4π r³) [2 cosθ r̂ + sinθ θ̂]
+  // Use general formula: B = (μ0/4π) [3(m·r̂)r̂ − m]/r³
+  const mvec = new THREE.Vector3(0, m, 0);
+  function Bvec(p){
+    const r = p.length();
+    if(r<0.9) return new THREE.Vector3(0,0,0);
+    const rhat = p.clone().normalize();
+    const term = rhat.clone().multiplyScalar(3*mvec.dot(rhat));
+    term.sub(mvec);
+    term.multiplyScalar(mu0/(4*Math.PI*r*r*r));
+    return term;
+  }
+
+  const points = [];
+  const ext = 5.5;
+  for(let x=-ext; x<=ext; x+=1.8){
+    for(let y=-ext; y<=ext; y+=1.8){
+      for(let z=-ext; z<=ext; z+=1.8){
+        if(Math.hypot(x,y,z)<1.3) continue;
+        points.push(new THREE.Vector3(x,y,z));
+      }
+    }
+  }
+  let maxMag = 0;
+  const vecs = points.map(p=>{ const b=Bvec(p); maxMag=Math.max(maxMag,b.length()); return b; });
+  points.forEach((p,i)=>{
+    const b = vecs[i]; const mag = b.length(); if(mag<1e-20) return;
+    const dir = b.clone().normalize();
+    const len = 0.35 + 1.3*(mag/maxMag);
+    const col = colorForMag(mag, maxMag);
+    const to = p.clone().addScaledVector(dir, len);
+    const arr = makeArrow(p, to, col.getHex(), 0.25);
+    if(arr) simRoot.add(arr);
+  });
+
+  // Field lines (xz-plane seeds)
+  const lineMat = new THREE.LineBasicMaterial({ color:0x6fd0ff, transparent:true, opacity:0.45 });
+  for(let phi=0; phi<Math.PI*2; phi+=Math.PI/3){
+    for(let theta of [Math.PI/6, Math.PI/3, Math.PI/2, 2*Math.PI/3, 5*Math.PI/6]){
+      // seed near dipole
+      const r0 = 1.2;
+      const start = new THREE.Vector3(
+        r0*Math.sin(theta)*Math.cos(phi),
+        r0*Math.cos(theta),
+        r0*Math.sin(theta)*Math.sin(phi)
+      );
+      const positions = [start.clone()];
+      let p = start.clone();
+      for(let s=0;s<500;s++){
+        const b = Bvec(p);
+        if(b.length()<1e-25) break;
+        p = p.clone().addScaledVector(b.normalize(), 0.08);
+        if(p.length()>7) break;
+        positions.push(p.clone());
+      }
+      const g = new THREE.BufferGeometry().setFromPoints(positions);
+      simRoot.add(new THREE.Line(g, lineMat));
+    }
+  }
+
+  return {
+    info: ()=>({
+      formula:`遠場 B ∝ m/r³；B = (μ₀/4π)[3(m·r̂)r̂ − m]/r³，|m|=${m.toFixed(2)} A·m²`
+    })
+  };
+}
+
+/* =================== Param Panel =================== */
+const panel = document.getElementById("paramPanel");
+const footText = document.getElementById("footText");
+const panelToggle = document.getElementById("panel-toggle");
+panelToggle.addEventListener("click", ()=>panel.classList.toggle("hidden"));
+
+const state = {
+  current: "wire",
+  params: {
+    wire: { I: 10 },
+    loop: { I: 5, a: 2.5, showLines: true },
+    solenoid: { N: 50, I: 2, Lsol: 10, R: 1.5 },
+    dipole: { m: 1.0 },
+  },
+  sim: null,
+};
+
+function renderPanel(){
+  const sim = state.current;
+  const p = state.params[sim];
+  if(sim==="wire"){
+    panel.innerHTML = `
+      <h3>① 直導線 Long Wire</h3>
+      <p class="desc">長直導線沿 y 軸流過電流 I，B 場環繞導線成同心圓。右手定則。</p>
+      <p class="formula">B = μ₀I/(2πr)</p>
+      <div class="ctrl">
+        <label>電流 I (A)<span class="val" id="v_I">${p.I.toFixed(1)}</span></label>
+        <input type="range" min="1" max="50" step="0.5" value="${p.I}" id="s_I">
+      </div>
+      <div class="desc mt-2" id="info-out"></div>
+    `;
+    document.getElementById("s_I").addEventListener("input", e=>{
+      p.I = parseFloat(e.target.value);
+      document.getElementById("v_I").textContent = p.I.toFixed(1);
+      applySim();
+    });
+  } else if(sim==="loop"){
+    panel.innerHTML = `
+      <h3>② 圓形電流環 Circular Loop</h3>
+      <p class="desc">面積向量 A 指向 +y；軸上 z=0 處 B 最強；遠場為磁偶極。</p>
+      <p class="formula">B_z(0) = μ₀I/(2a)；m = IπA</p>
+      <div class="ctrl">
+        <label>電流 I (A)<span class="val" id="v_I">${p.I.toFixed(1)}</span></label>
+        <input type="range" min="1" max="30" step="0.5" value="${p.I}" id="s_I">
+      </div>
+      <div class="ctrl">
+        <label>半徑 a (cm)<span class="val" id="v_a">${p.a.toFixed(1)}</span></label>
+        <input type="range" min="1" max="5" step="0.1" value="${p.a}" id="s_a">
+      </div>
+      <div class="toggle-row">
+        <button class="toggle ${p.showLines?'on':''}" id="s_lines">顯示磁力線</button>
+      </div>
+      <div class="desc mt-2" id="info-out"></div>
+    `;
+    document.getElementById("s_I").addEventListener("input", e=>{
+      p.I = parseFloat(e.target.value);
+      document.getElementById("v_I").textContent = p.I.toFixed(1);
+      applySim();
+    });
+    document.getElementById("s_a").addEventListener("input", e=>{
+      p.a = parseFloat(e.target.value);
+      document.getElementById("v_a").textContent = p.a.toFixed(1);
+      applySim();
+    });
+    document.getElementById("s_lines").addEventListener("click", e=>{
+      p.showLines = !p.showLines; e.currentTarget.classList.toggle("on", p.showLines); applySim();
+    });
+  } else if(sim==="solenoid"){
+    panel.innerHTML = `
+      <h3>③ 螺線管 Solenoid</h3>
+      <p class="desc">密繞時內部近似均勻：B = μ₀ n I，n=N/L。</p>
+      <p class="formula">L_inductance = μ₀ N² A / ℓ</p>
+      <div class="ctrl">
+        <label>匝數 N<span class="val" id="v_N">${p.N}</span></label>
+        <input type="range" min="10" max="120" step="1" value="${p.N}" id="s_N">
+      </div>
+      <div class="ctrl">
+        <label>電流 I (A)<span class="val" id="v_I">${p.I.toFixed(1)}</span></label>
+        <input type="range" min="0.5" max="10" step="0.1" value="${p.I}" id="s_I">
+      </div>
+      <div class="ctrl">
+        <label>長度 L (cm)<span class="val" id="v_L">${p.Lsol.toFixed(0)}</span></label>
+        <input type="range" min="6" max="16" step="0.5" value="${p.Lsol}" id="s_L">
+      </div>
+      <div class="ctrl">
+        <label>半徑 R (cm)<span class="val" id="v_R">${p.R.toFixed(1)}</span></label>
+        <input type="range" min="1" max="2.5" step="0.1" value="${p.R}" id="s_R">
+      </div>
+      <div class="desc mt-2" id="info-out"></div>
+    `;
+    const update = (k,v,id)=>{
+      p[k]=v; document.getElementById(id).textContent = typeof v==="number" ? (k==="N"?v:v.toFixed(1)) : v;
+      applySim();
+    };
+    document.getElementById("s_N").addEventListener("input", e=>update("N", parseInt(e.target.value), "v_N"));
+    document.getElementById("s_I").addEventListener("input", e=>update("I", parseFloat(e.target.value), "v_I"));
+    document.getElementById("s_L").addEventListener("input", e=>{
+      p.Lsol = parseFloat(e.target.value);
+      document.getElementById("v_L").textContent = p.Lsol.toFixed(0);
+      applySim();
+    });
+    document.getElementById("s_R").addEventListener("input", e=>update("R", parseFloat(e.target.value), "v_R"));
+  } else if(sim==="dipole"){
+    panel.innerHTML = `
+      <h3>④ 磁偶極 Magnetic Dipole</h3>
+      <p class="desc">遠場（r >> 偶極尺寸）等同小磁鐵：B ∝ m/r³。</p>
+      <p class="formula">B = (μ₀/4π)[3(m·r̂)r̂ − m]/r³</p>
+      <div class="ctrl">
+        <label>磁矩 |m| (A·m²)<span class="val" id="v_m">${p.m.toFixed(2)}</span></label>
+        <input type="range" min="0.2" max="4" step="0.1" value="${p.m}" id="s_m">
+      </div>
+      <div class="desc mt-2" id="info-out"></div>
+    `;
+    document.getElementById("s_m").addEventListener("input", e=>{
+      p.m = parseFloat(e.target.value);
+      document.getElementById("v_m").textContent = p.m.toFixed(2);
+      applySim();
+    });
+  }
+}
+
+function applySim(){
+  const sim = state.current;
+  const p = state.params[sim];
+  try{
+    if(sim==="wire") state.sim = buildWireSim(p);
+    else if(sim==="loop") state.sim = buildLoopSim(p);
+    else if(sim==="solenoid") state.sim = buildSolenoidSim(p);
+    else if(sim==="dipole") state.sim = buildDipoleSim(p);
+
+    const info = state.sim && state.sim.info ? state.sim.info() : null;
+    const foot = document.getElementById("footText");
+    let label = "";
+    if(sim==="wire") label = "① 直導線 Long Wire：B 場線為環繞導線的同心圓；改變 I 觀察 B 箭頭長度。";
+    if(sim==="loop") label = "② 圓形電流環：沿軸 B 最強，遠場轉為磁偶極場；調整 I 與 a。";
+    if(sim==="solenoid") label = "③ 螺線管 Solenoid：內部 B 近乎均勻指向 +y；調整 N、I、長度 L。";
+    if(sim==="dipole") label = "④ 磁偶極 Magnetic Dipole：類似小磁鐵；B 場線從 N 出發終於 S，遠場 ∝ m/r³。";
+    foot.innerHTML = `<div><b>${label}</b></div><div class="mt-1 text-slate-300">${info?info.formula:""}</div>`;
+    const out = document.getElementById("info-out");
+    if(out) out.innerHTML = info?info.formula:"";
+  }catch(e){
+    const bn = document.createElement("div");
+    bn.className = "err-banner"; bn.textContent = "建構錯誤："+e.message;
+    document.body.appendChild(bn);
+    setTimeout(()=>bn.remove(),4000);
+  }
+}
+
+/* =================== Switch Simulations =================== */
+document.querySelectorAll(".sim-btn").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    document.querySelectorAll(".sim-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    state.current = b.dataset.sim;
+    renderPanel();
+    applySim();
+  });
+});
+
+renderPanel();
+applySim();
+
+/* =================== Animate =================== */
+function animate(){
+  try{
+    controls.update && controls.update();
+    renderer.render(scene, camera);
+  }catch(e){ console.error(e); }
+  requestAnimationFrame(animate);
+}
+animate();
+
+}catch(err){
+  console.error(err);
+  const bn = document.createElement("div");
+  bn.style.cssText = "position:fixed;top:20px;left:20px;background:#400;color:#fff;padding:14px;border-radius:10px;z-index:99;max-width:80vw;";
+  bn.textContent = "3D 初始化失敗：" + err.message;
+  document.body.appendChild(bn);
+}
+</script>
+</body>
+</html>

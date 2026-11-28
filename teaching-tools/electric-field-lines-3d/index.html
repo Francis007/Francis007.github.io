@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch3 電場線與等位面 3D 互動模擬 Electric Field Lines & Equipotential Surfaces</title>
+<style>
+  :root { --primary: #1a5276; --accent: #2980b9; --bg: #f0f3f7; --card: #fff; --text: #2c3e50; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); }
+  .header { background: linear-gradient(135deg, #1a5276, #2980b9); color: white; padding: 16px 24px; text-align: center; }
+  .header h1 { font-size: 1.5em; margin-bottom: 4px; }
+  .header p { font-size: 0.95em; opacity: 0.9; }
+  .main { display: flex; height: calc(100vh - 80px); }
+  .sidebar { width: 300px; background: var(--card); padding: 16px; overflow-y: auto; border-right: 1px solid #ddd; }
+  .canvas-wrap { flex: 1; position: relative; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .sidebar h3 { color: var(--primary); margin: 12px 0 8px; font-size: 1em; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
+  .sidebar label { display: block; margin: 6px 0 2px; font-size: 0.9em; }
+  .sidebar select, .sidebar input[type="range"] { width: 100%; margin-bottom: 8px; }
+  .sidebar input[type="range"] { accent-color: var(--accent); }
+  .val { float: right; font-weight: bold; color: var(--accent); }
+  .btn { display: block; width: 100%; padding: 8px; margin: 6px 0; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-secondary { background: #ecf0f1; color: var(--text); }
+  .btn:hover { opacity: 0.85; }
+  .checkbox-row { display: flex; align-items: center; gap: 6px; margin: 6px 0; font-size: 0.9em; }
+  .checkbox-row input { accent-color: var(--accent); }
+  .info-box { background: #eaf2f8; border-radius: 8px; padding: 10px; margin: 10px 0; font-size: 0.85em; line-height: 1.5; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; font-size: 0.82em; }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .overlay-info { position: absolute; bottom: 12px; left: 12px; background: rgba(255,255,255,0.9); padding: 8px 12px; border-radius: 8px; font-size: 0.85em; max-width: 350px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  @media (max-width: 768px) {
+    .main { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; max-height: 40vh; }
+    .canvas-wrap { height: 60vh; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>⚡ Ch3 電場線與等位面 3D 互動模擬</h1>
+  <p>Electric Field Lines & Equipotential Surfaces 3D Interactive Simulation</p>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <h3>📋 電荷配置 Charge Configuration</h3>
+    <label>預設場景 Preset:</label>
+    <select id="preset" onchange="loadPreset()">
+      <option value="single_pos">單一正電荷 Single +Q</option>
+      <option value="single_neg">單一負電荷 Single −Q</option>
+      <option value="dipole">電偶極 Dipole (+Q, −Q)</option>
+      <option value="two_pos">兩正電荷 Two +Q</option>
+      <option value="parallel">平行板 Parallel Plates</option>
+      <option value="quadrupole">四極 Quadrupole</option>
+    </select>
+
+    <label>電荷量 |Q| (μC): <span class="val" id="qVal">1.0</span></label>
+    <input type="range" id="chargeQ" min="0.1" max="5" step="0.1" value="1" oninput="updateParams()">
+
+    <label>電荷間距 d (m): <span class="val" id="dVal">2.0</span></label>
+    <input type="range" id="chargeD" min="0.5" max="5" step="0.1" value="2" oninput="updateParams()">
+
+    <h3>🎨 顯示選項 Display Options</h3>
+    <div class="checkbox-row"><input type="checkbox" id="showFieldLines" checked onchange="redraw()"><label for="showFieldLines">電場線 Field Lines</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="showEquipotential" checked onchange="redraw()"><label for="showEquipotential">等位面 Equipotential</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="showVectors" onchange="redraw()"><label for="showVectors">電場向量 E Vectors</label></div>
+    <div class="checkbox-row"><input type="checkbox" id="showCharges" checked onchange="redraw()"><label for="showCharges">電荷標示 Charges</label></div>
+
+    <label>電場線數量 Lines: <span class="val" id="linesVal">16</span></label>
+    <input type="range" id="numLines" min="8" max="32" step="4" value="16" oninput="updateParams()">
+
+    <label>等位線數量 Contours: <span class="val" id="contoursVal">8</span></label>
+    <input type="range" id="numContours" min="4" max="16" step="2" value="8" oninput="updateParams()">
+
+    <h3>🖱️ 互動操作 Controls</h3>
+    <div class="info-box">
+      🖱️ <b>拖曳旋轉</b> Drag to rotate<br>
+      🔄 <b>滾輪縮放</b> Scroll to zoom<br>
+      📌 <b>點擊空白處</b> 顯示該點 E 值<br>
+      <span style="color:#888;">Click anywhere to see E at that point</span>
+    </div>
+
+    <button class="btn btn-primary" onclick="resetView()">🔄 重置視角 Reset View</button>
+    <button class="btn btn-secondary" onclick="toggleAnimation()">▶️ 動畫 Animate</button>
+
+    <h3>📊 圖例 Legend</h3>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div> 正電荷 +Q</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2980b9;"></div> 負電荷 −Q</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f39c12;"></div> 電場線 E-line</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#27ae60;"></div> 等位面 V=const</div>
+    </div>
+
+    <div class="info-box" id="formulaBox">
+      <b>點電荷電場 Point Charge E:</b><br>
+      E = Q / (4πε₀r²) â<sub>r</sub><br>
+      V = Q / (4πε₀r)
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="simCanvas"></canvas>
+    <div class="overlay-info" id="overlayInfo">
+      📍 點擊畫布上任意位置以查看該點的電場強度與電位<br>
+      <span style="color:#888;">Click on canvas to probe E and V at that point</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+let charges = [];
+let viewAngle = 0;
+let viewTilt = 0.3;
+let zoom = 1;
+let dragging = false;
+let lastMouse = { x: 0, y: 0 };
+let animating = false;
+let animFrame;
+
+const eps0 = 8.854e-12;
+const k = 1 / (4 * Math.PI * eps0);
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  W = canvas.width;
+  H = canvas.height;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  W = rect.width;
+  H = rect.height;
+  redraw();
+}
+window.addEventListener('resize', resize);
+
+function updateParams() {
+  document.getElementById('qVal').textContent = document.getElementById('chargeQ').value;
+  document.getElementById('dVal').textContent = document.getElementById('chargeD').value;
+  document.getElementById('linesVal').textContent = document.getElementById('numLines').value;
+  document.getElementById('contoursVal').textContent = document.getElementById('numContours').value;
+  loadPreset();
+}
+
+function loadPreset() {
+  const preset = document.getElementById('preset').value;
+  const Q = parseFloat(document.getElementById('chargeQ').value) * 1e-6;
+  const d = parseFloat(document.getElementById('chargeD').value);
+  const half = d / 2;
+
+  charges = [];
+  if (preset === 'single_pos') {
+    charges = [{ x: 0, y: 0, q: Q }];
+  } else if (preset === 'single_neg') {
+    charges = [{ x: 0, y: 0, q: -Q }];
+  } else if (preset === 'dipole') {
+    charges = [{ x: -half, y: 0, q: Q }, { x: half, y: 0, q: -Q }];
+  } else if (preset === 'two_pos') {
+    charges = [{ x: -half, y: 0, q: Q }, { x: half, y: 0, q: Q }];
+  } else if (preset === 'parallel') {
+    for (let i = -3; i <= 3; i++) {
+      charges.push({ x: -half, y: i * 0.5, q: Q * 0.3 });
+      charges.push({ x: half, y: i * 0.5, q: -Q * 0.3 });
+    }
+  } else if (preset === 'quadrupole') {
+    charges = [
+      { x: -half, y: -half, q: Q }, { x: half, y: half, q: Q },
+      { x: half, y: -half, q: -Q }, { x: -half, y: half, q: -Q }
+    ];
+  }
+  updateFormulaBox(preset);
+  redraw();
+}
+
+function updateFormulaBox(preset) {
+  const box = document.getElementById('formulaBox');
+  const formulas = {
+    single_pos: '<b>點電荷 Point Charge:</b><br>E = Q/(4πε₀r²) â<sub>r</sub><br>V = Q/(4πε₀r)',
+    single_neg: '<b>負點電荷 Negative Point Charge:</b><br>E = |Q|/(4πε₀r²) (−â<sub>r</sub>)<br>V = −|Q|/(4πε₀r)',
+    dipole: '<b>電偶極 Dipole:</b><br>p = Qd â<sub>x</sub><br>遠場: V ≈ p·cos θ/(4πε₀r²)',
+    two_pos: '<b>同號電荷 Like Charges:</b><br>中間有零場點 null point<br>等位面在中間分離',
+    parallel: '<b>平行板 Parallel Plates:</b><br>板間 E ≈ σ/ε₀ (均勻)<br>V = −Ed',
+    quadrupole: '<b>四極 Quadrupole:</b><br>場衰減更快 ∝ 1/r⁴<br>等位面呈四瓣花形'
+  };
+  box.innerHTML = formulas[preset] || '';
+}
+
+// Physics
+function getField(px, py) {
+  let Ex = 0, Ey = 0;
+  for (const c of charges) {
+    const dx = px - c.x, dy = py - c.y;
+    const r2 = dx * dx + dy * dy;
+    if (r2 < 0.001) continue;
+    const r = Math.sqrt(r2);
+    const E = c.q * k / r2;
+    Ex += E * dx / r;
+    Ey += E * dy / r;
+  }
+  return { x: Ex, y: Ey };
+}
+
+function getPotential(px, py) {
+  let V = 0;
+  for (const c of charges) {
+    const dx = px - c.x, dy = py - c.y;
+    const r = Math.sqrt(dx * dx + dy * dy);
+    if (r < 0.01) return Infinity;
+    V += c.q * k / r;
+  }
+  return V;
+}
+
+// Coordinate transform (simple pseudo-3D)
+function toScreen(x, y) {
+  const cosA = Math.cos(viewAngle), sinA = Math.sin(viewAngle);
+  const rx = x * cosA - y * sinA;
+  const ry = x * sinA + y * cosA;
+  const scale = 80 * zoom;
+  const sy = ry * Math.cos(viewTilt);
+  return { x: W / 2 + rx * scale, y: H / 2 - sy * scale };
+}
+
+function fromScreen(sx, sy) {
+  const scale = 80 * zoom;
+  const rx = (sx - W / 2) / scale;
+  const ry = -(sy - H / 2) / scale / Math.cos(viewTilt);
+  const cosA = Math.cos(-viewAngle), sinA = Math.sin(-viewAngle);
+  return { x: rx * cosA - ry * sinA, y: rx * sinA + ry * cosA };
+}
+
+function redraw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background grid
+  ctx.strokeStyle = '#e0e4e8';
+  ctx.lineWidth = 0.5;
+  const gridSize = 1;
+  for (let i = -8; i <= 8; i++) {
+    const p1 = toScreen(i * gridSize, -8 * gridSize);
+    const p2 = toScreen(i * gridSize, 8 * gridSize);
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    const p3 = toScreen(-8 * gridSize, i * gridSize);
+    const p4 = toScreen(8 * gridSize, i * gridSize);
+    ctx.beginPath(); ctx.moveTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.stroke();
+  }
+
+  // Equipotential contours (marching squares approximation)
+  if (document.getElementById('showEquipotential').checked) {
+    drawEquipotentials();
+  }
+
+  // Field lines
+  if (document.getElementById('showFieldLines').checked) {
+    drawFieldLines();
+  }
+
+  // E vectors
+  if (document.getElementById('showVectors').checked) {
+    drawEVectors();
+  }
+
+  // Charges
+  if (document.getElementById('showCharges').checked) {
+    drawCharges();
+  }
+}
+
+function drawFieldLines() {
+  const numLines = parseInt(document.getElementById('numLines').value);
+  ctx.lineWidth = 1.5;
+
+  for (const c of charges) {
+    if (c.q <= 0) continue; // trace from positive charges
+    for (let i = 0; i < numLines; i++) {
+      const angle = (2 * Math.PI * i) / numLines;
+      traceLine(c.x + 0.05 * Math.cos(angle), c.y + 0.05 * Math.sin(angle), 1);
+    }
+  }
+  // If only negative charges, trace inward
+  if (charges.every(c => c.q < 0)) {
+    for (const c of charges) {
+      for (let i = 0; i < numLines; i++) {
+        const angle = (2 * Math.PI * i) / numLines;
+        traceLine(c.x + 0.05 * Math.cos(angle), c.y + 0.05 * Math.sin(angle), -1);
+      }
+    }
+  }
+}
+
+function traceLine(startX, startY, direction) {
+  const dt = 0.02;
+  const maxSteps = 800;
+  let x = startX, y = startY;
+
+  ctx.beginPath();
+  const sp = toScreen(x, y);
+  ctx.moveTo(sp.x, sp.y);
+
+  const gradient = ctx.createLinearGradient(0, 0, W, H);
+  gradient.addColorStop(0, '#f39c12');
+  gradient.addColorStop(0.5, '#e67e22');
+  gradient.addColorStop(1, '#d35400');
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = 1.5;
+
+  for (let step = 0; step < maxSteps; step++) {
+    const E = getField(x, y);
+    const mag = Math.sqrt(E.x * E.x + E.y * E.y);
+    if (mag < 1e-2 || mag > 1e15) break;
+
+    const nx = E.x / mag, ny = E.y / mag;
+    x += nx * dt * direction;
+    y += ny * dt * direction;
+
+    if (Math.abs(x) > 8 || Math.abs(y) > 8) break;
+
+    // Check if near a negative charge (sink)
+    let nearCharge = false;
+    for (const c of charges) {
+      const dr = Math.sqrt((x - c.x) ** 2 + (y - c.y) ** 2);
+      if (dr < 0.08 && c.q < 0) { nearCharge = true; break; }
+    }
+
+    const p = toScreen(x, y);
+    ctx.lineTo(p.x, p.y);
+
+    if (nearCharge) break;
+  }
+  ctx.stroke();
+
+  // Arrowhead at midpoint
+  const midSteps = Math.min(200, 400);
+  let mx = startX, my = startY;
+  for (let s = 0; s < midSteps; s++) {
+    const E = getField(mx, my);
+    const mag = Math.sqrt(E.x * E.x + E.y * E.y);
+    if (mag < 1e-2) break;
+    mx += (E.x / mag) * dt * direction;
+    my += (E.y / mag) * dt * direction;
+  }
+  const E2 = getField(mx, my);
+  const m2 = Math.sqrt(E2.x * E2.x + E2.y * E2.y);
+  if (m2 > 0) {
+    const mp = toScreen(mx, my);
+    const ang = Math.atan2(-E2.y * Math.cos(viewTilt) * direction, E2.x * direction);
+    const rotAng = ang - viewAngle;
+    ctx.fillStyle = '#e67e22';
+    ctx.beginPath();
+    ctx.moveTo(mp.x + 6 * Math.cos(rotAng), mp.y - 6 * Math.sin(rotAng));
+    ctx.lineTo(mp.x + 6 * Math.cos(rotAng + 2.5), mp.y - 6 * Math.sin(rotAng + 2.5));
+    ctx.lineTo(mp.x + 6 * Math.cos(rotAng - 2.5), mp.y - 6 * Math.sin(rotAng - 2.5));
+    ctx.fill();
+  }
+}
+
+function drawEquipotentials() {
+  const numContours = parseInt(document.getElementById('numContours').value);
+  const resolution = 2; // pixels
+  const cols = Math.ceil(W / resolution);
+  const rows = Math.ceil(H / resolution);
+
+  // Sample potential on grid
+  const grid = [];
+  for (let j = 0; j < rows; j++) {
+    grid[j] = [];
+    for (let i = 0; i < cols; i++) {
+      const world = fromScreen(i * resolution, j * resolution);
+      grid[j][i] = getPotential(world.x, world.y);
+    }
+  }
+
+  // Find good contour levels
+  let vmin = Infinity, vmax = -Infinity;
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const v = grid[j][i];
+      if (isFinite(v) && Math.abs(v) < 1e10) {
+        vmin = Math.min(vmin, v);
+        vmax = Math.max(vmax, v);
+      }
+    }
+  }
+
+  // Use log-spaced contours for better visualization
+  const levels = [];
+  for (let i = 1; i <= numContours; i++) {
+    const frac = i / (numContours + 1);
+    levels.push(vmin + frac * (vmax - vmin));
+  }
+
+  ctx.lineWidth = 1.2;
+
+  for (const level of levels) {
+    const t = (level - vmin) / (vmax - vmin);
+    const r = Math.round(39 + t * 0);
+    const g = Math.round(174 - t * 100);
+    const b = Math.round(96 + t * 80);
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.6)`;
+    ctx.beginPath();
+
+    // Simple contour: march through grid
+    for (let j = 0; j < rows - 1; j++) {
+      for (let i = 0; i < cols - 1; i++) {
+        const v00 = grid[j][i], v10 = grid[j][i + 1];
+        const v01 = grid[j + 1][i], v11 = grid[j + 1][i + 1];
+
+        // Check horizontal edges
+        if ((v00 - level) * (v10 - level) < 0 && isFinite(v00) && isFinite(v10)) {
+          const t2 = (level - v00) / (v10 - v00);
+          const sx = (i + t2) * resolution;
+          const sy = j * resolution;
+          ctx.moveTo(sx, sy);
+          ctx.arc(sx, sy, 0.8, 0, Math.PI * 2);
+        }
+        if ((v00 - level) * (v01 - level) < 0 && isFinite(v00) && isFinite(v01)) {
+          const t2 = (level - v00) / (v01 - v00);
+          const sx = i * resolution;
+          const sy = (j + t2) * resolution;
+          ctx.moveTo(sx, sy);
+          ctx.arc(sx, sy, 0.8, 0, Math.PI * 2);
+        }
+      }
+    }
+    ctx.fill();
+  }
+}
+
+function drawEVectors() {
+  const step = 1.2;
+  ctx.lineWidth = 1;
+
+  for (let gx = -6; gx <= 6; gx += step) {
+    for (let gy = -6; gy <= 6; gy += step) {
+      const E = getField(gx, gy);
+      const mag = Math.sqrt(E.x * E.x + E.y * E.y);
+      if (mag < 10 || mag > 1e12) continue;
+
+      const logMag = Math.log10(mag);
+      const len = Math.min(0.4, Math.max(0.08, logMag * 0.04));
+
+      const p1 = toScreen(gx, gy);
+      const p2 = toScreen(gx + E.x / mag * len, gy + E.y / mag * len);
+
+      const alpha = Math.min(1, Math.max(0.2, (logMag - 2) * 0.15));
+      ctx.strokeStyle = `rgba(149, 165, 166, ${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+
+      // arrowhead
+      const ang = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+      ctx.fillStyle = `rgba(149, 165, 166, ${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(p2.x, p2.y);
+      ctx.lineTo(p2.x - 5 * Math.cos(ang - 0.4), p2.y - 5 * Math.sin(ang - 0.4));
+      ctx.lineTo(p2.x - 5 * Math.cos(ang + 0.4), p2.y - 5 * Math.sin(ang + 0.4));
+      ctx.fill();
+    }
+  }
+}
+
+function drawCharges() {
+  for (const c of charges) {
+    const p = toScreen(c.x, c.y);
+    const radius = 12;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = c.q > 0 ? '#e74c3c' : '#2980b9';
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(c.q > 0 ? '+' : '−', p.x, p.y);
+  }
+}
+
+// Mouse interaction
+canvas.addEventListener('mousedown', (e) => { dragging = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  viewAngle -= dx * 0.005;
+  viewTilt = Math.max(-1.2, Math.min(1.2, viewTilt + dy * 0.005));
+  lastMouse = { x: e.clientX, y: e.clientY };
+  redraw();
+});
+canvas.addEventListener('mouseup', () => dragging = false);
+canvas.addEventListener('mouseleave', () => dragging = false);
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  zoom *= e.deltaY > 0 ? 0.92 : 1.08;
+  zoom = Math.max(0.3, Math.min(4, zoom));
+  redraw();
+}, { passive: false });
+
+canvas.addEventListener('click', (e) => {
+  if (dragging) return;
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  const world = fromScreen(sx, sy);
+  const E = getField(world.x, world.y);
+  const Emag = Math.sqrt(E.x * E.x + E.y * E.y);
+  const V = getPotential(world.x, world.y);
+  const info = document.getElementById('overlayInfo');
+  info.innerHTML = `📍 <b>位置</b> (${world.x.toFixed(2)}, ${world.y.toFixed(2)}) m<br>` +
+    `⚡ <b>|E|</b> = ${Emag.toExponential(3)} V/m<br>` +
+    `🔋 <b>V</b> = ${isFinite(V) ? V.toExponential(3) : '∞'} V<br>` +
+    `<span style="color:#888;">E direction: (${(E.x/Emag).toFixed(3)}, ${(E.y/Emag).toFixed(3)})</span>`;
+});
+
+function resetView() {
+  viewAngle = 0;
+  viewTilt = 0.3;
+  zoom = 1;
+  redraw();
+}
+
+function toggleAnimation() {
+  animating = !animating;
+  if (animating) animate();
+}
+
+function animate() {
+  if (!animating) return;
+  viewAngle += 0.008;
+  redraw();
+  animFrame = requestAnimationFrame(animate);
+}
+
+// Init
+setTimeout(() => { resize(); loadPreset(); }, 50);
+</script>
+</body>
+</html>

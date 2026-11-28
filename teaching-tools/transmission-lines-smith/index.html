@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch09 傳輸線與史密斯圖 — 互動模擬</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{color-scheme:light;--pri:#2563eb;--pri-l:#dbeafe;--acc:#f59e0b;--acc-l:#fef3c7;--ok:#16a34a;--ok-l:#dcfce7;--err:#dc2626;--err-l:#fee2e2;--pur:#7c3aed;--pur-l:#ede9fe;--bg:#f8fafc;--card:#fff;--txt:#1e293b;--sub:#64748b;--border:#e2e8f0;--radius:12px;
+--cV:#dc2626;--cI:#2563eb;--cInc:#f59e0b;--cRef:#7c3aed;--cEnv:#0f766e;--cZ:#be123c}
+body{font-family:'Segoe UI','Noto Sans TC','Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--txt);line-height:1.7;min-height:100vh;-webkit-text-size-adjust:100%}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+
+/* Header */
+.hero{background:linear-gradient(135deg,#0f766e,#2563eb);color:#fff;padding:36px 30px;border-radius:var(--radius);margin-bottom:20px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%}
+.hero h1{font-size:1.7em;margin-bottom:8px;position:relative}
+.hero p{opacity:.92;font-size:1em;position:relative}
+
+/* Progress */
+.progress-wrap{background:#fff;padding:14px 20px;border-radius:var(--radius);margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.progress-wrap label{font-weight:600;font-size:.9em;color:var(--sub)}
+.progress-bar{height:10px;background:var(--border);border-radius:5px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--pri),#60a5fa);border-radius:5px;transition:width .5s ease;width:0%}
+.progress-text{font-size:.85em;color:var(--sub);margin-top:4px;text-align:right}
+
+/* Nav */
+.nav-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;background:#fff;padding:8px;border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.nav-tab{padding:11px 15px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:.92em;font-weight:500;color:var(--sub);transition:all .2s;font-family:inherit;min-height:44px}
+.nav-tab:hover{background:var(--pri-l);color:var(--pri)}
+.nav-tab.active{background:var(--pri);color:#fff}
+.nav-tab .badge{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;background:#cbd5e1;vertical-align:middle}
+.nav-tab .badge.done{background:var(--ok)}
+
+.section{display:none;animation:fadeIn .3s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.card{background:var(--card);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.card h2{color:var(--pri);font-size:1.28em;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3{color:var(--txt);font-size:1.05em;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--pri-l)}
+.card p{margin:6px 0}
+
+/* Info boxes */
+.whatnow{background:linear-gradient(135deg,#dbeafe,#eff6ff);border-left:4px solid var(--pri);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.whatnow strong{color:#1e40af}
+.focus{background:var(--acc-l);border-left:4px solid var(--acc);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.focus strong{color:#92400e}
+.warn{background:var(--err-l);border-left:4px solid var(--err);padding:13px 17px;border-radius:0 8px 8px 0;margin:12px 0}
+.warn strong{color:var(--err)}
+.tip{background:var(--ok-l);border-left:4px solid var(--ok);padding:13px 17px;border-radius:0 8px 8px 0;margin:12px 0}
+.tip strong{color:var(--ok)}
+.analogy{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-left:4px solid var(--pur);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.formula-box{background:linear-gradient(135deg,#fef3c7,#fde68a);border-left:4px solid var(--acc);padding:14px 18px;border-radius:0 8px 8px 0;margin:10px 0;font-size:1.02em;font-family:'Cambria Math','Times New Roman',serif}
+.formula-box .label{font-size:.78em;font-weight:700;color:#92400e;letter-spacing:.5px;margin-bottom:4px;font-family:'Segoe UI',sans-serif}
+.live{background:#ecfeff;border:1px dashed #0891b2;border-radius:8px;padding:11px 15px;margin:10px 0;font-size:.92em}
+.live strong{color:#0e7490}
+
+/* Collapsible */
+.collapsible{margin:10px 0}
+.collapsible-toggle{width:100%;padding:13px 18px;background:var(--pri-l);border:none;border-radius:8px;cursor:pointer;text-align:left;font-size:.97em;font-weight:600;color:var(--pri);display:flex;justify-content:space-between;align-items:center;gap:10px;transition:background .2s;font-family:inherit;min-height:46px}
+.collapsible-toggle:hover{background:#bfdbfe}
+.collapsible-toggle::after{content:'▼';font-size:.7em;transition:transform .3s;flex-shrink:0}
+.collapsible-toggle.open::after{transform:rotate(180deg)}
+.collapsible-content{max-height:0;overflow:hidden;transition:max-height .4s ease;padding:0 18px}
+.collapsible-content.open{max-height:2200px;padding:14px 18px}
+
+/* Simulator shell */
+.sim{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:12px;margin:14px 0}
+.canvas-box{width:100%;background:#fdfdfe;border-radius:8px;overflow:hidden;position:relative}
+.canvas-box canvas{display:block;width:100%;touch-action:pan-y;cursor:crosshair;border-radius:8px}
+.canvas-box canvas.draglock{touch-action:none;cursor:grab}
+.canvas-box canvas.draglock:active{cursor:grabbing}
+.hint{font-size:.8em;color:var(--sub);text-align:center;margin-top:6px}
+.dual{display:flex;gap:12px;flex-wrap:wrap}
+.dual>div{flex:1 1 300px;min-width:0}
+.dual h4{font-size:.88em;color:var(--sub);font-weight:600;margin-bottom:5px;text-align:center}
+
+/* Controls */
+.ctrls{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 16px}
+.ctrl{display:flex;flex-direction:column;gap:3px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;font-size:.86em;color:var(--sub);font-weight:600}
+.ctrl .val{color:var(--pri);font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:26px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:8px;background:var(--border);border-radius:4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:var(--pri);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+input[type=range]::-moz-range-track{height:8px;background:var(--border);border-radius:4px}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--pri);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.btn{padding:10px 15px;border:2px solid var(--pri);border-radius:8px;background:#fff;color:var(--pri);cursor:pointer;font-size:.88em;font-weight:700;font-family:inherit;min-height:44px;transition:all .15s}
+.btn:hover{background:var(--pri-l)}
+.btn.on{background:var(--pri);color:#fff}
+.btn.play{border-color:var(--ok);color:var(--ok)}
+.btn.play.on{background:var(--ok);color:#fff}
+.btn.small{padding:8px 12px;font-size:.82em;min-height:40px;border-color:var(--sub);color:var(--sub)}
+.btn.small:hover{background:#f1f5f9}
+.btn.small.on{background:var(--sub);color:#fff}
+.toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip-toggle{padding:8px 13px;border-radius:20px;border:2px solid var(--border);background:#fff;cursor:pointer;font-size:.83em;font-weight:600;color:var(--sub);font-family:inherit;min-height:40px;display:inline-flex;align-items:center;gap:6px}
+.chip-toggle .dot{width:11px;height:11px;border-radius:50%;background:#cbd5e1;flex-shrink:0}
+.chip-toggle.on{color:var(--txt);border-color:currentColor;background:#f8fafc}
+
+/* Readout */
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;margin-top:12px}
+.stat{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.stat .k{display:block;font-size:.74em;color:var(--sub);font-weight:600;line-height:1.35}
+.stat .v{display:block;font-size:1.02em;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums;line-height:1.4}
+.stat.hi{background:var(--acc-l);border-color:#fcd34d}
+.stat.hi .v{color:#92400e}
+.flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;min-height:4px}
+.flag{padding:5px 11px;border-radius:6px;font-size:.8em;font-weight:700}
+.flag.g{background:var(--ok-l);color:#166534}
+.flag.r{background:var(--err-l);color:#991b1b}
+.flag.b{background:var(--pri-l);color:#1e40af}
+.flag.y{background:var(--acc-l);color:#92400e}
+.flag.p{background:var(--pur-l);color:#5b21b6}
+
+/* legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:.82em;color:var(--sub)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:16px;height:4px;border-radius:2px;display:inline-block}
+
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.9em}
+th{background:var(--pri);color:#fff;padding:9px 11px;text-align:left}
+td{padding:9px 11px;border-bottom:1px solid var(--border)}
+tr:hover td{background:var(--pri-l)}
+ul.tight{padding-left:22px;margin:8px 0}
+ul.tight li{margin:4px 0}
+code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.92em}
+
+.myth{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0;background:#fff}
+.myth .bad{color:var(--err);font-weight:700}
+.myth .good{color:var(--ok);font-weight:700}
+.myth h4{font-size:1em;margin-bottom:6px;color:var(--txt)}
+
+.checklist{list-style:none;padding:0}
+.checklist li{padding:11px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .2s}
+.checklist li:hover{background:var(--pri-l)}
+.checklist li .check{width:24px;height:24px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;font-weight:700}
+.checklist li.checked .check{background:var(--ok);border-color:var(--ok);color:#fff}
+.checklist li.checked{color:var(--sub);text-decoration:line-through}
+
+.foot{text-align:center;color:var(--sub);font-size:.82em;padding:16px 0 30px;line-height:1.8}
+
+@media(max-width:640px){
+  .container{padding:11px}
+  .hero{padding:22px 16px}
+  .hero h1{font-size:1.28em}
+  .hero p{font-size:.9em}
+  .nav-tabs{gap:4px;padding:6px}
+  .nav-tab{padding:9px 10px;font-size:.8em}
+  .card{padding:15px}
+  .sim{padding:9px}
+  .ctrls{grid-template-columns:1fr}
+  .readout{grid-template-columns:repeat(auto-fit,minmax(108px,1fr))}
+  .stat .v{font-size:.94em}
+  table{font-size:.82em}
+  th,td{padding:7px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+  <h1>〰️ 第九章：傳輸線與史密斯圖 — 互動模擬</h1>
+  <p>Transmission Lines &amp; Smith Chart</p>
+</div>
+
+<div class="progress-wrap">
+  <label>📊 探索進度</label>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 4 個模式已探索</div>
+</div>
+
+<div class="card" style="padding:16px 20px">
+  <p style="font-size:.93em;color:var(--sub);margin:0">
+  <strong style="color:var(--txt)">怎麼用：</strong>選上面的分頁 → 拉滑桿看<strong>圖形和數字一起變</strong> → 模式③ 的史密斯圖上那顆點<strong>可以用滑鼠或手指直接拖</strong>。
+  每個模式都有「你現在在看什麼」和「該注意哪裡」，最後有引導問題可以自己先想再展開看解答。
+  第 ⑤ 頁整理了本章<strong>五個最常見的誤解</strong>，考前務必看過。
+  </p>
+</div>
+
+<div class="card" style="padding:14px 20px;background:#fffbeb;border-color:#fcd34d">
+  <p style="font-size:.9em;margin:0">
+  <strong>📐 全篇座標與符號約定：</strong>
+  負載在<strong>右端</strong>、電源在<strong>左端</strong>；位置座標 <strong>z′ 從負載往電源量</strong>（z′ = 0 就在負載上）。
+  <strong>Z₀</strong>＝特性阻抗 (characteristic impedance)、<strong>Z_L</strong>＝負載阻抗、<strong>Γ</strong>＝電壓反射係數 (voltage reflection coefficient)、
+  <strong>S 或 SWR</strong>＝駐波比 (standing-wave ratio)、<strong>Z_in</strong>＝輸入阻抗 (input impedance)、
+  <strong>z = Z/Z₀</strong>＝正規化阻抗 (normalized impedance)、<strong>βz′</strong>＝電長度 (electrical length)。
+  本章全部假設<strong>無損耗線 (lossless line)</strong>：γ = jβ、α = 0、Z₀ 為實數。
+  </p>
+</div>
+
+<div class="nav-tabs" id="navTabs">
+  <button class="nav-tab active" data-action="show" data-idx="0">① 駐波動畫<span class="badge" id="badge0"></span></button>
+  <button class="nav-tab" data-action="show" data-idx="1">② 開路／短路／匹配<span class="badge" id="badge1"></span></button>
+  <button class="nav-tab" data-action="show" data-idx="2">③ 互動史密斯圖<span class="badge" id="badge2"></span></button>
+  <button class="nav-tab" data-action="show" data-idx="3">④ 阻抗匹配<span class="badge" id="badge3"></span></button>
+  <button class="nav-tab" data-action="show" data-idx="4">⑤ 常見誤解＋自我檢核</button>
+</div>
+
+<!-- ==================== MODE 0 ==================== -->
+<div class="section active" id="sec0">
+<div class="card">
+  <h2>① 傳輸線上的電壓駐波 voltage standing wave</h2>
+
+  <div class="whatnow">
+    <strong>👀 你現在在看什麼：</strong>一條特性阻抗 Z₀ 的無損耗傳輸線，右端接負載 Z_L = R_L + jX_L。
+    <span style="color:var(--cInc);font-weight:700">橘色</span>是<strong>入射波</strong>（往右、往負載跑）、
+    <span style="color:var(--cRef);font-weight:700">紫色</span>是<strong>反射波</strong>（往左、往電源跑）、
+    <span style="color:var(--cV);font-weight:700">紅色</span>是兩者<strong>疊加後的瞬時電壓</strong> v(z′,t)、
+    <span style="color:var(--cEnv);font-weight:700">深青色</span>是<strong>包絡 ±|V(z′)|</strong>，也就是「駐波型態」。
+  </div>
+
+  <div class="analogy">
+    <strong>💡 生活類比：跳繩</strong><br>
+    你甩繩子，波往前跑到另一端。<strong>另一端被牆綁死（短路）</strong>→ 波原封不動彈回來，跟去的波疊在一起，繩子上就出現幾個<u>永遠不動的點（節點）</u>和幾個<u>甩得最兇的點（腹點）</u>。
+    <strong>另一端交給一個跟你同步的人接住（匹配）</strong>→ 能量被接走，沒有東西彈回來，繩子上看不到節點，只有一路往前跑的波。
+    <strong>傳輸線一模一樣，只是「繩子」換成電壓。</strong>
+  </div>
+
+  <div class="sim">
+    <div class="canvas-box"><canvas id="c1"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--cInc)"></i>入射波 V⁺</span>
+      <span><i style="background:var(--cRef)"></i>反射波 V⁻</span>
+      <span><i style="background:var(--cV)"></i>合成瞬時電壓 v(z′,t)</span>
+      <span><i style="background:var(--cEnv)"></i>包絡 ±|V(z′)|</span>
+      <span><i style="background:var(--cI)"></i>電流包絡 Z₀|I(z′)|</span>
+    </div>
+    <div class="hint">👆 在圖上<strong>左右拖曳</strong>可以移動測量探針（手機也是左右滑；上下滑動＝正常捲動頁面）</div>
+
+    <div class="btnrow">
+      <button class="btn play on" data-action="play" data-m="0" id="p1">⏸ 暫停</button>
+      <button class="btn small on" data-action="view1" data-v="anim" id="v1anim">🎬 動畫進行中</button>
+      <button class="btn small" data-action="view1" data-v="env" id="v1env">📏 只看包絡</button>
+      <button class="btn small" data-action="probe-reset">↺ 探針歸零（回到負載）</button>
+    </div>
+
+    <div class="toggles">
+      <button class="chip-toggle on" data-action="tog" data-m="0" data-key="showInc" style="color:var(--cInc)"><span class="dot" style="background:var(--cInc)"></span>入射波</button>
+      <button class="chip-toggle on" data-action="tog" data-m="0" data-key="showRef" style="color:var(--cRef)"><span class="dot" style="background:var(--cRef)"></span>反射波</button>
+      <button class="chip-toggle on" data-action="tog" data-m="0" data-key="showTot" style="color:var(--cV)"><span class="dot" style="background:var(--cV)"></span>合成電壓</button>
+      <button class="chip-toggle on" data-action="tog" data-m="0" data-key="showEnv" style="color:var(--cEnv)"><span class="dot" style="background:var(--cEnv)"></span>電壓包絡</button>
+      <button class="chip-toggle" data-action="tog" data-m="0" data-key="showCur" style="color:var(--cI)"><span class="dot" style="background:var(--cI)"></span>電流包絡</button>
+    </div>
+
+    <div class="btnrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">快速情境：</span>
+      <button class="btn small" data-action="load1" data-t="match">匹配 Z_L = Z₀</button>
+      <button class="btn small" data-action="load1" data-t="short">短路 Z_L = 0</button>
+      <button class="btn small" data-action="load1" data-t="open">開路 Z_L = ∞</button>
+      <button class="btn small" data-action="load1" data-t="react">純電抗 Z_L = j50</button>
+      <button class="btn small" data-action="load1" data-t="cplx">一般複數 25 + j50</button>
+      <button class="btn small" data-action="load1" data-t="hiR">純電阻 100 Ω</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>特性阻抗 Z₀ (characteristic impedance)</span><span class="val" id="v1z0">50 Ω</span></div>
+        <input type="range" id="s1z0" min="10" max="150" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>負載電阻 R_L</span><span class="val" id="v1rl">100.0 Ω</span></div>
+        <input type="range" id="s1rl" min="0" max="600" value="200" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>負載電抗 X_L（＋感性／−容性）</span><span class="val" id="v1xl">0.0 Ω</span></div>
+        <input type="range" id="s1xl" min="-600" max="600" value="0" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>線長 ℓ（以波長為單位）</span><span class="val" id="v1len">0.75 λ</span></div>
+        <input type="range" id="s1len" min="10" max="200" value="75" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>測量探針位置 z′</span><span class="val" id="v1p">0.000 λ</span></div>
+        <input type="range" id="s1p" min="0" max="200" value="0" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>動畫速度（慢動作）</span><span class="val" id="v1s">1.0×</span></div>
+        <input type="range" id="s1s" min="0" max="100" value="45" step="1">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="stat"><span class="k">負載阻抗 Z_L</span><span class="v" id="r1zl">—</span></div>
+      <div class="stat"><span class="k">反射係數 Γ = (Z_L−Z₀)/(Z_L+Z₀)</span><span class="v" id="r1G">—</span></div>
+      <div class="stat hi"><span class="k">駐波比 SWR = (1+|Γ|)/(1−|Γ|)</span><span class="v" id="r1swr">—</span></div>
+      <div class="stat"><span class="k">反射功率比 |Γ|²</span><span class="v" id="r1P">—</span></div>
+      <div class="stat"><span class="k">第一個 V_max 位置 z′</span><span class="v" id="r1zmax">—</span></div>
+      <div class="stat"><span class="k">第一個 V_min 位置 z′</span><span class="v" id="r1zmin">—</span></div>
+      <div class="stat"><span class="k">探針處 |V| / |V⁺|</span><span class="v" id="r1pv">—</span></div>
+      <div class="stat"><span class="k">探針處阻抗 Z(z′)</span><span class="v" id="r1pz">—</span></div>
+      <div class="stat hi"><span class="k">線頭輸入阻抗 Z_in(ℓ)</span><span class="v" id="r1zin">—</span></div>
+      <div class="stat"><span class="k">電長度 βℓ</span><span class="v" id="r1bl">—</span></div>
+    </div>
+    <div class="flags" id="f1"></div>
+  </div>
+
+  <div class="focus">
+    <strong>🎯 該注意哪裡：</strong>
+    <ul class="tight" style="margin-top:6px">
+      <li><strong>相鄰兩個 V_max（或兩個 V_min）相距 λ/2，而 V_max 與最近的 V_min 相距 λ/4。</strong>這是本章最常被考的距離關係——駐波看的是<u>振幅絕對值</u>，一個週期裡過零兩次，所以間距是半波長不是一個波長。</li>
+      <li>把 X_L 拉離 0 → V_max 的位置<strong>整排平移</strong>，因為 Γ 的相角 θ_Γ 變了，而 z′<sub>max</sub> = θ_Γλ/(4π)。<u>SWR 只由 |Γ| 決定，跟相角無關</u>：拉 X_L 時 SWR 和包絡的胖瘦會變，但「幾個 max、間距多少」永遠不變。</li>
+      <li>打開「電流包絡」：<strong>電壓最大的地方電流最小、電壓最小的地方電流最大</strong>。V 與 I 的包絡剛好錯開 λ/4。這就是為什麼 V_min 處的阻抗 Z = V/I 最小（＝ Z₀/S），V_max 處最大（＝ SZ₀）。</li>
+      <li>把 R_L 調到剛好等於 Z₀、X_L = 0 → 紫色反射波<strong>整個消失</strong>，包絡變成兩條水平線，SWR = 1。這叫<strong>阻抗匹配 (matched)</strong>。</li>
+      <li>切到「📏 只看包絡」：畫面停下來，你就能專心讀 V_max / V_min 的位置——常見的是這張<u>靜態包絡圖</u>，不是動畫。</li>
+    </ul>
+  </div>
+
+  <div class="formula-box">
+    <div class="label">本模式使用的式子</div>
+    Γ = (Z_L − Z₀)/(Z_L + Z₀) = |Γ|e<sup>jθ<sub>Γ</sub></sup>　　S = SWR = (1 + |Γ|)/(1 − |Γ|)　　|Γ| = (S − 1)/(S + 1)<br>
+    V(z′) = V₀⁺(e<sup>jβz′</sup> + Γe<sup>−jβz′</sup>)　　I(z′) = (V₀⁺/Z₀)(e<sup>jβz′</sup> − Γe<sup>−jβz′</sup>)<br>
+    |V(z′)| = |V₀⁺|·|1 + Γe<sup>−j2βz′</sup>|　　V_max = |V₀⁺|(1+|Γ|)　　V_min = |V₀⁺|(1−|Γ|)<br>
+    z′<sub>max</sub> = (θ<sub>Γ</sub> + 2nπ)λ/(4π)　　z′<sub>min</sub> = z′<sub>max</sub> ± λ/4　　（n = 0, 1, 2, …）<br>
+    Z_in(z′) = Z₀ (Z_L + jZ₀tan βz′)/(Z₀ + jZ_L tan βz′)　　β = 2π/λ
+  </div>
+
+  <div class="warn"><strong>⚠️ 畫面上的注意事項</strong>：橫軸是<strong>位置 z′（空間）</strong>，不是時間。畫面上「跑」的紅線是<u>同一條線上的電壓分布</u>隨時間變化的樣子。深青色的包絡<strong>完全不動</strong>——這就是「駐波 standing wave」的意思：<u>波形的形狀站著不動，只有高度在原地上下呼吸</u>。</div>
+
+  <h3>🤔 引導問題（先自己想，再展開）</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　把負載改成純電抗（R_L = 0、X_L = 50 Ω），SWR 會發生什麼事？為什麼會趨近無限大？</button>
+    <div class="collapsible-content">
+      <p><strong>SWR → ∞</strong>（畫面顯示 ∞，包絡的最小值掉到 0）。</p>
+      <p><strong>算一次就懂：</strong>Z_L = j50、Z₀ = 50 → Γ = (j50 − 50)/(j50 + 50)。分子與分母的<u>大小完全一樣</u>（都是 50√2），只差在相角，所以 <strong>|Γ| = 1</strong>。代進 S = (1+1)/(1−1) = 2/0 → <strong>∞</strong>。</p>
+      <p><strong>物理上：</strong>電抗元件（純電感、純電容）<u>不消耗任何實功率</u>，它只把能量暫存起來再全部吐回去。既然一點功率都吃不掉，入射的功率只能<strong>百分之百反射</strong>。開路和短路也是同樣的道理（|Γ| = 1）。</p>
+      <p><strong>差別在哪：</strong>短路的 Γ = −1（θ_Γ = 180°）、開路的 Γ = +1（θ_Γ = 0°）、純電抗的 |Γ| = 1 但相角是<u>其他角度</u>——所以三者的駐波「胖瘦一樣（都是最極端）」，只是<strong>節點的位置被平移</strong>。你可以拉 X_L 滑桿直接看節點整排滑動。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　R_L = 100 Ω、Z₀ = 50 Ω（純電阻、R_L &gt; Z₀）時，負載那一點（z′ = 0）是電壓最大還是最小？換成 R_L = 25 Ω 呢？</button>
+    <div class="collapsible-content">
+      <p><strong>R_L &gt; Z₀ → 負載處是 V_max。</strong>因為 Γ = (100−50)/(100+50) = +1/3 是<u>正實數</u>，θ_Γ = 0°，所以 z′<sub>max</sub> = 0。</p>
+      <p><strong>R_L &lt; Z₀ → 負載處是 V_min。</strong>Γ = (25−50)/(25+50) = −1/3 是<u>負實數</u>，θ_Γ = 180°，代進 z′<sub>max</sub> = θ_Γλ/(4π) = λ/4，所以最大值退到 λ/4 處，<strong>負載處反而是最小值</strong>。</p>
+      <p>這正是這裡的關鍵。實驗上反過來用也成立：只要量到「第一個電壓最小值出現在負載上」，就知道 <u>R_L &lt; Z₀</u>；再由 SWR 算出 R_L = Z₀/S。（R_L &gt; Z₀ 時則是 R_L = S·Z₀。）</p>
+      <p><em>動手試：按「純電阻 100 Ω」看一次，再把 R_L 滑桿拉到 25 Ω，盯著 z′ = 0 那一端的包絡從「鼓起來」變成「掐下去」。</em></p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　把線長 ℓ 從 0.25λ 拉到 0.50λ，「線頭輸入阻抗 Z_in(ℓ)」怎麼變？0.5λ 時等於什麼？</button>
+    <div class="collapsible-content">
+      <p><strong>ℓ = λ/2（或任何 nλ/2）時，Z_in = Z_L，原封不動。</strong>因為 tan βℓ = tan π = 0，代進 Z_in = Z₀(Z_L + jZ₀·0)/(Z₀ + jZ_L·0) = <strong>Z_L</strong>。這叫<strong>半波長線 (half-wave line)</strong>。</p>
+      <p><strong>ℓ = λ/4 時，Z_in = Z₀²/Z_L</strong>（tan βℓ → ∞，取極限）。這是<strong>四分之一波長轉換器 (quarter-wave transformer)</strong>，模式④ 會整段玩它。注意它會把大阻抗變小、小阻抗變大——是個「阻抗翻轉器」。</p>
+      <p><strong>中間的長度</strong>則在複數平面上繞：Z_in 隨 ℓ 週期性變化，<strong>週期是 λ/2 不是 λ</strong>。這件事在史密斯圖上就是「轉一整圈＝走了半個波長」（模式③）。</p>
+      <p><strong>只有匹配時例外：</strong>Z_L = Z₀ 的話，不管線多長 Z_in 永遠是 Z₀。把「快速情境」按到「匹配」再拉線長滑桿，Z_in 那格完全不動。</p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="0" data-next="1">✅ 我看懂了，前往「② 開路／短路／匹配」→</button>
+</div>
+</div>
+
+<!-- ==================== MODE 1 ==================== -->
+<div class="section" id="sec1">
+<div class="card">
+  <h2>② 四種特殊終端的比較：開路／短路／匹配／純電抗</h2>
+
+  <div class="whatnow" id="m2what">
+    <strong>👀 你現在在看什麼：</strong>同一條 Z₀ 的線、同樣的入射波，只換終端。四條線疊在一起比較，你會直接看到
+    <strong>開路與短路的駐波型態一模一樣，只是整個平移了 λ/4</strong>，而匹配那條<u>根本沒有駐波</u>。
+    按下面的按鈕挑一個當主角，它會被特別標示出來，並標出節點位置。
+  </div>
+
+  <div class="sim">
+    <div class="canvas-box"><canvas id="c2"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--cV)"></i>瞬時電壓 v(z′,t)</span>
+      <span><i style="background:var(--cEnv)"></i>電壓包絡 |V(z′)|</span>
+      <span><i style="background:#f59e0b"></i>V_max（腹點 antinode）</span>
+      <span><i style="background:#2563eb"></i>V_min（節點 node）</span>
+    </div>
+    <div class="hint">👆 四個面板同時畫，按鈕選誰當主角；左右拖曳可移動比較用的參考線</div>
+
+    <div class="btnrow">
+      <button class="btn play on" data-action="play" data-m="1" id="p2">⏸ 暫停</button>
+      <button class="btn small on" data-action="tog" data-m="1" data-key="showInst">顯示瞬時波形</button>
+      <button class="btn small on" data-action="tog" data-m="1" data-key="showRuler">顯示 λ/4 對照尺</button>
+    </div>
+
+    <div class="btnrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">選主角：</span>
+      <button class="btn on" data-action="focus2" data-k="0">🔓 開路 Z_L = ∞</button>
+      <button class="btn" data-action="focus2" data-k="1">⚡ 短路 Z_L = 0</button>
+      <button class="btn" data-action="focus2" data-k="2">✅ 匹配 Z_L = Z₀</button>
+      <button class="btn" data-action="focus2" data-k="3">🌀 純電抗 Z_L = jZ₀</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>特性阻抗 Z₀</span><span class="val" id="v2z0">50 Ω</span></div>
+        <input type="range" id="s2z0" min="10" max="150" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>線長 ℓ</span><span class="val" id="v2len">1.00 λ</span></div>
+        <input type="range" id="s2len" min="25" max="200" value="100" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>參考線位置 z′</span><span class="val" id="v2p">0.250 λ</span></div>
+        <input type="range" id="s2p" min="0" max="200" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>動畫速度</span><span class="val" id="v2s">1.0×</span></div>
+        <input type="range" id="s2s" min="0" max="100" value="45" step="1">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="stat hi"><span class="k">主角情境</span><span class="v" id="r2case">開路</span></div>
+      <div class="stat"><span class="k">Γ</span><span class="v" id="r2G">—</span></div>
+      <div class="stat"><span class="k">SWR</span><span class="v" id="r2swr">—</span></div>
+      <div class="stat"><span class="k">負載處是 max 還是 min</span><span class="v" id="r2at0">—</span></div>
+      <div class="stat"><span class="k">第一個 V_min 位置</span><span class="v" id="r2zmin">—</span></div>
+      <div class="stat"><span class="k">參考線處 Z(z′)</span><span class="v" id="r2pz">—</span></div>
+    </div>
+    <div class="flags" id="f2"></div>
+  </div>
+
+  <div class="focus" id="m2focus">
+    <strong>🎯 該注意哪裡：</strong>
+    <ul class="tight" style="margin-top:6px">
+      <li><strong>開路：</strong>負載端電流被切斷（I = 0），所以電壓在那裡<u>疊到最大</u>。Γ = +1，第一個節點退到 <strong>z′ = λ/4</strong>。</li>
+      <li><strong>短路：</strong>負載端被銅線接死（V = 0），電壓在那裡<u>永遠是零</u>。Γ = −1，第一個節點就在 <strong>z′ = 0</strong>。</li>
+      <li><strong>兩者的節點剛好差 λ/4</strong> —— 把「λ/4 對照尺」打開，看那條連接兩個節點的虛線。這是實驗室用來判斷「線到底是開路還是短路」的標準手法。</li>
+      <li><strong>匹配：</strong>Γ = 0，包絡是<u>兩條平的直線</u>，SWR = 1，沒有任何節點。線上任何一點看進去的阻抗都是 Z₀（等同於「線被延伸到無限遠」）。</li>
+      <li><strong>純電抗：</strong>|Γ| = 1，胖瘦跟開路／短路一模一樣（一樣是 SWR = ∞），但節點的位置被平移到<u>其他角度</u>——這證明了「SWR 管胖瘦，θ_Γ 管位置」。</li>
+    </ul>
+  </div>
+
+  <div class="formula-box">
+    <div class="label">三種終端的關鍵數字</div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+    <table style="font-family:'Segoe UI',sans-serif;font-size:.9em">
+      <tr><th>終端</th><th>Γ</th><th>SWR</th><th>負載處</th><th>Z_in(λ/4)</th><th>Z_in(λ/2)</th><th>Z_in(λ/8)</th></tr>
+      <tr><td>開路 Z_L = ∞</td><td>+1 ∠0°</td><td>∞</td><td>V_max</td><td>0（等效短路）</td><td>∞</td><td>−jZ₀（電容性）</td></tr>
+      <tr><td>短路 Z_L = 0</td><td>−1 ∠180°</td><td>∞</td><td>V_min</td><td>∞（等效開路）</td><td>0</td><td>+jZ₀（電感性）</td></tr>
+      <tr><td>匹配 Z_L = Z₀</td><td>0</td><td>1</td><td>沒有起伏</td><td>Z₀</td><td>Z₀</td><td>Z₀</td></tr>
+    </table>
+    </div>
+    開路線：Z_in = −jZ₀ cot βz′　｜　短路線：Z_in = +jZ₀ tan βz′　｜　兩者相乘 Z_in(開)·Z_in(短) = Z₀²
+  </div>
+
+  <div class="tip"><strong>💡 為什麼工程上要在乎？</strong>短路截線 (short-circuited stub) 只要換長度就能當成任何電感或電容——UHF 頻段做不出好的集總元件，就用一段線代替（可視為電路元件的傳輸線）。而且<u>短路端比開路端好做</u>：開路端會往外輻射、還會受手指靠近影響，短路端焊一顆過孔就搞定，這就是「為何常用短路截線」的原因。</div>
+
+  <h3>🤔 引導問題</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　開路和短路的 |Γ| 都是 1、SWR 都是 ∞，那用駐波比根本分不出它們。要怎麼分？</button>
+    <div class="collapsible-content">
+      <p><strong>看節點的位置。</strong>SWR 只告訴你 <u>|Γ| 有多大</u>，節點位置才告訴你 <u>θ_Γ 是多少</u>。</p>
+      <ul class="tight">
+        <li>短路：θ_Γ = 180° → 第一個 <strong>V_min 就在負載上（z′ = 0）</strong>，然後每 λ/2 出現一次：0、0.5λ、1.0λ…</li>
+        <li>開路：θ_Γ = 0° → 第一個 <strong>V_min 在 z′ = λ/4</strong>，然後 0.75λ、1.25λ…</li>
+      </ul>
+      <p>所以量到節點在哪，就把 Γ 的<u>大小和相角都定死了</u>，Z_L 也就算得出來（這套測量法正是由此而來）。</p>
+      <p><em>動手試：把主角切到「開路」記下第一個 V_min 位置，再切到「短路」比較——差距永遠是 0.25λ。</em></p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　為什麼一段 λ/4 的<u>短路</u>線，從輸入端看進去反而像「開路」？</button>
+    <div class="collapsible-content">
+      <p><strong>代公式：</strong>短路線 Z_in = jZ₀ tan βz′。當 z′ = λ/4 時 βz′ = (2π/λ)(λ/4) = π/2，<strong>tan(π/2) → ∞</strong>，所以 Z_in → ∞ ＝ <u>開路</u>。</p>
+      <p><strong>看畫面：</strong>切到短路那一列，把參考線滑桿移到 z′ = 0.25λ。你會看到那裡剛好是<strong>電壓腹點（V_max）</strong>——電壓最大、電流為零，V/I → ∞，這正是「開路」的定義。</p>
+      <p><strong>白話：</strong>λ/4 的線是個「阻抗翻轉器」，它把短路翻成開路、把開路翻成短路、把 Z_L 翻成 Z₀²/Z_L。這也是模式④ 四分之一波長轉換器能成功的原理。</p>
+      <p><strong>常見誤解：</strong>這只在<u>那一個設計頻率</u>成立。頻率變一倍，λ 減半，同一段實體長度就變成 λ/2，短路又變回短路了。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　匹配那一列的包絡是兩條水平線。這是不是代表「線上電壓處處相同、所以線根本不用管」？</button>
+    <div class="collapsible-content">
+      <p><strong>包絡是平的，但電壓不是處處相同。</strong>包絡平代表<u>每一點的振幅一樣大</u>；瞬時值仍然是一個往前跑的行進波，各點的<strong>相位不同</strong>（打開「顯示瞬時波形」看紅線在跑）。</p>
+      <p>換句話說：|V(z′)| = |V₀⁺| 為常數，但 V(z′) = V₀⁺e<sup>jβz′</sup> 的<u>相角隨 z′ 線性增加</u>。相位差就是<strong>電長度 βz′</strong>。</p>
+      <p><strong>所以線還是要管：</strong>兩條並聯的饋線若長度差半個波長，訊號到達時會反相互相抵銷；高速數位電路的等長布線 (length matching) 管的就是這件事。<u>匹配消掉的是反射，不是傳播延遲。</u></p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="1" data-next="2">✅ 我看懂了，前往「③ 互動史密斯圖」→</button>
+</div>
+</div>
+
+<!-- ==================== MODE 2 ==================== -->
+<div class="section" id="sec2">
+<div class="card">
+  <h2>③ 互動史密斯圖 Smith chart</h2>
+
+  <div class="whatnow">
+    <strong>👀 你現在在看什麼：</strong>史密斯圖就是<strong>反射係數 Γ 的複數平面</strong>（單位圓內），上面再疊印<u>正規化阻抗 z = Z/Z₀ 的格線</u>。
+    <span style="color:#0f766e;font-weight:700">深青色的圓</span>是<strong>等電阻圓 r = 常數</strong>、
+    <span style="color:#be123c;font-weight:700">紅色的弧</span>是<strong>等電抗圓 x = 常數</strong>。
+    <strong style="color:#7c3aed">紫色那顆大點就是你的負載 z_L</strong>——用滑鼠或手指直接拖它，或用下面的 R、X 滑桿輸入。
+    <span style="color:#f59e0b;font-weight:700">橘色虛線圓</span>是<strong>等 SWR 圓</strong>，
+    <span style="color:#2563eb;font-weight:700">藍色那顆點</span>是往電源走 d 距離後看到的 <strong>Γ_in / z_in</strong>。
+  </div>
+
+  <div class="live"><strong>🔑 一句話說穿史密斯圖：</strong>它把「阻抗 Z」和「反射係數 Γ」用同一張圖畫在一起，
+  靠的是雙線性映射 <strong>Γ = (z−1)/(z+1)</strong> 與其反函數 <strong>z = (1+Γ)/(1−Γ)</strong>。
+  於是「沿線移動」這件本來要算 tan 的麻煩事，變成「<u>在圖上繞圈圈</u>」——圓規量一量就有答案，這是還沒有計算機的年代發明它的原因。</div>
+
+  <div class="sim">
+    <div class="canvas-box"><canvas id="c3"></canvas></div>
+    <div class="hint">👆 <strong>電腦：</strong>在圖上任意處按住拖曳即可移動負載點。<strong>手機：</strong>手指要按在<u>紫色點附近</u>才會進入拖曳（其他地方上下滑＝正常捲頁）；或按下面的「🔒 手機拖曳鎖定」讓整張圖都能拖。</div>
+
+    <div class="btnrow">
+      <button class="chip-toggle" data-action="draglock" id="dlbtn"><span class="dot"></span>🔒 手機拖曳鎖定（開啟後整張圖可拖，但圖上無法捲頁）</button>
+    </div>
+
+    <div class="toggles">
+      <button class="chip-toggle on" data-action="tog" data-m="2" data-key="showFine" style="color:#0f766e"><span class="dot" style="background:#0f766e"></span>細格線</button>
+      <button class="chip-toggle on" data-action="tog" data-m="2" data-key="showSwr" style="color:var(--acc)"><span class="dot" style="background:var(--acc)"></span>等 SWR 圓</button>
+      <button class="chip-toggle on" data-action="tog" data-m="2" data-key="showWtg" style="color:var(--sub)"><span class="dot" style="background:var(--sub)"></span>外圈「往電源」波長刻度</button>
+      <button class="chip-toggle" data-action="tog" data-m="2" data-key="showAdm" style="color:var(--pur)"><span class="dot" style="background:var(--pur)"></span>顯示導納點 y = 1/z</button>
+      <button class="chip-toggle on" data-action="tog" data-m="2" data-key="showLbl" style="color:var(--sub)"><span class="dot" style="background:var(--sub)"></span>格線數字標示</button>
+    </div>
+
+    <div class="btnrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">特殊點：</span>
+      <button class="btn small" data-action="sp" data-t="short">短路 z = 0（最左）</button>
+      <button class="btn small" data-action="sp" data-t="open">開路 z = ∞（最右）</button>
+      <button class="btn small" data-action="sp" data-t="match">匹配 z = 1（正中央）</button>
+      <button class="btn small" data-action="sp" data-t="ind">純電感 z = j1（上緣）</button>
+      <button class="btn small" data-action="sp" data-t="cap">純電容 z = −j1（下緣）</button>
+      <button class="btn small" data-action="sp" data-t="ex">例題 z = 0.5 + j1</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>特性阻抗 Z₀（正規化的分母）</span><span class="val" id="v3z0">50 Ω</span></div>
+        <input type="range" id="s3z0" min="10" max="150" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>負載電阻 R_L</span><span class="val" id="v3r">25.0 Ω</span></div>
+        <input type="range" id="s3r" min="0" max="600" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>負載電抗 X_L</span><span class="val" id="v3x">50.0 Ω</span></div>
+        <input type="range" id="s3x" min="-600" max="600" value="100" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>往電源方向移動距離 d</span><span class="val" id="v3d">0.000 λ</span></div>
+        <input type="range" id="s3d" min="0" max="500" value="0" step="1">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="stat hi"><span class="k">正規化負載 z_L = Z_L/Z₀</span><span class="v" id="r3zl">—</span></div>
+      <div class="stat"><span class="k">反射係數 Γ_L（大小∠相位）</span><span class="v" id="r3G">—</span></div>
+      <div class="stat"><span class="k">駐波比 SWR</span><span class="v" id="r3swr">—</span></div>
+      <div class="stat"><span class="k">圖上轉動角度 −2βd</span><span class="v" id="r3ang">—</span></div>
+      <div class="stat"><span class="k">Γ_in = Γ_L e<sup>−j2βd</sup></span><span class="v" id="r3Gin">—</span></div>
+      <div class="stat hi"><span class="k">正規化輸入阻抗 z_in</span><span class="v" id="r3zin">—</span></div>
+      <div class="stat hi"><span class="k">還原後 Z_in = z_in × Z₀</span><span class="v" id="r3Zin">—</span></div>
+      <div class="stat"><span class="k">導納 y_L = 1/z_L</span><span class="v" id="r3y">—</span></div>
+    </div>
+    <div class="flags" id="f3"></div>
+  </div>
+
+  <h3>🧭 完整操作流程示範：從負載阻抗找輸入阻抗</h3>
+  <div class="live" id="demoBox"><strong>示範題：</strong>Z₀ = 50 Ω 的無損耗線，接上 Z_L = 25 + j50 Ω，線長 ℓ = 0.125λ。求 Z_in。
+  按下面五個步驟按鈕，畫面會一步一步帶你做。</div>
+  <div class="btnrow">
+    <button class="btn" data-action="demo" data-k="1">步驟 1：正規化</button>
+    <button class="btn" data-action="demo" data-k="2">步驟 2：標點、讀 Γ</button>
+    <button class="btn" data-action="demo" data-k="3">步驟 3：畫等 SWR 圓</button>
+    <button class="btn" data-action="demo" data-k="4">步驟 4：往電源轉 2βd</button>
+    <button class="btn" data-action="demo" data-k="5">步驟 5：讀 z_in、還原 Z_in</button>
+    <button class="btn small" data-action="demo" data-k="0">↺ 重來</button>
+  </div>
+  <div class="whatnow" id="demoText"><strong>👉 目前狀態：</strong>還沒開始。按「步驟 1」。</div>
+
+  <div class="focus">
+    <strong>🎯 該注意哪裡：</strong>
+    <ul class="tight" style="margin-top:6px">
+      <li><strong>圖上永遠是正規化阻抗 z，不是 Z。</strong>畫進去前要除以 Z₀，讀出來後要乘回 Z₀。這是初學最常掉的坑，畫面上「z_L」和「Z_in」兩格特地分開顯示就是要你養成習慣。</li>
+      <li><strong>上半圓 = 電感性（x &gt; 0）、下半圓 = 電容性（x &lt; 0）、中線 = 純電阻。</strong>拖著點上下移動，看 X_L 的正負跟著變號。</li>
+      <li><strong>往電源方向移動 = 順時針轉。</strong>轉的角度是 <strong>2βd</strong>（不是 βd！），所以走 λ/2 就轉滿 720°/2 = 360°，剛好一整圈——這就是「半波長線阻抗不變」在圖上的樣子。</li>
+      <li><strong>|Γ| 在轉動時完全不變</strong>（無損耗線），所以那顆點只會沿著<u>同一個橘色圓</u>跑。SWR 也因此全線相同。</li>
+      <li><strong>與正實軸的交點 = V_max 且 z = S</strong>（等於 SWR 的數值）；<strong>與負實軸的交點 = V_min 且 z = 1/S</strong>。拖到讓橘圓交在 r = 2 的地方，去看 SWR 那格是不是 2。</li>
+      <li>打開「導納點」：<strong>y = 1/z 就是把點繞圓心旋轉 180°</strong>（因為 y = (1−Γ)/(1+Γ)，等價於 Γ → −Γ）。模式④ 的單截線匹配全程都在導納圖上做。</li>
+    </ul>
+  </div>
+
+  <div class="formula-box">
+    <div class="label">史密斯圖的數學骨架（本模擬就是照這幾條式子畫的）</div>
+    Γ = (z − 1)/(z + 1)，z = r + jx　　⇔　　z = (1 + Γ)/(1 − Γ)<br>
+    <strong>等電阻圓</strong> r = 常數：圓心 ( r/(1+r) , 0 )，半徑 1/(1+r)<br>
+    <strong>等電抗圓</strong> x = 常數：圓心 ( 1 , 1/x )，半徑 |1/x|（只取單位圓內的弧）<br>
+    <strong>三個必背特殊點</strong>：z = 0（短路）→ Γ = −1，<u>最左邊</u>；z → ∞（開路）→ Γ = +1，<u>最右邊</u>；z = 1（匹配）→ Γ = 0，<u>正中央</u><br>
+    <strong>沿線移動</strong>：往電源走 d → Γ(d) = Γ_L e<sup>−j2βd</sup>（順時針轉 2βd）；往負載走則是逆時針<br>
+    <strong>與實軸交點</strong>：右交點 z = S = SWR（V_max 處）；左交點 z = 1/S（V_min 處）
+  </div>
+
+  <div class="warn"><strong>⚠️ 三個最容易畫錯的地方</strong><br>
+  ① <strong>忘記除以 Z₀</strong>：Z_L = 100 + j50 Ω 在 Z₀ = 50 的圖上是 z = <u>2 + j1</u>，不是「100 + j50」。史密斯圖上根本沒有「Ω」這個單位。<br>
+  ② <strong>轉的角度用成 βd</strong>：正確是 <strong>2βd</strong>，因為反射波要<u>來回走兩趟</u>。d = λ/8 → 2βd = 90°，不是 45°。<br>
+  ③ <strong>轉錯方向</strong>：往<u>電源</u>（wavelengths toward generator）＝<strong>順時針</strong>；往<u>負載</u>＝逆時針。外圈刻度上有標，別憑感覺。</div>
+
+  <h3>🤔 引導問題</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　把負載拖到單位圓的<u>邊界</u>（|Γ| = 1）上，這代表什麼樣的負載？SWR 是多少？</button>
+    <div class="collapsible-content">
+      <p><strong>代表 r = 0，也就是完全不吃實功率的負載：純電抗、短路、或開路。</strong>單位圓邊界就是 r = 0 那個圓（圓心 (0,0)、半徑 1），你可以在畫面上驗證：拖到邊界時 R_L 那格會變成 0。</p>
+      <p><strong>SWR = ∞。</strong>因為 S = (1+|Γ|)/(1−|Γ|)，|Γ| = 1 時分母為 0。畫面上會顯示 ∞ 並跳出紅色警告標籤。</p>
+      <p><strong>能量觀點：</strong>|Γ|² = 1 表示<u>入射功率 100% 被彈回來</u>，負載一瓦都沒吃到。所以「史密斯圖的外圈」＝「全反射的世界」，越靠近中心反射越少，<strong>圓心就是完美匹配</strong>。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　把 d 滑桿從 0 拉到 0.25λ，那顆藍點轉了幾度？拉到 0.5λ 呢？</button>
+    <div class="collapsible-content">
+      <p><strong>d = 0.25λ → 轉 180°（半圈）；d = 0.5λ → 轉 360°（整整一圈，回到原點）。</strong></p>
+      <p><strong>算給你看：</strong>轉動角 = 2βd = 2·(2π/λ)·d = 4πd/λ。代 d = λ/4 → 4π/4 = π = 180° ✓；代 d = λ/2 → 2π = 360° ✓。</p>
+      <p><strong>兩個立刻能用的結論：</strong></p>
+      <ul class="tight">
+        <li>d = λ/2 → 轉一整圈 → <strong>Z_in = Z_L</strong>（半波長線阻抗不變）。</li>
+        <li>d = λ/4 → 轉半圈 → 點跑到圓心正對面 → <strong>z_in = 1/z_L</strong>，還原後 Z_in = Z₀²/Z_L（四分之一波長轉換器）。</li>
+      </ul>
+      <p><em>動手試：按「例題 z = 0.5 + j1」，再把 d 拉到 0.25λ，看 z_in 那格是不是變成 1/(0.5+j1) = 0.4 − j0.8。</em></p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　同一顆點，如果我把 Z₀ 從 50 Ω 改成 75 Ω，圖上那顆點會跑掉嗎？為什麼？</button>
+    <div class="collapsible-content">
+      <p><strong>會跑掉。</strong>拉 Z₀ 滑桿試試看：R_L、X_L 的歐姆數字沒變，但點的位置移動了，Γ 和 SWR 也跟著變。</p>
+      <p><strong>原因：</strong>圖上畫的是 z = Z_L/Z₀。分母換了，正規化的結果當然換了。例如 Z_L = 100 Ω：在 Z₀ = 50 的圖上是 z = 2（Γ = 1/3、SWR = 2）；在 Z₀ = 100 的圖上是 z = 1（Γ = 0、<strong>完美匹配</strong>）。</p>
+      <p><strong>工程上的意義：</strong>「匹配」不是負載本身的性質，而是<u>負載與那條線的關係</u>。同一支天線接 50 Ω 同軸線可能很匹配，接 75 Ω 有線電視線就不匹配了。<strong>所以每張史密斯圖都必須先講清楚 Z₀ 是多少。</strong></p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="2" data-next="3">✅ 我看懂了，前往「④ 阻抗匹配」→</button>
+</div>
+</div>
+
+<!-- ==================== MODE 3 ==================== -->
+<div class="section" id="sec3">
+<div class="card">
+  <h2>④ 阻抗匹配：四分之一波長轉換器 &amp; 單截線匹配</h2>
+
+  <div class="whatnow" id="m4what">
+    <strong>👀 你現在在看什麼：</strong>兩種常見的匹配手法。
+    <strong>左圖</strong>是設計過程（λ/4 模式畫的是頻率響應；截線模式畫的是史密斯圖上的三步作圖），
+    <strong>右圖</strong>是<u>線上的電壓包絡</u>——匹配成功的話，靠電源那一側的包絡會<strong>被壓平</strong>。用上面的按鈕切換兩種方法。
+  </div>
+
+  <div class="btnrow">
+    <span style="font-size:.85em;color:var(--sub);font-weight:700">方法：</span>
+    <button class="btn on" data-action="mm" data-k="qw">① 四分之一波長轉換器 λ/4</button>
+    <button class="btn" data-action="mm" data-k="stub">② 單截線匹配 single stub</button>
+  </div>
+
+  <div class="sim">
+    <div class="dual">
+      <div>
+        <h4 id="h4a">左圖：|Γ_in| 的頻率響應</h4>
+        <div class="canvas-box"><canvas id="c4a"></canvas></div>
+      </div>
+      <div>
+        <h4 id="h4b">右圖：線上的電壓包絡與電路配置</h4>
+        <div class="canvas-box"><canvas id="c4b"></canvas></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#94a3b8"></i>沒有匹配網路時的包絡</span>
+      <span><i style="background:var(--cEnv)"></i>加上匹配網路後的包絡</span>
+      <span><i style="background:var(--acc)"></i>匹配網路所在區段</span>
+    </div>
+
+    <div class="btnrow" id="qwrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">λ/4 情境：</span>
+      <button class="btn small" data-action="qwp" data-z0="50" data-zl="100">50 Ω → 100 Ω</button>
+      <button class="btn small" data-action="qwp" data-z0="50" data-zl="200">50 Ω → 200 Ω</button>
+      <button class="btn small" data-action="qwp" data-z0="75" data-zl="300">75 Ω → 300 Ω（電視天線）</button>
+      <button class="btn small" data-action="qwp" data-z0="50" data-zl="25">50 Ω → 25 Ω（降阻抗）</button>
+    </div>
+
+    <div class="btnrow" id="stubrow" style="display:none">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">截線設定：</span>
+      <button class="btn small on" data-action="stubtype" data-k="short">短路截線</button>
+      <button class="btn small" data-action="stubtype" data-k="open">開路截線</button>
+      <button class="btn small on" data-action="stubsol" data-k="0">解 1（較近的 d）</button>
+      <button class="btn small" data-action="stubsol" data-k="1">解 2（較遠的 d）</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>特性阻抗 Z₀</span><span class="val" id="v4z0">50 Ω</span></div>
+        <input type="range" id="s4z0" min="10" max="150" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>負載電阻 R_L</span><span class="val" id="v4rl">100.0 Ω</span></div>
+        <input type="range" id="s4rl" min="1" max="600" value="200" step="1">
+      </div>
+      <div class="ctrl" id="ctlXL">
+        <div class="row"><span>負載電抗 X_L（λ/4 模式請設為 0）</span><span class="val" id="v4xl">0.0 Ω</span></div>
+        <input type="range" id="s4xl" min="-600" max="600" value="0" step="1">
+      </div>
+      <div class="ctrl" id="ctlFR">
+        <div class="row"><span>工作頻率比 f / f₀</span><span class="val" id="v4fr">1.00</span></div>
+        <input type="range" id="s4fr" min="40" max="200" value="100" step="1">
+      </div>
+    </div>
+
+    <div class="readout" id="ro4">
+      <div class="stat"><span class="k">負載 Z_L</span><span class="v" id="r4zl">—</span></div>
+      <div class="stat hi"><span class="k" id="k4a">轉換器阻抗 Z₁ = √(Z₀·Z_L)</span><span class="v" id="r4a">—</span></div>
+      <div class="stat"><span class="k" id="k4b">轉換器長度</span><span class="v" id="r4b">—</span></div>
+      <div class="stat"><span class="k">沒有匹配網路：|Γ|</span><span class="v" id="r4g0">—</span></div>
+      <div class="stat"><span class="k">沒有匹配網路：SWR</span><span class="v" id="r4s0">—</span></div>
+      <div class="stat hi"><span class="k">加上匹配網路：|Γ_in|</span><span class="v" id="r4g1">—</span></div>
+      <div class="stat hi"><span class="k">加上匹配網路：SWR</span><span class="v" id="r4s1">—</span></div>
+      <div class="stat"><span class="k" id="k4c">此頻率下的 Z_in</span><span class="v" id="r4c">—</span></div>
+    </div>
+    <div class="flags" id="f4"></div>
+  </div>
+
+  <div class="focus" id="m4focus"></div>
+
+  <div class="formula-box" id="m4form"></div>
+
+  <div class="warn"><strong>⚠️ 四分之一波長轉換器的兩個限制</strong><br>
+  ① <strong>只能匹配純電阻負載</strong>。Z_L 若是複數，√(Z₀Z_L) 會是複數，做不出來——實務上要先用一段線把負載轉到實軸上（也就是先走到 V_max 或 V_min 的位置）再接轉換器。把 X_L 滑桿拉離 0，畫面會跳出警告。<br>
+  ② <strong>只在設計頻率 f₀ 完美</strong>。把 f/f₀ 滑桿拉到 0.5 或 1.5，|Γ_in| 立刻爬起來；拉到 2.0 附近時那段線變成半波長，<u>轉換器完全失效</u>，反射回到原本的值。這叫<strong>窄頻 (narrowband)</strong>，寬頻應用要改用多節轉換器或漸變線。</div>
+
+  <h3>🤔 引導問題</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　為什麼 Z₁ = √(Z₀·Z_L) 這一根「幾何平均」就能把反射消掉？</button>
+    <div class="collapsible-content">
+      <p><strong>推法一（代公式，最快）：</strong>λ/4 線的輸入阻抗是 Z_in = Z₁²/Z_L。要匹配就要 Z_in = Z₀，於是 Z₁²/Z_L = Z₀ → <strong>Z₁ = √(Z₀Z_L)</strong>。</p>
+      <p><strong>推法二（物理，看得見）：</strong>現在有<u>兩個</u>界面各自會反射：</p>
+      <ul class="tight">
+        <li>前界面 Z₀→Z₁：Γ₁ = (Z₁−Z₀)/(Z₁+Z₀)</li>
+        <li>後界面 Z₁→Z_L：Γ₂ = (Z_L−Z₁)/(Z_L+Z₁)</li>
+      </ul>
+      <p>取 Z₁ = √(Z₀Z_L) 時，可以驗算出 <strong>|Γ₁| = |Γ₂|</strong>（畫面上兩格數字會一模一樣）。而第二個反射波必須<u>在 λ/4 的線裡走一個來回</u>，也就是多走 λ/2 → 多出 <strong>e<sup>−j2β(λ/4)</sup> = e<sup>−jπ</sup> = −1</strong> 的相位，剛好<u>反相</u>。</p>
+      <p><strong>兩個大小相同、相位相反的反射波 → 完全相消。</strong>這就是 λ/4 的「4」的來源：只有走四分之一波長，來回才剛好是半個波長、才剛好翻 180°。</p>
+      <p>（嚴格說還有無窮多次來回反射，但把等比級數加總起來，結果仍然精確為零——這一點用公式法 Z_in = Z₁²/Z_L 一行就保證了。）</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　單截線匹配為什麼要「並聯」一段截線？並且為什麼要在導納圖上做？</button>
+    <div class="collapsible-content">
+      <p><strong>並聯的元件，導納直接相加：</strong>Y_total = Y_line + Y_stub。加法比阻抗並聯的 (1/Z₁+1/Z₂)⁻¹ 好算太多，所以整套流程改用<strong>導納 y = 1/z</strong>。</p>
+      <p><strong>三個步驟：</strong></p>
+      <ol class="tight" style="padding-left:22px">
+        <li>從負載往電源走一段距離 <strong>d</strong>，走到<u>正規化導納的實部剛好等於 1</u> 的地方，也就是 y(d) = 1 + jb。（在史密斯圖上：沿等 SWR 圓順時針轉，直到<strong>碰到 g = 1 那個圓</strong>。這個圓一定會被碰到兩次 → <u>兩組解</u>。）</li>
+        <li>剩下的 jb 是多餘的電納，用一段截線產生 <strong>−jb</strong> 把它抵掉。</li>
+        <li>短路截線的導納是 y = −j cot(βℓ_s)，解出長度 ℓ_s；開路截線則是 y = +j tan(βℓ_s)。</li>
+      </ol>
+      <p><strong>結果：</strong>接點左側 y = 1 + jb − jb = 1 → 完全匹配，往電源看過去 SWR = 1（右圖包絡在接點左邊變平）。<u>但接點與負載之間那一段仍然有駐波</u>，這一段本來就消不掉——請在右圖親眼確認這件事。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　把頻率比 f/f₀ 拉到 2.0，λ/4 轉換器發生什麼事？為什麼？</button>
+    <div class="collapsible-content">
+      <p><strong>轉換器完全失效，|Γ_in| 回到「沒有轉換器」時的值。</strong></p>
+      <p><strong>原因：</strong>那段線的<u>實體長度是固定的</u>。頻率加倍 → 波長減半 → 同一段實體長度從 λ₀/4 變成 <strong>λ/2</strong>。而半波長線「阻抗原封不動」，所以看進去就是 Z_L 本人，轉換器等於不存在。</p>
+      <p><strong>這正是「電長度 vs 實體長度」的最佳示範：</strong>電路認得的是 βℓ（電長度），不是幾公分。βℓ = (2π/λ)ℓ，其中 λ 隨頻率變。<u>同一根線在不同頻率下是完全不同的元件。</u></p>
+      <p><em>動手試：慢慢把 f/f₀ 從 1.0 拉到 2.0，看左圖的紅點沿著碗形曲線爬上去，右圖的包絡從平的慢慢長回波浪。</em></p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="3" data-next="4">✅ 我看懂了，前往「⑤ 常見誤解」→</button>
+</div>
+</div>
+
+<!-- ==================== MODE 4：常見誤解 ==================== -->
+<div class="section" id="sec4">
+<div class="card">
+  <h2>⑤ 五個最常見的誤解（考前必看）</h2>
+  <p style="color:var(--sub);font-size:.93em">這五題對應傳輸線學習上最容易出錯的地方。每一條都配了「回去用哪個模式驗證」。</p>
+
+  <div class="myth">
+    <h4>誤解 ①　「相速度 v_p 就是光速 c」</h4>
+    <p><span class="bad">✗ 錯：</span>訊號在同軸線裡也是以 3 × 10⁸ m/s 跑。</p>
+    <p><span class="good">✓ 對：</span><strong>v_p = 1/√(LC) = 1/√(με) = c/√ε_r</strong>（無損耗線）。介質的相對介電常數 ε_r 一定大於 1，所以線上的速度<u>永遠比光速慢</u>。</p>
+    <ul class="tight">
+      <li>常見的 PE 絕緣同軸線 ε_r ≈ 2.25 → v_p ≈ 0.67c，也就是資料手冊上寫的 <strong>velocity factor 0.66</strong>。</li>
+      <li>連帶的後果：<strong>λ = v_p/f 也比自由空間的波長短</strong>。1 GHz 在空氣中 λ = 30 cm，在該同軸線裡只有 <u>20 cm</u>。做 λ/4 截線時如果用 30 cm 去除以 4，長度會錯 1.5 倍，整個匹配網路報廢。</li>
+      <li>只有<strong>空氣介質</strong>（或真空）的 TEM 線才等於 c。這一點值得特別注意。</li>
+    </ul>
+    <p style="font-size:.9em;color:var(--sub)">🔁 回去驗證：模式④ 把 f/f₀ 拉一拉，體會「同一段實體長度、不同頻率＝不同電長度」。</p>
+  </div>
+
+  <div class="myth">
+    <h4>誤解 ②　「史密斯圖上直接標 Z_L 的歐姆數就好」</h4>
+    <p><span class="bad">✗ 錯：</span>Z_L = 100 + j50 Ω，就在圖上找「100」和「50」。</p>
+    <p><span class="good">✓ 對：</span>史密斯圖<strong>只認正規化阻抗 z = Z/Z₀</strong>，圖上沒有歐姆這個單位。Z₀ = 50 Ω 時要標的是 <strong>z = 2 + j1</strong>。讀完答案再<strong>乘回 Z₀</strong> 才是真正的歐姆值。</p>
+    <ul class="tight">
+      <li>口訣：<strong>進圖除以 Z₀，出圖乘以 Z₀。</strong></li>
+      <li>同一顆負載在不同 Z₀ 的圖上位置不同 → 「匹配」講的是<u>負載與線的關係</u>，不是負載自己的性質。</li>
+      <li>導納也一樣要正規化：y = Y/Y₀ = Y·Z₀。</li>
+    </ul>
+    <p style="font-size:.9em;color:var(--sub)">🔁 回去驗證：模式③ 固定 R_L = 100 Ω 不動，只拉 Z₀ 滑桿，看點在圖上跑來跑去。</p>
+  </div>
+
+  <div class="myth">
+    <h4>誤解 ③　「電壓最大的地方，一定就在負載上」／「V_max 和 V_min 的位置隨便記」</h4>
+    <p><span class="bad">✗ 錯：</span>反正負載是「終點」，波打過去疊起來一定最大。</p>
+    <p><span class="good">✓ 對：</span>要看 <strong>Γ 的相角 θ_Γ</strong>：<strong>z′_max = θ_Γ λ/(4π)</strong>。</p>
+    <table>
+      <tr><th>負載</th><th>Γ</th><th>θ_Γ</th><th>負載處 (z′ = 0)</th><th>第一個 V_min</th></tr>
+      <tr><td>R_L &gt; Z₀（純電阻）</td><td>正實數</td><td>0°</td><td><strong>V_max</strong></td><td>λ/4</td></tr>
+      <tr><td>R_L &lt; Z₀（純電阻）</td><td>負實數</td><td>180°</td><td><strong>V_min</strong></td><td>0</td></tr>
+      <tr><td>開路</td><td>+1</td><td>0°</td><td><strong>V_max</strong></td><td>λ/4</td></tr>
+      <tr><td>短路</td><td>−1</td><td>180°</td><td><strong>V_min</strong></td><td>0</td></tr>
+    </table>
+    <p>另外兩個常錯的距離：<strong>相鄰兩個 V_min 相距 λ/2</strong>（不是 λ）；<strong>V_max 到最近的 V_min 相距 λ/4</strong>。
+    還有 <strong>電流的包絡跟電壓錯開 λ/4</strong>：V_max 的地方 I 最小，V_min 的地方 I 最大。</p>
+    <p style="font-size:.9em;color:var(--sub)">🔁 回去驗證：模式① 按「純電阻 100 Ω」再把 R_L 拉到 25 Ω，盯著負載端的包絡翻過來；模式② 比較開路與短路的節點差 λ/4。</p>
+  </div>
+
+  <div class="myth">
+    <h4>誤解 ④　「開路就是 Γ = −1、短路就是 Γ = +1」（邊界條件記反）</h4>
+    <p><span class="bad">✗ 錯：</span>「開路 = 沒有東西 = 負的」這種聯想。</p>
+    <p><span class="good">✓ 對：</span>用<strong>物理邊界條件</strong>推，不要背：</p>
+    <ul class="tight">
+      <li><strong>短路（Z_L = 0）：</strong>兩導體被接在一起，<u>電壓必須是 0</u>。要讓 V⁺ + V⁻ = 0，只能 V⁻ = −V⁺ → <strong>Γ = −1</strong>。（電流反而加倍：I⁺ − I⁻ = 2I⁺。）</li>
+      <li><strong>開路（Z_L = ∞）：</strong>電路被切斷，<u>電流必須是 0</u>。要讓 I⁺ − I⁻ = 0，只能 I⁻ = I⁺，換算成電壓就是 V⁻ = +V⁺ → <strong>Γ = +1</strong>。（電壓反而加倍。）</li>
+      <li>代公式檢查也行：Γ = (Z_L − Z₀)/(Z_L + Z₀)。Z_L = 0 → (−Z₀)/(Z₀) = <strong>−1</strong> ✓；Z_L → ∞ 時分子分母都被 Z_L 主宰 → <strong>+1</strong> ✓。</li>
+    </ul>
+    <p>順帶提醒：<strong>電流反射係數 = −Γ</strong>（電壓反射係數的負值），特別注意「它不等於電壓反射係數」。</p>
+    <p style="font-size:.9em;color:var(--sub)">🔁 回去驗證：模式② 看短路那一列在 z′ = 0 是不是壓成 0；模式③ 按「短路」看點是不是跳到<u>最左邊</u>。</p>
+  </div>
+
+  <div class="myth">
+    <h4>誤解 ⑤　「電長度就是實體長度」／「一根線就是一根線」</h4>
+    <p><span class="bad">✗ 錯：</span>10 公分的線，永遠是 10 公分的線。</p>
+    <p><span class="good">✓ 對：</span>電路看得到的是<strong>電長度 βℓ = (2π/λ)ℓ（單位是弧度或度）</strong>，或等價的 <strong>ℓ/λ（幾個波長）</strong>。同一根線在不同頻率下是<u>完全不同的元件</u>。</p>
+    <ul class="tight">
+      <li>例：ε_r = 2.25 的線上，1 GHz 時 λ = 20 cm，所以 10 cm = <strong>λ/2</strong>（阻抗不變）；2 GHz 時 λ = 10 cm，同一根變成 <strong>1λ</strong>；500 MHz 時變成 <strong>λ/4</strong>（阻抗翻轉）。<u>同一根銅線，三種完全不同的行為。</u></li>
+      <li>反過來的判準：<strong>當 ℓ 遠小於 λ 時（大約 ℓ &lt; λ/20），才可以忽略傳輸線效應</strong>當成普通導線。60 Hz 市電的 λ 有 5000 km，家裡的電線當然不用管；但 5 GHz 的 λ 只有 6 cm，PCB 上 1 公分的走線就已經是傳輸線了。</li>
+      <li>相關公式（tan βℓ、e<sup>−jβz′</sup>、史密斯圖轉 2βd）裡出現的都是<u>電長度</u>，沒有一個是公分。</li>
+    </ul>
+    <p style="font-size:.9em;color:var(--sub)">🔁 回去驗證：模式④ 把 f/f₀ 從 1.0 拉到 2.0，看 λ/4 轉換器怎麼在頻率加倍時變成半波長線而完全失效。</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>🏆 章末自我檢核（第九章 傳輸線）</h2>
+  <p style="color:var(--sub);margin-bottom:12px">點一下打勾，確認自己真的能<strong>講出來</strong>（不是「看過」）：</p>
+  <ul class="checklist" id="checklist">
+    <li data-action="check"><span class="check"></span>我能寫出 Γ = (Z_L − Z₀)/(Z_L + Z₀)，並說明它是<strong>電壓</strong>反射係數、電流反射係數是它的負值</li>
+    <li data-action="check"><span class="check"></span>我能由 |Γ| 算 SWR，也能由 SWR 反算 |Γ| = (S−1)/(S+1)</li>
+    <li data-action="check"><span class="check"></span>我知道 V_max 與 V_min 相距 λ/4、相鄰兩個 V_min 相距 λ/2，且電流包絡與電壓錯開 λ/4</li>
+    <li data-action="check"><span class="check"></span>我能判斷 R_L &gt; Z₀ 時負載處是 V_max、R_L &lt; Z₀ 時是 V_min</li>
+    <li data-action="check"><span class="check"></span>我能用邊界條件推出短路 Γ = −1、開路 Γ = +1，而不是硬背</li>
+    <li data-action="check"><span class="check"></span>我能寫出 Z_in = Z₀(Z_L + jZ₀tan βℓ)/(Z₀ + jZ_L tan βℓ)，並算出開路線、短路線的特例</li>
+    <li data-action="check"><span class="check"></span>我知道半波長線 Z_in = Z_L、四分之一波長線 Z_in = Z₀²/Z_L</li>
+    <li data-action="check"><span class="check"></span>我能說出史密斯圖上短路、開路、匹配三個點分別在最左、最右、正中央</li>
+    <li data-action="check"><span class="check"></span>我知道畫史密斯圖前要除以 Z₀（正規化）、讀完要乘回 Z₀</li>
+    <li data-action="check"><span class="check"></span>我知道往電源方向移動 d 是<strong>順時針轉 2βd</strong>，走 λ/2 剛好轉一整圈</li>
+    <li data-action="check"><span class="check"></span>我能說明等 SWR 圓為什麼在無損耗線上是正圓（|Γ| 不變）</li>
+    <li data-action="check"><span class="check"></span>我能設計四分之一波長轉換器 Z₁ = √(Z₀Z_L)，並說出它的兩個限制（只能純電阻、只在單一頻率）</li>
+    <li data-action="check"><span class="check"></span>我能講出單截線匹配的三個步驟，並解釋為什麼要在導納圖上做</li>
+    <li data-action="check"><span class="check"></span>我知道相速度 v_p = c/√ε_r 比光速慢，波長也跟著縮短</li>
+    <li data-action="check"><span class="check"></span>我知道電長度 βℓ 才是電路認得的長度，同一根線在不同頻率是不同元件</li>
+  </ul>
+</div>
+</div>
+
+<div class="foot">
+  第九章 傳輸線 Transmission Lines<br>
+  單一 HTML 檔・無外部連線・可離線使用 ｜ 駐波動畫與史密斯圖皆以原生 Canvas 2D 依公式自行繪製
+</div>
+
+</div><!-- /container -->
+
+<script>
+(function(){
+'use strict';
+
+/* ============ 常數與小工具 ============ */
+var TAU=Math.PI*2, R2D=180/Math.PI;
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function lerpLog(t,a,b){return a*Math.pow(b/a,t);}
+function $(id){return document.getElementById(id);}
+function setTxt(id,t){var e=$(id); if(e)e.textContent=t;}
+
+/* 複數（沿用 Ch08 同一套寫法） */
+function cx(re,im){return {r:re,i:im};}
+function cAdd(a,b){return cx(a.r+b.r,a.i+b.i);}
+function cSub(a,b){return cx(a.r-b.r,a.i-b.i);}
+function cMul(a,b){return cx(a.r*b.r-a.i*b.i, a.r*b.i+a.i*b.r);}
+function cDiv(a,b){var d=b.r*b.r+b.i*b.i; if(d===0)d=1e-30; return cx((a.r*b.r+a.i*b.i)/d,(a.i*b.r-a.r*b.i)/d);}
+function cScale(a,s){return cx(a.r*s,a.i*s);}
+function cAbs(a){return Math.hypot(a.r,a.i);}
+function cArg(a){return Math.atan2(a.i,a.r);}
+function cExpj(th){return cx(Math.cos(th),Math.sin(th));}
+var ONE=cx(1,0);
+
+/* 顯示格式 */
+/* 四捨五入後若是 −0.0 就把負號拿掉，避免畫面出現「-0.0 Ω」 */
+function fx(v,d){ var s=v.toFixed(d); return /^-0(\.0*)?$/.test(s)?s.slice(1):s; }
+function fmtOhm(c,d){
+  if(!c)return '→ ∞';
+  if(!isFinite(c.r)||!isFinite(c.i))return '→ ∞';
+  d=(d===undefined)?1:d;
+  var s=(c.i<0)?' − j':' + j';
+  return fx(c.r,d)+s+Math.abs(c.i).toFixed(d)+' Ω';
+}
+function fmtZn(c,d){
+  if(!c)return '→ ∞';
+  if(!isFinite(c.r)||!isFinite(c.i))return '→ ∞';
+  d=(d===undefined)?3:d;
+  var s=(c.i<0)?' − j':' + j';
+  return fx(c.r,d)+s+Math.abs(c.i).toFixed(d);
+}
+function fmtG(c,d){
+  if(!c)return '—';
+  d=(d===undefined)?3:d;
+  return cAbs(c).toFixed(d)+' ∠'+(cArg(c)*R2D).toFixed(1)+'°';
+}
+function setFlags(id,list){
+  var e=$(id); if(!e)return;
+  var h='',i;
+  for(i=0;i<list.length;i++){ h+='<span class="flag '+list[i].c+'">'+list[i].t+'</span>'; }
+  e.innerHTML=h;
+}
+
+/* ============ 傳輸線核心（無損耗線）============ */
+/* Γ_L = (Z_L − Z0)/(Z_L + Z0)；開路以 isOpen 旗標處理，避免 ∞/∞ */
+function gammaLoad(Z0,ZL,isOpen){
+  if(isOpen)return cx(1,0);
+  var den=cAdd(ZL,cx(Z0,0));
+  if(cAbs(den)<1e-12)return cx(-1,0);
+  return cDiv(cSub(ZL,cx(Z0,0)),den);
+}
+function swrOf(G){ var m=cAbs(G); if(m>=1-1e-9)return Infinity; return (1+m)/(1-m); }
+/* 往電源方向走 d（單位：波長）→ Γ(d) = Γ_L e^{−j2βd}，2βd = 4πd/λ */
+function rotG(G,dlam){ return cMul(G,cExpj(-4*Math.PI*dlam)); }
+/* z = (1+Γ)/(1−Γ)；Γ→1 時回傳 null 代表 ∞ */
+function zFromG(G){ var d=cSub(ONE,G); if(cAbs(d)<2e-4)return null; return cDiv(cAdd(ONE,G),d); }
+function gFromZ(z){ var d=cAdd(z,ONE); if(cAbs(d)<1e-12)return cx(-1,0); return cDiv(cSub(z,ONE),d); }
+/* Z_in(d) = Z0(1+Γ(d))/(1−Γ(d))，與 Z0(Z_L+jZ0 tanβd)/(Z0+jZ_L tanβd) 等價（已用 python 交叉驗證） */
+function ZinAt(Z0,G,dlam){ var z=zFromG(rotG(G,dlam)); return z?cScale(z,Z0):null; }
+/* 包絡：|V(z′)|/|V0⁺| = |1 + Γe^{−j2βz′}|；電流則是 |1 − Γe^{−j2βz′}| */
+function envV(G,zp){ return cAbs(cAdd(ONE,cMul(G,cExpj(-4*Math.PI*zp)))); }
+function envI(G,zp){ return cAbs(cSub(ONE,cMul(G,cExpj(-4*Math.PI*zp)))); }
+/* z′_max = (θ_Γ + 2nπ)λ/(4π)，取落在 [0, 0.5λ) 的第一個 */
+function firstMax(G){ var z=cArg(G)/(4*Math.PI); while(z<-1e-12)z+=0.5; while(z>=0.5-1e-12)z-=0.5; return z<0?0:z; }
+function firstMin(G){ var z=firstMax(G)+0.25; while(z>=0.5-1e-12)z-=0.5; return z; }
+
+/* ============ Canvas 尺寸與繪圖工具 ============ */
+function fit(cv,aspect,minH,maxH){
+  var host=cv.parentElement;
+  if(host.clientWidth<40&&cv._w)return cv._ctx;   /* 分頁隱藏時不重設，否則會被鎖在最小寬度 */
+  var w=Math.max(240,Math.floor(host.clientWidth));
+  var h=Math.round(w/aspect);
+  if(minH&&h<minH)h=minH;
+  if(maxH&&h>maxH)h=maxH;
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.style.height=h+'px';
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  cv._w=w; cv._h=h; cv._ctx=ctx;
+  return ctx;
+}
+function bg(ctx,W,H){ ctx.clearRect(0,0,W,H); ctx.fillStyle='#fdfdff'; ctx.fillRect(0,0,W,H); }
+function cfont(ctx,W,px,bold){
+  var k=clamp(W/700,0.78,1);
+  ctx.font=(bold?'bold ':'')+Math.max(8,Math.round(px*k))+'px "Segoe UI",sans-serif';
+}
+function lineSeg(ctx,x1,y1,x2,y2,color,w,dash){
+  ctx.save(); if(dash)ctx.setLineDash(dash);
+  ctx.strokeStyle=color; ctx.lineWidth=w||1; ctx.lineCap='butt';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore();
+}
+function drawArrow(ctx,x1,y1,x2,y2,color,w,head){
+  var dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+  ctx.strokeStyle=color; ctx.lineWidth=w||2; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  if(L<3)return;
+  var ux=dx/L,uy=dy/L,h=Math.min(head||8,L*0.5);
+  ctx.fillStyle=color; ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-ux*h-uy*h*0.42, y2-uy*h+ux*h*0.42);
+  ctx.lineTo(x2-ux*h+uy*h*0.42, y2-uy*h-ux*h*0.42);
+  ctx.closePath(); ctx.fill();
+}
+function lab(ctx,t,x,y,color,align,baseline){
+  ctx.fillStyle=color; ctx.textAlign=align||'left'; ctx.textBaseline=baseline||'middle';
+  ctx.fillText(t,x,y);
+}
+
+/* ============ 動畫排程（單一 RAF，頁面隱藏時暫停）============ */
+var MODES=[], active=0, last=0;
+function tick(ts){
+  requestAnimationFrame(tick);
+  if(document.hidden){last=ts;return;}
+  if(!last)last=ts;
+  var dt=Math.min(0.06,(ts-last)/1000); last=ts;
+  var m=MODES[active];
+  if(!m)return;
+  if(m.playing){ m.t+=dt*m.speed; m.dirty=true; }
+  if(m.dirty){ m.dirty=false; m.draw(); }
+}
+
+/* ==========================================================
+   模式 ①：傳輸線上的電壓駐波
+   ========================================================== */
+var M1={
+  t:0, playing:true, speed:1, dirty:true,
+  Z0:50, RL:100, XL:0, len:0.75, pf:0, isOpen:false,
+  view:'anim',
+  showInc:true, showRef:true, showTot:true, showEnv:true, showCur:false,
+  cv:null
+};
+M1.calc=function(){
+  this.ZL=cx(this.RL,this.XL);
+  this.G=gammaLoad(this.Z0,this.ZL,this.isOpen);
+  this.mg=cAbs(this.G);
+  this.S=swrOf(this.G);
+  this.p=this.len*this.pf;
+};
+M1.draw=function(){
+  var cv=this.cv; if(!cv||!cv._ctx)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H); this.calc();
+  var G=this.G, mg=this.mg, L=this.len;
+  var padL=46,padR=16, xL=padL, xR=W-padR;
+  var schTop=6, schH=30, axisH=32;
+  var yTop=schTop+schH+12;
+  var avail=H-yTop-axisH;
+  var hV=this.showCur?avail*0.60:avail;
+  var hI=this.showCur?avail*0.34:0;
+  var ycV=yTop+hV/2, hhV=hV/2-8;
+  var ycI=yTop+hV+(this.showCur?(avail-hV)*0.5+2:0), hhI=hI/2-6;
+  var vmax=Math.max(1+mg,1.05), sV=hhV/vmax;
+  var sI=hhI/Math.max(1+mg,1.05);
+  function X(zp){ return xR-(zp/L)*(xR-xL); }
+  var i,zp,x,v,k,n;
+
+  /* ---------- 電路示意 ---------- */
+  var yA=schTop+9, yB=schTop+23;
+  ctx.strokeStyle='#94a3b8'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(xL+10,yA); ctx.lineTo(xR-4,yA); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xL+10,yB); ctx.lineTo(xR-4,yB); ctx.stroke();
+  ctx.beginPath(); ctx.arc(xL+2,(yA+yB)/2,9,0,TAU); ctx.fillStyle='#fff'; ctx.fill(); ctx.stroke();
+  cfont(ctx,W,11,true); lab(ctx,'~',xL+2,(yA+yB)/2+1,'#475569','center');
+  ctx.fillStyle=this.isOpen?'#fff':(mg<1e-6?'#dcfce7':'#fee2e2');
+  ctx.strokeStyle=this.isOpen?'#94a3b8':(mg<1e-6?'#16a34a':'#dc2626'); ctx.lineWidth=2;
+  if(this.isOpen){
+    ctx.beginPath(); ctx.arc(xR-4,yA,3,0,TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(xR-4,yB,3,0,TAU); ctx.stroke();
+  }else{
+    ctx.beginPath(); ctx.rect(xR-16,yA-1,14,yB-yA+2); ctx.fill(); ctx.stroke();
+  }
+  cfont(ctx,W,10,true);
+  lab(ctx,'電源端',xL+14,schTop+1,'#64748b','left','top');
+  lab(ctx,this.isOpen?'Z_L = ∞（開路）':'Z_L',xR-20,schTop+1,'#be123c','right','top');
+  cfont(ctx,W,10);
+  lab(ctx,'z′ 從負載往電源量（左邊是電源）',xL+14,yB+3,'#94a3b8','left','top');
+
+  /* ---------- 格線 ---------- */
+  for(k=0;k*0.125<=L+1e-9;k++){
+    zp=k*0.125; x=X(zp);
+    var major=(Math.abs(zp/0.25-Math.round(zp/0.25))<1e-9);
+    lineSeg(ctx,x,yTop-4,x,yTop+avail,major?'rgba(148,163,184,.45)':'rgba(203,213,225,.35)',1,major?null:[2,3]);
+  }
+  lineSeg(ctx,xL,ycV,xR,ycV,'#cbd5e1',1.2);
+  lineSeg(ctx,xL,ycV-sV,xR,ycV-sV,'rgba(148,163,184,.35)',1,[3,4]);
+  lineSeg(ctx,xL,ycV+sV,xR,ycV+sV,'rgba(148,163,184,.35)',1,[3,4]);
+  cfont(ctx,W,9);
+  lab(ctx,'0',xL-5,ycV,'#94a3b8','right');
+  lab(ctx,'+|V⁺|',xL-5,ycV-sV,'#94a3b8','right');
+  lab(ctx,'−|V⁺|',xL-5,ycV+sV,'#94a3b8','right');
+
+  var N=Math.max(160,Math.min(700,Math.round(W*1.2)));
+
+  /* ---------- 包絡 ---------- */
+  if(this.showEnv){
+    ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envV(G,zp); if(i===0)ctx.moveTo(x,ycV-v*sV); else ctx.lineTo(x,ycV-v*sV); }
+    for(i=N;i>=0;i--){ zp=L*i/N; x=X(zp); v=envV(G,zp); ctx.lineTo(x,ycV+v*sV); }
+    ctx.closePath(); ctx.fillStyle='rgba(15,118,110,.10)'; ctx.fill();
+    ctx.strokeStyle='#0f766e'; ctx.lineWidth=2.4; ctx.lineJoin='round';
+    ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envV(G,zp); if(i===0)ctx.moveTo(x,ycV-v*sV); else ctx.lineTo(x,ycV-v*sV); }
+    ctx.stroke();
+    ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envV(G,zp); if(i===0)ctx.moveTo(x,ycV+v*sV); else ctx.lineTo(x,ycV+v*sV); }
+    ctx.stroke();
+  }
+
+  /* ---------- 瞬時波形 ---------- */
+  var ph=this.t*TAU, thG=cArg(G), q;
+  if(this.view==='anim'){
+    if(this.showInc){
+      ctx.save(); ctx.setLineDash([6,4]);
+      ctx.strokeStyle='rgba(245,158,11,.95)'; ctx.lineWidth=1.8; ctx.beginPath();
+      for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=Math.cos(ph+TAU*zp); if(i===0)ctx.moveTo(x,ycV-v*sV); else ctx.lineTo(x,ycV-v*sV); }
+      ctx.stroke(); ctx.restore();
+    }
+    if(this.showRef&&mg>1e-6){
+      ctx.save(); ctx.setLineDash([3,4]);
+      ctx.strokeStyle='rgba(124,58,237,.95)'; ctx.lineWidth=1.8; ctx.beginPath();
+      for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=mg*Math.cos(ph-TAU*zp+thG); if(i===0)ctx.moveTo(x,ycV-v*sV); else ctx.lineTo(x,ycV-v*sV); }
+      ctx.stroke(); ctx.restore();
+    }
+    if(this.showTot){
+      ctx.strokeStyle='#dc2626'; ctx.lineWidth=2.8; ctx.lineJoin='round'; ctx.beginPath();
+      for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=Math.cos(ph+TAU*zp)+mg*Math.cos(ph-TAU*zp+thG);
+        if(i===0)ctx.moveTo(x,ycV-v*sV); else ctx.lineTo(x,ycV-v*sV); }
+      ctx.stroke();
+    }
+  }else{
+    /* 只看包絡：疊上幾個時刻的殘影，讓學生看見「包絡是所有瞬時波形的外框」 */
+    for(q=0;q<9;q++){
+      var pq=TAU*q/9;
+      ctx.strokeStyle='rgba(220,38,38,.16)'; ctx.lineWidth=1.2; ctx.beginPath();
+      for(i=0;i<=N;i+=2){ zp=L*i/N; x=X(zp); v=Math.cos(pq+TAU*zp)+mg*Math.cos(pq-TAU*zp+thG);
+        if(i===0)ctx.moveTo(x,ycV-v*sV); else ctx.lineTo(x,ycV-v*sV); }
+      ctx.stroke();
+    }
+  }
+
+  /* ---------- V_max / V_min 標記 ---------- */
+  if(mg>1e-4){
+    var z0max=firstMax(G), z0min=firstMin(G);
+    cfont(ctx,W,9,true);
+    for(n=0;;n++){ zp=z0max+0.5*n; if(zp>L+1e-9)break;
+      x=X(zp); lineSeg(ctx,x,ycV-vmax*sV-4,x,ycV+vmax*sV+4,'rgba(245,158,11,.75)',1.4,[4,3]);
+      ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.moveTo(x,yTop-2); ctx.lineTo(x-4,yTop-9); ctx.lineTo(x+4,yTop-9); ctx.closePath(); ctx.fill();
+      if(n===0)lab(ctx,'V_max',x+5,yTop-6,'#b45309','left');
+    }
+    for(n=0;;n++){ zp=z0min+0.5*n; if(zp>L+1e-9)break;
+      x=X(zp); lineSeg(ctx,x,ycV-vmax*sV-4,x,ycV+vmax*sV+4,'rgba(37,99,235,.6)',1.4,[2,4]);
+      ctx.fillStyle='#2563eb'; ctx.beginPath(); ctx.moveTo(x,yTop-2); ctx.lineTo(x-4,yTop-9); ctx.lineTo(x+4,yTop-9); ctx.closePath(); ctx.fill();
+      if(n===0)lab(ctx,'V_min',x+5,yTop-6,'#1d4ed8','left');
+    }
+  }
+
+  /* ---------- 電流包絡 ---------- */
+  if(this.showCur){
+    lineSeg(ctx,xL,ycI,xR,ycI,'#cbd5e1',1.2);
+    ctx.strokeStyle='#2563eb'; ctx.lineWidth=2.2; ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envI(G,zp); if(i===0)ctx.moveTo(x,ycI-v*sI); else ctx.lineTo(x,ycI-v*sI); }
+    ctx.stroke();
+    ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envI(G,zp); if(i===0)ctx.moveTo(x,ycI+v*sI); else ctx.lineTo(x,ycI+v*sI); }
+    ctx.stroke();
+    if(this.view==='anim'){
+      ctx.strokeStyle='rgba(37,99,235,.45)'; ctx.lineWidth=1.4; ctx.beginPath();
+      for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=Math.cos(ph+TAU*zp)-mg*Math.cos(ph-TAU*zp+thG);
+        if(i===0)ctx.moveTo(x,ycI-v*sI); else ctx.lineTo(x,ycI-v*sI); }
+      ctx.stroke();
+    }
+    cfont(ctx,W,9,true);
+    lab(ctx,'Z₀·|I(z′)| 電流包絡（與電壓錯開 λ/4）',xL+4,ycI-hhI-2,'#1d4ed8','left','top');
+  }
+
+  /* ---------- 測量探針 ---------- */
+  var pz=this.p, pxx=X(pz), pv=envV(G,pz);
+  lineSeg(ctx,pxx,yTop-10,pxx,yTop+avail,'rgba(15,23,42,.55)',1.6);
+  ctx.fillStyle='#0f172a';
+  ctx.beginPath(); ctx.arc(pxx,ycV-pv*sV,4.5,0,TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(pxx,ycV+pv*sV,4.5,0,TAU); ctx.fill();
+  var tx=pxx+7, al='left';
+  if(tx>W-100){tx=pxx-7; al='right';}
+  cfont(ctx,W,10,true);
+  ctx.fillStyle='#0f172a'; ctx.textAlign=al; ctx.textBaseline='top';
+  ctx.fillText('探針 z′='+pz.toFixed(3)+'λ',tx,yTop+2);
+  ctx.fillText('|V|/|V⁺|='+pv.toFixed(3),tx,yTop+15);
+
+  /* ---------- 底部座標軸 ---------- */
+  var yAx=yTop+avail+4;
+  lineSeg(ctx,xL,yAx,xR,yAx,'#94a3b8',1.5);
+  cfont(ctx,W,9);
+  for(k=0;k*0.25<=L+1e-9;k++){
+    zp=k*0.25; x=X(zp);
+    lineSeg(ctx,x,yAx,x,yAx+4,'#94a3b8',1.2);
+    if(W<430&&k%2===1)continue;
+    lab(ctx,zp.toFixed(2)+'λ',x,yAx+6,'#64748b','center','top');
+  }
+  cfont(ctx,W,10,true);
+  lab(ctx,'負載 z′=0',xR,yAx+18,'#be123c','right','top');
+  lab(ctx,'← 往電源',xL,yAx+18,'#64748b','left','top');
+
+  /* ---------- 讀數 ---------- */
+  setTxt('r1zl',this.isOpen?'∞（開路）':fmtOhm(this.ZL,1));
+  setTxt('r1G',fmtG(G,3));
+  setTxt('r1swr',isFinite(this.S)?this.S.toFixed(3):'∞');
+  setTxt('r1P',(mg*mg).toFixed(4)+'（'+(mg*mg*100).toFixed(1)+'%）');
+  if(mg>1e-4){
+    setTxt('r1zmax',firstMax(G).toFixed(4)+' λ');
+    setTxt('r1zmin',firstMin(G).toFixed(4)+' λ');
+  }else{ setTxt('r1zmax','無（包絡是平的）'); setTxt('r1zmin','無（包絡是平的）'); }
+  setTxt('r1pv',pv.toFixed(4));
+  setTxt('r1pz',fmtOhm(ZinAt(this.Z0,G,pz),1));
+  setTxt('r1zin',fmtOhm(ZinAt(this.Z0,G,L),1));
+  setTxt('r1bl',(360*L).toFixed(1)+'°');
+
+  var fl=[];
+  if(mg<1e-6)fl.push({c:'g',t:'✅ 完全匹配：沒有反射波、SWR = 1'});
+  else if(mg>0.999)fl.push({c:'r',t:'⚠️ 全反射 |Γ| = 1：負載一瓦都沒吃到，SWR → ∞'});
+  else fl.push({c:'y',t:'部分反射：'+(mg*mg*100).toFixed(1)+'% 的功率被彈回電源'});
+  if(!this.isOpen&&Math.abs(this.XL)<1e-9&&this.RL>this.Z0+1e-9)fl.push({c:'b',t:'R_L > Z₀ → 負載處是 V_max（θ_Γ = 0°）'});
+  if(!this.isOpen&&Math.abs(this.XL)<1e-9&&this.RL<this.Z0-1e-9&&this.RL>0)fl.push({c:'b',t:'R_L < Z₀ → 負載處是 V_min（θ_Γ = 180°）'});
+  if(this.XL>1e-9&&!this.isOpen)fl.push({c:'p',t:'電感性負載 inductive（X_L > 0）'});
+  if(this.XL<-1e-9&&!this.isOpen)fl.push({c:'p',t:'電容性負載 capacitive（X_L < 0）'});
+  if(Math.abs(L*2-Math.round(L*2))<0.006)fl.push({c:'g',t:'ℓ ≈ nλ/2 → Z_in = Z_L（半波長線）'});
+  else if(Math.abs(L*4-Math.round(L*4))<0.006&&Math.round(L*4)%2===1)fl.push({c:'g',t:'ℓ ≈ (2n+1)λ/4 → Z_in = Z₀²/Z_L（四分之一波長線）'});
+  setFlags('f1',fl);
+};
+
+/* ==========================================================
+   模式 ②：開路／短路／匹配／純電抗 四格比較
+   ========================================================== */
+var M2={
+  t:0, playing:true, speed:1, dirty:true,
+  Z0:50, len:1.0, pf:0.25, focus:0,
+  showInst:true, showRuler:true, cv:null
+};
+M2.cases=function(){
+  return [
+    {n:'開路 Z_L = ∞',    G:cx(1,0),  desc:'負載端電流被切斷（I = 0），電壓在那裡疊到最大'},
+    {n:'短路 Z_L = 0',    G:cx(-1,0), desc:'負載端被接死（V = 0），電壓在那裡永遠是零'},
+    {n:'匹配 Z_L = Z₀',   G:cx(0,0),  desc:'能量全被負載吃掉，一點反射都沒有'},
+    {n:'純電抗 Z_L = jZ₀', G:gammaLoad(this.Z0,cx(0,this.Z0),false), desc:'|Γ| = 1 但 θ_Γ = 90°，節點被平移 λ/8'}
+  ];
+};
+M2.draw=function(){
+  var cv=this.cv; if(!cv||!cv._ctx)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H);
+  var CS=this.cases(), L=this.len;
+  var padL=58,padR=14, xL=padL, xR=W-padR;
+  var top=8, axisH=42, rulerH=this.showRuler?26:0;
+  var totalH=H-top-axisH-rulerH;
+  var hp=totalH/4;
+  function X(zp){ return xR-(zp/L)*(xR-xL); }
+  var N=Math.max(140,Math.min(560,Math.round(W)));
+  var ph=this.t*TAU, i,zp,x,v,c,idx,kk,n2;
+  var p=L*this.pf;
+
+  for(idx=0;idx<4;idx++){
+    c=CS[idx];
+    var y0=top+idx*hp, yc=y0+hp/2, hh=hp/2-9;
+    var mg=cAbs(c.G), th=cArg(c.G);
+    var sc=hh/2.05;
+    var isF=(idx===this.focus);
+    ctx.fillStyle=isF?'rgba(37,99,235,.06)':'rgba(241,245,249,.5)';
+    ctx.fillRect(xL-2,y0+2,xR-xL+4,hp-4);
+    if(isF){ ctx.strokeStyle='rgba(37,99,235,.55)'; ctx.lineWidth=1.6; ctx.strokeRect(xL-2,y0+2,xR-xL+4,hp-4); }
+    for(kk=0;kk*0.25<=L+1e-9;kk++){ x=X(kk*0.25); lineSeg(ctx,x,y0+3,x,y0+hp-3,'rgba(203,213,225,.6)',1,[2,3]); }
+    lineSeg(ctx,xL,yc,xR,yc,'#cbd5e1',1);
+    /* 包絡 */
+    ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envV(c.G,zp); if(i===0)ctx.moveTo(x,yc-v*sc); else ctx.lineTo(x,yc-v*sc); }
+    for(i=N;i>=0;i--){ zp=L*i/N; x=X(zp); v=envV(c.G,zp); ctx.lineTo(x,yc+v*sc); }
+    ctx.closePath(); ctx.fillStyle=isF?'rgba(15,118,110,.14)':'rgba(15,118,110,.07)'; ctx.fill();
+    ctx.strokeStyle=isF?'#0f766e':'rgba(15,118,110,.5)'; ctx.lineWidth=isF?2.4:1.6;
+    ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envV(c.G,zp); if(i===0)ctx.moveTo(x,yc-v*sc); else ctx.lineTo(x,yc-v*sc); }
+    ctx.stroke();
+    ctx.beginPath();
+    for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=envV(c.G,zp); if(i===0)ctx.moveTo(x,yc+v*sc); else ctx.lineTo(x,yc+v*sc); }
+    ctx.stroke();
+    /* 瞬時 */
+    if(this.showInst){
+      ctx.strokeStyle=isF?'rgba(220,38,38,.95)':'rgba(220,38,38,.42)'; ctx.lineWidth=isF?2.2:1.4;
+      ctx.beginPath();
+      for(i=0;i<=N;i++){ zp=L*i/N; x=X(zp); v=Math.cos(ph+TAU*zp)+mg*Math.cos(ph-TAU*zp+th);
+        if(i===0)ctx.moveTo(x,yc-v*sc); else ctx.lineTo(x,yc-v*sc); }
+      ctx.stroke();
+    }
+    /* 腹點 / 節點 */
+    if(mg>1e-4){
+      var zmx=firstMax(c.G), zmn=firstMin(c.G);
+      for(n2=0;;n2++){ zp=zmx+0.5*n2; if(zp>L+1e-9)break; x=X(zp);
+        ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.arc(x,yc-(1+mg)*sc,3.4,0,TAU); ctx.fill(); }
+      for(n2=0;;n2++){ zp=zmn+0.5*n2; if(zp>L+1e-9)break; x=X(zp);
+        ctx.fillStyle='#2563eb'; ctx.beginPath(); ctx.arc(x,yc-(1-mg)*sc,3.6,0,TAU); ctx.fill(); }
+    }
+    cfont(ctx,W,10,true);
+    lab(ctx,c.n,4,yc-8,isF?'#0f172a':'#64748b','left');
+    cfont(ctx,W,9);
+    lab(ctx,'Γ = '+(Math.abs(c.G.i)<1e-9?c.G.r.toFixed(0):fmtG(c.G,2)),4,yc+5,isF?'#334155':'#94a3b8','left');
+    lab(ctx,'SWR = '+(isFinite(swrOf(c.G))?swrOf(c.G).toFixed(0):'∞'),4,yc+17,isF?'#334155':'#94a3b8','left');
+  }
+
+  /* λ/4 對照尺：開路的第一個節點 (0.25λ) vs 短路的第一個節點 (0) */
+  if(this.showRuler){
+    var yR=top+totalH+6;
+    var xo=X(0.25), xs=X(0);
+    lineSeg(ctx,xo,top+hp/2,xo,yR,'rgba(37,99,235,.45)',1.2,[3,3]);
+    lineSeg(ctx,xs,top+hp+hp/2,xs,yR,'rgba(37,99,235,.45)',1.2,[3,3]);
+    drawArrow(ctx,xo,yR,xs,yR,'#2563eb',1.6,7);
+    drawArrow(ctx,xs,yR,xo,yR,'#2563eb',1.6,7);
+    cfont(ctx,W,10,true);
+    ctx.fillStyle='#fff'; ctx.fillRect((xo+xs)/2-32,yR-8,64,15);
+    lab(ctx,'節點差 λ/4',(xo+xs)/2,yR,'#1d4ed8','center');
+  }
+
+  var pxx=X(p);
+  lineSeg(ctx,pxx,top,pxx,top+totalH,'rgba(15,23,42,.5)',1.6);
+
+  var yAx=H-axisH+8;
+  lineSeg(ctx,xL,yAx,xR,yAx,'#94a3b8',1.5);
+  cfont(ctx,W,9);
+  for(kk=0;kk*0.25<=L+1e-9;kk++){
+    zp=kk*0.25; x=X(zp); lineSeg(ctx,x,yAx,x,yAx+4,'#94a3b8',1.2);
+    if(W<430&&kk%2===1)continue;
+    lab(ctx,zp.toFixed(2)+'λ',x,yAx+6,'#64748b','center','top');
+  }
+  cfont(ctx,W,10,true);
+  lab(ctx,'負載 z′=0',xR,yAx+18,'#be123c','right','top');
+  lab(ctx,'← 往電源',xL,yAx+18,'#64748b','left','top');
+
+  /* 讀數 */
+  var f=CS[this.focus];
+  setTxt('r2case',f.n);
+  setTxt('r2G',Math.abs(f.G.i)<1e-9?f.G.r.toFixed(0):fmtG(f.G,3));
+  setTxt('r2swr',isFinite(swrOf(f.G))?swrOf(f.G).toFixed(2):'∞');
+  if(cAbs(f.G)<1e-6)setTxt('r2at0','都不是（包絡是平的）');
+  else if(firstMax(f.G)<1e-6)setTxt('r2at0','V_max（腹點 antinode）');
+  else if(firstMin(f.G)<1e-6)setTxt('r2at0','V_min（節點 node）');
+  else setTxt('r2at0','都不是（V_max 在 '+firstMax(f.G).toFixed(3)+'λ）');
+  setTxt('r2zmin',cAbs(f.G)<1e-6?'無':firstMin(f.G).toFixed(4)+' λ');
+  setTxt('r2pz',fmtOhm(ZinAt(this.Z0,f.G,p),1));
+
+  var fl=[];
+  if(this.focus===0)fl.push({c:'p',t:'開路：Γ = +1、θ_Γ = 0°，第一個節點在 λ/4'});
+  if(this.focus===1)fl.push({c:'r',t:'短路：Γ = −1、θ_Γ = 180°，第一個節點就在負載上'});
+  if(this.focus===2)fl.push({c:'g',t:'匹配：Γ = 0、SWR = 1，全線任一點看進去都是 Z₀'});
+  if(this.focus===3)fl.push({c:'b',t:'純電抗：|Γ| = 1（跟開路短路一樣），但 θ_Γ = 90° → 節點平移 λ/8'});
+  fl.push({c:'y',t:'參考線 z′ = '+p.toFixed(3)+'λ　電長度 βz′ = '+(360*p).toFixed(1)+'°'});
+  setFlags('f2',fl);
+  var wt=$('m2what');
+  if(wt)wt.innerHTML='<strong>👀 你現在在看什麼：</strong>目前主角是 <strong>'+f.n+'</strong>——'+f.desc+
+    '。四條線用的是<u>同樣的入射波、同樣的 Z₀</u>，只換終端。'+
+    '注意<strong>開路與短路的包絡形狀完全一樣，只是整個平移了 λ/4</strong>，而匹配那條根本沒有駐波。';
+};
+
+/* ==========================================================
+   史密斯圖繪製（模式 ③、④ 共用）
+   等電阻圓：圓心 (r/(1+r), 0)、半徑 1/(1+r)
+   等電抗圓：圓心 (1, 1/x)、半徑 |1/x|
+   ========================================================== */
+var R_MAIN=[0.2,0.5,1,2,5], R_FINE=[0.1,0.3,0.4,0.6,0.8,1.5,3,4,10,20];
+var X_MAIN=[0.2,0.5,1,2,5],  X_FINE=[0.1,0.3,0.4,0.6,0.8,1.5,3,4,10,20];
+function smithGrid(ctx,cx0,cy0,R,W,opt){
+  opt=opt||{};
+  var i;
+  function rCircle(r,color,lw){
+    var c=r/(1+r), rad=1/(1+r);
+    ctx.strokeStyle=color; ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.arc(cx0+R*c,cy0,R*rad,0,TAU); ctx.stroke();
+  }
+  function xCircle(xv,color,lw){
+    var cyv=1/xv, rad=Math.abs(1/xv);
+    ctx.strokeStyle=color; ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.arc(cx0+R,cy0-R*cyv,R*rad,0,TAU); ctx.stroke();
+  }
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx0,cy0,R,0,TAU); ctx.closePath();
+  ctx.fillStyle='#ffffff'; ctx.fill();
+  ctx.clip();
+  if(opt.fine){
+    for(i=0;i<R_FINE.length;i++)rCircle(R_FINE[i],'rgba(15,118,110,.20)',0.8);
+    for(i=0;i<X_FINE.length;i++){ xCircle(X_FINE[i],'rgba(190,18,60,.18)',0.8); xCircle(-X_FINE[i],'rgba(190,18,60,.18)',0.8); }
+  }
+  for(i=0;i<R_MAIN.length;i++)rCircle(R_MAIN[i],'rgba(15,118,110,.55)',1.3);
+  for(i=0;i<X_MAIN.length;i++){ xCircle(X_MAIN[i],'rgba(190,18,60,.5)',1.2); xCircle(-X_MAIN[i],'rgba(190,18,60,.5)',1.2); }
+  /* x = 0 的「圓」退化成一條直線，就是實軸 */
+  ctx.strokeStyle='rgba(100,116,139,.75)'; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(cx0-R,cy0); ctx.lineTo(cx0+R,cy0); ctx.stroke();
+  ctx.restore();
+  /* 外圈就是 r = 0 的圓 */
+  ctx.strokeStyle='#334155'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx0,cy0,R,0,TAU); ctx.stroke();
+
+  if(opt.labels){
+    cfont(ctx,W,9,true);
+    ctx.fillStyle='#0f766e'; ctx.textBaseline='top'; ctx.textAlign='center';
+    for(i=0;i<R_MAIN.length;i++){
+      var r=R_MAIN[i];
+      ctx.fillText(String(r),cx0+R*(r-1)/(r+1),cy0+4);
+    }
+    ctx.fillStyle='#be123c'; ctx.textBaseline='middle';
+    for(i=0;i<X_MAIN.length;i++){
+      var xv=X_MAIN[i];
+      var a=cArg(gFromZ(cx(0,xv)));      /* r = 0、x 給定 → Γ 落在單位圓上，標籤往內縮 10% */
+      ctx.fillText('j'+xv,cx0+R*0.9*Math.cos(a),cy0-R*0.9*Math.sin(a));
+      ctx.fillText('−j'+xv,cx0+R*0.9*Math.cos(a),cy0+R*0.9*Math.sin(a));
+    }
+  }
+  if(opt.special){
+    cfont(ctx,W,9,true);
+    ctx.fillStyle='#475569';
+    ctx.beginPath(); ctx.arc(cx0-R,cy0,3.5,0,TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx0+R,cy0,3.5,0,TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx0,cy0,3,0,TAU); ctx.fill();
+    ctx.textBaseline='bottom';
+    ctx.textAlign='left';  ctx.fillText('z=0 短路',cx0-R+2,cy0-6);
+    ctx.textAlign='right'; ctx.fillText('z=∞ 開路',cx0+R-2,cy0-6);
+    ctx.textAlign='center';ctx.fillText('z=1 匹配',cx0,cy0-6);
+  }
+}
+/* 外圈「往電源方向的波長數」刻度：w = 0 在最左（短路點），順時針遞增，w = 0.5 剛好轉一圈 */
+function smithWTG(ctx,cx0,cy0,R,W){
+  var w,i,a,maj,r1,r2;
+  for(i=0;i<=50;i++){
+    w=i/100;
+    a=Math.PI-4*Math.PI*w;
+    maj=(i%5===0);
+    r1=R*1.005; r2=R*(maj?1.055:1.03);
+    lineSeg(ctx,cx0+r1*Math.cos(a),cy0-r1*Math.sin(a),cx0+r2*Math.cos(a),cy0-r2*Math.sin(a),maj?'#475569':'#cbd5e1',maj?1.4:0.9);
+    /* i = 50 與 i = 0 落在同一點（最左），合併成一個標籤，否則兩個數字會疊在一起 */
+    if(maj&&i%10===0&&i<50){
+      cfont(ctx,W,8.5,true);
+      ctx.fillStyle='#64748b'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(i===0?'0 / 0.5':w.toFixed(2),cx0+R*1.105*Math.cos(a),cy0-R*1.105*Math.sin(a));
+    }
+  }
+}
+function GtoPx(G,cx0,cy0,R){ return {x:cx0+R*G.r, y:cy0-R*G.i}; }
+
+/* ==========================================================
+   模式 ③：互動史密斯圖
+   ========================================================== */
+var M3={
+  t:0, playing:false, speed:1, dirty:true,
+  Z0:50, RL:25, XL:50, d:0, isOpen:false,
+  showFine:true, showSwr:true, showWtg:true, showAdm:false, showLbl:true,
+  dragLock:false, demo:0, cv:null
+};
+M3.geom=function(){
+  var cv=this.cv, W=cv._w||300, H=cv._h||300;
+  return {W:W,H:H,cx:W/2,cy:H/2,R:Math.min(W,H)*0.40};
+};
+M3.calc=function(){
+  if(this.isOpen){ this.ZL=null; this.zL=null; this.G=cx(1,0); }
+  else{
+    this.ZL=cx(this.RL,this.XL);
+    this.zL=cScale(this.ZL,1/this.Z0);
+    this.G=gFromZ(this.zL);
+  }
+  this.mg=cAbs(this.G);
+  this.S=swrOf(this.G);
+  this.Gin=rotG(this.G,this.d);
+  this.zin=zFromG(this.Gin);
+};
+M3.markerPx=function(){
+  var g=this.geom(); this.calc();
+  var p=GtoPx(this.G,g.cx,g.cy,g.R);
+  return {x:p.x,y:p.y,R:g.R};
+};
+M3.draw=function(){
+  var cv=this.cv; if(!cv||!cv._ctx)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H); this.calc();
+  var g=this.geom(), cx0=g.cx, cy0=g.cy, R=g.R;
+  smithGrid(ctx,cx0,cy0,R,W,{fine:this.showFine,labels:this.showLbl,special:true});
+  if(this.showWtg)smithWTG(ctx,cx0,cy0,R,W);
+
+  var pL=GtoPx(this.G,cx0,cy0,R), pI=GtoPx(this.Gin,cx0,cy0,R);
+  var mg=this.mg, dm=this.demo;
+
+  if(this.showSwr&&mg>1e-4){
+    ctx.save(); ctx.setLineDash([6,4]);
+    ctx.strokeStyle=(dm===3)?'#f59e0b':'rgba(245,158,11,.85)';
+    ctx.lineWidth=(dm===3)?3:2;
+    ctx.beginPath(); ctx.arc(cx0,cy0,R*mg,0,TAU); ctx.stroke(); ctx.restore();
+    if(isFinite(this.S)){
+      cfont(ctx,W,9,true);
+      lab(ctx,'r = S = '+this.S.toFixed(2),cx0+R*mg,cy0-6,'#b45309','center','bottom');
+    }
+  }
+
+  lineSeg(ctx,cx0,cy0,pL.x,pL.y,'rgba(124,58,237,.5)',1.4,[4,3]);
+
+  if(this.d>1e-6&&mg>1e-4){
+    var thL=cArg(this.G), rot=4*Math.PI*this.d;
+    ctx.save();
+    ctx.strokeStyle=(dm===4)?'#2563eb':'rgba(37,99,235,.8)';
+    ctx.lineWidth=(dm===4)?4.5:3.2; ctx.lineCap='round';
+    ctx.beginPath();
+    /* canvas 角度 = −(Γ 的相角)，角度遞增在螢幕上就是順時針，也就是「往電源」 */
+    ctx.arc(cx0,cy0,R*mg,-thL,-thL+rot,false);
+    ctx.stroke(); ctx.restore();
+    var ae=-thL+rot;
+    var ex=cx0+R*mg*Math.cos(ae), ey=cy0+R*mg*Math.sin(ae);
+    drawArrow(ctx,ex+Math.sin(ae)*10,ey-Math.cos(ae)*10,ex,ey,'#2563eb',3,10);
+    cfont(ctx,W,10,true);
+    lab(ctx,'順時針 = 往電源',cx0,cy0-R*mg-16,'#1d4ed8','center','bottom');
+  }
+
+  /* 導納點 y = 1/z：Γ → −Γ，也就是繞圓心轉 180° */
+  if(this.showAdm&&mg>1e-4){
+    var pA=GtoPx(cScale(this.G,-1),cx0,cy0,R);
+    lineSeg(ctx,pL.x,pL.y,pA.x,pA.y,'rgba(124,58,237,.35)',1.2,[2,3]);
+    ctx.strokeStyle='#7c3aed'; ctx.lineWidth=2.4; ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(pA.x,pA.y,6.5,0,TAU); ctx.fill(); ctx.stroke();
+    cfont(ctx,W,10,true); lab(ctx,'y_L',pA.x+9,pA.y,'#6d28d9','left');
+  }
+
+  if(this.d>1e-6){
+    ctx.fillStyle='#2563eb'; ctx.strokeStyle='#fff'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(pI.x,pI.y,(dm===5?9:7.5),0,TAU); ctx.fill(); ctx.stroke();
+    cfont(ctx,W,10.5,true); lab(ctx,'z_in',pI.x+11,pI.y,'#1d4ed8','left');
+  }
+
+  if(dm===2){ ctx.strokeStyle='rgba(124,58,237,.35)'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(pL.x,pL.y,17,0,TAU); ctx.stroke(); }
+  ctx.fillStyle='#7c3aed'; ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(pL.x,pL.y,10,0,TAU); ctx.fill(); ctx.stroke();
+  cfont(ctx,W,11,true); lab(ctx,'z_L',pL.x+13,pL.y,'#6d28d9','left');
+
+  cfont(ctx,W,10,true);
+  ctx.textBaseline='top';
+  lab(ctx,'Z₀ = '+this.Z0+' Ω',6,6,'#334155','left','top');
+  lab(ctx,'z_L = '+(this.zL?fmtZn(this.zL,2):'∞'),6,20,'#334155','left','top');
+  lab(ctx,'圓 = 等電阻 r',6,H-32,'#0f766e','left','top');
+  lab(ctx,'弧 = 等電抗 x',6,H-19,'#be123c','left','top');
+  if(this.showWtg)lab(ctx,'外圈刻度：往電源方向的波長數',W-6,H-19,'#94a3b8','right','top');
+  lab(ctx,'|Γ| = '+mg.toFixed(3),W-6,6,'#334155','right','top');
+  lab(ctx,'SWR = '+(isFinite(this.S)?this.S.toFixed(2):'∞'),W-6,20,'#334155','right','top');
+  if(this.dragLock)lab(ctx,'🔒 拖曳鎖定中',W-6,34,'#b45309','right','top');
+
+  setTxt('r3zl',this.zL?fmtZn(this.zL,3):'∞（開路）');
+  setTxt('r3G',fmtG(this.G,3));
+  setTxt('r3swr',isFinite(this.S)?this.S.toFixed(3):'∞');
+  setTxt('r3ang','−'+(720*this.d).toFixed(1)+'°　(d = '+this.d.toFixed(3)+'λ)');
+  setTxt('r3Gin',fmtG(this.Gin,3));
+  setTxt('r3zin',fmtZn(this.zin,3));
+  setTxt('r3Zin',this.zin?fmtOhm(cScale(this.zin,this.Z0),1):'→ ∞');
+  var yL=this.isOpen?cx(0,0):((cAbs(this.zL)<1e-9)?null:cDiv(ONE,this.zL));
+  setTxt('r3y',yL?fmtZn(yL,3):'→ ∞');
+
+  var fl=[];
+  if(mg<1e-4)fl.push({c:'g',t:'✅ 你正站在圓心：z = 1，完美匹配，Γ = 0'});
+  if(mg>0.999)fl.push({c:'r',t:'⚠️ 你在最外圈：r = 0（純電抗／開路／短路），|Γ| = 1、SWR = ∞'});
+  if(!this.isOpen){
+    if(this.XL>1e-9)fl.push({c:'p',t:'上半圓 = 電感性（x > 0）'});
+    else if(this.XL<-1e-9)fl.push({c:'p',t:'下半圓 = 電容性（x < 0）'});
+    else fl.push({c:'b',t:'落在中線 = 純電阻（x = 0）'});
+  }
+  if(Math.abs(this.d-0.25)<0.003)fl.push({c:'y',t:'d = λ/4 → 轉 180°，z_in = 1/z_L（阻抗翻轉）'});
+  if(this.d>0.497)fl.push({c:'y',t:'d = λ/2 → 轉 360° 回到原點，Z_in = Z_L'});
+  setFlags('f3',fl);
+};
+M3.setFromPixel=function(clientX,clientY){
+  var cv=this.cv; if(!cv||!cv._w)return;
+  var rect=cv.getBoundingClientRect(), g=this.geom();
+  var gx=(clientX-rect.left-g.cx)/g.R, gy=-(clientY-rect.top-g.cy)/g.R;
+  var m=Math.hypot(gx,gy);
+  if(m>0.995){ gx*=0.995/m; gy*=0.995/m; }   /* 卡在單位圓內，避免 z → ∞ */
+  var z=zFromG(cx(gx,gy)); if(!z)return;
+  this.isOpen=false;
+  setRange('s3r',Math.round(clamp(z.r*this.Z0,0,300)*2));
+  setRange('s3x',Math.round(clamp(z.i*this.Z0,-300,300)*2));
+  this.demo=0; this.dirty=true; this.draw();
+};
+
+/* ==========================================================
+   模式 ④：阻抗匹配（λ/4 轉換器 / 單截線）
+   ========================================================== */
+var M4={
+  t:0, playing:false, speed:1, dirty:true,
+  mode:'qw', Z0:50, RL:100, XL:0, fr:1.0,
+  stubType:'short', stubSol:0,
+  cvA:null, cvB:null
+};
+M4.calcQW=function(){
+  var Z0=this.Z0, ZL=cx(this.RL,this.XL);
+  var Z1=Math.sqrt(Z0*Math.max(this.RL,1e-6));
+  var G2=cDiv(cSub(ZL,cx(Z1,0)),cAdd(ZL,cx(Z1,0)));   /* Z1 → Z_L 界面 */
+  var th=Math.PI*this.fr;                             /* 2βl = 2·(2π/λ)·(λ₀/4) = π·(f/f₀) */
+  var zin2=zFromG(cMul(G2,cExpj(-th)));
+  var Zin2=zin2?cScale(zin2,Z1):null;
+  var G1=Zin2?cDiv(cSub(Zin2,cx(Z0,0)),cAdd(Zin2,cx(Z0,0))):cx(1,0);
+  return {Z0:Z0,ZL:ZL,Z1:Z1,G2:G2,Zin2:Zin2,G1:G1,
+          G0:gammaLoad(Z0,ZL,false),
+          Gj1:cDiv(cSub(cx(Z1,0),cx(Z0,0)),cAdd(cx(Z1,0),cx(Z0,0)))};
+};
+/* 單截線閉式解：Re{y(d)} = 1 ⇔ cos(θ_Γ − 2βd) = −|Γ|（已用 python 數值掃描交叉驗證） */
+M4.calcStub=function(){
+  var Z0=this.Z0, ZL=cx(this.RL,this.XL);
+  var G=gammaLoad(Z0,ZL,false), m=cAbs(G), th=cArg(G);
+  var out={Z0:Z0,ZL:ZL,G:G,m:m,S:swrOf(G),ok:false};
+  if(m<1e-4){ out.trivial=true; return out; }
+  if(m>0.999){ out.impossible=true; return out; }
+  var psi0=Math.acos(clamp(-m,-1,1));
+  var sols=[],k;
+  for(k=0;k<2;k++){
+    var psi=(k===0)?psi0:-psi0;
+    var d=(th-psi)/(4*Math.PI);
+    d=d-Math.floor(d/0.5)*0.5;
+    sols.push({d:d,b:-2*m*Math.sin(psi)/(1-m*m)});
+  }
+  sols.sort(function(a,b){return a.d-b.d;});
+  var s=sols[clamp(this.stubSol,0,1)];
+  var bl=(this.stubType==='short')?Math.atan2(1,s.b):Math.atan2(-s.b,1);
+  if(bl<0)bl+=Math.PI;
+  out.ok=true; out.sols=sols; out.d=s.d; out.b=s.b; out.ls=bl/TAU; out.y=cx(1,s.b);
+  return out;
+};
+M4.draw=function(){ this.drawA(); this.drawB(); this.readout(); };
+
+M4.drawA=function(){
+  var cv=this.cvA; if(!cv||!cv._ctx)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h; bg(ctx,W,H);
+  var i,f;
+  if(this.mode==='qw'){
+    var padL=44,padR=14,padT=26,padB=34;
+    var x0=padL,x1=W-padR,y0=padT,y1=H-padB;
+    var f0=0.4,f1=2.0;
+    var q=this.calcQW();
+    var g0=cAbs(q.G0);
+    var ymax=Math.max(0.5,Math.min(1,g0*1.35));
+    var Xf=function(ff){ return x0+(ff-f0)/(f1-f0)*(x1-x0); };
+    var Yg=function(v){ return y1-clamp(v/ymax,0,1)*(y1-y0); };
+    for(i=0;i<=8;i++){ f=f0+(f1-f0)*i/8; lineSeg(ctx,Xf(f),y0,Xf(f),y1,'rgba(226,232,240,.9)',1); }
+    for(i=0;i<=5;i++){ lineSeg(ctx,x0,Yg(ymax*i/5),x1,Yg(ymax*i/5),'rgba(226,232,240,.9)',1); }
+    lineSeg(ctx,x0,y1,x1,y1,'#94a3b8',1.4);
+    lineSeg(ctx,x0,y0,x0,y1,'#94a3b8',1.4);
+    lineSeg(ctx,x0,Yg(g0),x1,Yg(g0),'#94a3b8',2,[6,4]);
+    cfont(ctx,W,9,true);
+    lab(ctx,'沒有轉換器 |Γ| = '+g0.toFixed(3),x1-3,Yg(g0)-8,'#64748b','right');
+    ctx.strokeStyle='#0f766e'; ctx.lineWidth=2.6; ctx.beginPath();
+    for(i=0;i<=220;i++){
+      f=f0+(f1-f0)*i/220;
+      var z2=zFromG(cMul(q.G2,cExpj(-Math.PI*f))), Gf;
+      if(!z2)Gf=cx(1,0);
+      else{ var Zi=cScale(z2,q.Z1); Gf=cDiv(cSub(Zi,cx(q.Z0,0)),cAdd(Zi,cx(q.Z0,0))); }
+      if(i===0)ctx.moveTo(Xf(f),Yg(cAbs(Gf))); else ctx.lineTo(Xf(f),Yg(cAbs(Gf)));
+    }
+    ctx.stroke();
+    var fc=clamp(this.fr,f0,f1), gc=cAbs(q.G1);
+    lineSeg(ctx,Xf(fc),y0,Xf(fc),y1,'rgba(220,38,38,.6)',1.6,[4,3]);
+    ctx.fillStyle='#dc2626'; ctx.beginPath(); ctx.arc(Xf(fc),Yg(gc),6,0,TAU); ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    cfont(ctx,W,9);
+    for(i=0;i<=4;i++){ f=f0+(f1-f0)*i/4; lab(ctx,f.toFixed(1),Xf(f),y1+4,'#64748b','center','top'); }
+    for(i=0;i<=5;i++){ lab(ctx,(ymax*i/5).toFixed(2),x0-4,Yg(ymax*i/5),'#64748b','right','middle'); }
+    cfont(ctx,W,10,true);
+    lab(ctx,'工作頻率比 f / f₀',(x0+x1)/2,y1+16,'#334155','center','top');
+    lab(ctx,'|Γ_in|',4,y0-14,'#334155','left','top');
+    lab(ctx,'λ/4 轉換器只在 f = f₀ 完美（碗底）',(x0+x1)/2,4,'#0f766e','center','top');
+  }else{
+    var R=Math.min(W,H)*0.40, cx0=W/2, cy0=H/2;
+    smithGrid(ctx,cx0,cy0,R,W,{fine:false,labels:false,special:false});
+    var st=this.calcStub();
+    cfont(ctx,W,9,true);
+    lab(ctx,'此圖當導納圖用：圓 = 等 g、弧 = 等 b',5,5,'#475569','left','top');
+    if(st.impossible){
+      cfont(ctx,W,11,true);
+      lab(ctx,'純電抗負載（|Γ| = 1）無法用單截線匹配',cx0,cy0,'#dc2626','center','middle'); return;
+    }
+    if(st.trivial){
+      cfont(ctx,W,11,true);
+      lab(ctx,'負載已經等於 Z₀，不需要截線',cx0,cy0,'#16a34a','center','middle'); return;
+    }
+    /* g = 1 圓（在導納座標裡就是 r = 1 那個圓）*/
+    ctx.strokeStyle='#16a34a'; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.arc(cx0+R*0.5,cy0,R*0.5,0,TAU); ctx.stroke();
+    cfont(ctx,W,9,true); lab(ctx,'g = 1 圓',cx0+R*0.5,cy0-R*0.5-7,'#15803d','center','bottom');
+    ctx.save(); ctx.setLineDash([6,4]);
+    ctx.strokeStyle='rgba(245,158,11,.9)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cx0,cy0,R*st.m,0,TAU); ctx.stroke(); ctx.restore();
+    var GyL=cScale(st.G,-1);
+    var pz=GtoPx(st.G,cx0,cy0,R), py=GtoPx(GyL,cx0,cy0,R);
+    lineSeg(ctx,pz.x,pz.y,py.x,py.y,'rgba(148,163,184,.8)',1.2,[3,3]);
+    ctx.fillStyle='#94a3b8'; ctx.beginPath(); ctx.arc(pz.x,pz.y,5,0,TAU); ctx.fill();
+    cfont(ctx,W,9,true); lab(ctx,'z_L',pz.x+7,pz.y,'#64748b','left');
+    ctx.fillStyle='#7c3aed'; ctx.strokeStyle='#fff'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.arc(py.x,py.y,8,0,TAU); ctx.fill(); ctx.stroke();
+    cfont(ctx,W,10,true); lab(ctx,'y_L',py.x+10,py.y,'#6d28d9','left');
+    /* 沿等 SWR 圓往電源轉 2βd，直到碰上 g = 1 圓 */
+    var thY=cArg(GyL), rot=4*Math.PI*st.d;
+    ctx.strokeStyle='#2563eb'; ctx.lineWidth=3.6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(cx0,cy0,R*st.m,-thY,-thY+rot,false); ctx.stroke();
+    var Gy2=cMul(GyL,cExpj(-rot)), p2=GtoPx(Gy2,cx0,cy0,R);
+    var ae=-thY+rot;
+    drawArrow(ctx,p2.x+Math.sin(ae)*11,p2.y-Math.cos(ae)*11,p2.x,p2.y,'#2563eb',3,10);
+    ctx.fillStyle='#2563eb'; ctx.strokeStyle='#fff'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.arc(p2.x,p2.y,8,0,TAU); ctx.fill(); ctx.stroke();
+    cfont(ctx,W,10,true);
+    lab(ctx,'y = 1'+(st.b<0?' − j':' + j')+Math.abs(st.b).toFixed(2),p2.x+11,p2.y,'#1d4ed8','left');
+    /* 截線把 jb 抵掉：沿 g = 1 圓走到圓心（取較短的那一段弧）*/
+    var ang1=Math.atan2(p2.y-cy0,p2.x-(cx0+R*0.5));
+    var angC=(st.b>0)?-Math.PI:Math.PI;
+    ctx.save(); ctx.setLineDash([5,3]);
+    ctx.strokeStyle='#16a34a'; ctx.lineWidth=3.4;
+    ctx.beginPath(); ctx.arc(cx0+R*0.5,cy0,R*0.5,ang1,angC,st.b>0); ctx.stroke(); ctx.restore();
+    ctx.fillStyle='#16a34a'; ctx.strokeStyle='#fff'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.arc(cx0,cy0,7,0,TAU); ctx.fill(); ctx.stroke();
+    cfont(ctx,W,10,true); lab(ctx,'y = 1 匹配',cx0+10,cy0+14,'#15803d','left');
+    cfont(ctx,W,9,true);
+    lab(ctx,'① 灰→紫：轉 180° 把阻抗換成導納',5,H-32,'#475569','left','top');
+    lab(ctx,'② 藍弧：往電源走 d = '+st.d.toFixed(4)+'λ 碰到 g = 1',5,H-20,'#1d4ed8','left','top');
+    lab(ctx,'③ 綠弧：截線補上 −jb，滑到圓心',5,H-8,'#15803d','left','top');
+  }
+};
+
+M4.drawB=function(){
+  var cv=this.cvB; if(!cv||!cv._ctx)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h; bg(ctx,W,H);
+  var padL=16,padR=16, xL=padL, xR=W-padR;
+  var i,u,j;
+  if(this.mode==='qw'){
+    var q=this.calcQW();
+    var fr=this.fr, uT=0.25, uTot=1.0;      /* 長度以「設計波長 λ₀」為單位，實體長度固定 */
+    var X=function(uu){ return xL+(1-uu/uTot)*(xR-xL); };
+    var schY=26, y0=52, y1=H-38, yc=(y0+y1)/2, hh=(y1-y0)/2-6;
+    var A2=[],A0=[],mx=0,vv,v0;
+    for(i=0;i<=300;i++){
+      u=uTot*i/300;
+      if(u<=uT)vv=cAbs(cAdd(ONE,cMul(q.G2,cExpj(-4*Math.PI*u*fr))));
+      else vv=cAbs(cAdd(ONE,cMul(q.G1,cExpj(-4*Math.PI*(u-uT)*fr))));
+      A2.push(vv);
+      v0=cAbs(cAdd(ONE,cMul(q.G0,cExpj(-4*Math.PI*u*fr))));
+      A0.push(v0);
+    }
+    /* 接面電壓連續：把饋線段整體縮放，讓它在 u = 0.25 接上轉換器段 */
+    var vJ2=cAbs(cAdd(ONE,cMul(q.G2,cExpj(-4*Math.PI*uT*fr))));
+    var vJ1=cAbs(cAdd(ONE,q.G1));
+    var sc1=(vJ1>1e-9)?vJ2/vJ1:1;
+    for(i=0;i<=300;i++){
+      u=uTot*i/300;
+      if(u>uT)A2[i]=A2[i]*sc1;
+      if(A2[i]>mx)mx=A2[i];
+      if(A0[i]>mx)mx=A0[i];
+    }
+    var sV=hh/Math.max(mx,0.2);
+    ctx.fillStyle='rgba(245,158,11,.14)';
+    ctx.fillRect(X(uT),y0-16,X(0)-X(uT),y1-y0+22);
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(xL,schY); ctx.lineTo(xR,schY); ctx.stroke();
+    lineSeg(ctx,X(uT),schY-9,X(uT),schY+9,'#f59e0b',2.2);
+    ctx.fillStyle='#be123c'; ctx.fillRect(xR-9,schY-9,9,18);
+    cfont(ctx,W,9.5,true);
+    lab(ctx,'Z₀ = '+this.Z0+' Ω',(xL+X(uT))/2,schY-13,'#475569','center','bottom');
+    lab(ctx,'Z₁ = '+q.Z1.toFixed(2)+' Ω',(X(uT)+X(0))/2,schY-13,'#b45309','center','bottom');
+    lab(ctx,'λ₀/4',(X(uT)+X(0))/2,schY+12,'#b45309','center','top');
+    lab(ctx,'Z_L',xR-12,schY-13,'#be123c','right','bottom');
+    lab(ctx,'電源 →',xL,schY-13,'#64748b','left','bottom');
+    lineSeg(ctx,xL,yc,xR,yc,'#e2e8f0',1);
+    var poly=function(arr,color,lw,dash){
+      ctx.save(); if(dash)ctx.setLineDash(dash);
+      ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.lineJoin='round';
+      ctx.beginPath();
+      for(j=0;j<=300;j++){ var uu=uTot*j/300; if(j===0)ctx.moveTo(X(uu),yc-arr[j]*sV); else ctx.lineTo(X(uu),yc-arr[j]*sV); }
+      ctx.stroke();
+      ctx.beginPath();
+      for(j=0;j<=300;j++){ var u2=uTot*j/300; if(j===0)ctx.moveTo(X(u2),yc+arr[j]*sV); else ctx.lineTo(X(u2),yc+arr[j]*sV); }
+      ctx.stroke(); ctx.restore();
+    };
+    poly(A0,'#94a3b8',1.8,[5,4]);
+    poly(A2,'#0f766e',2.6,null);
+    cfont(ctx,W,9.5,true);
+    lab(ctx,'灰虛線：沒有轉換器（SWR = '+(isFinite(swrOf(q.G0))?swrOf(q.G0).toFixed(2):'∞')+'）',xL+2,y1+4,'#64748b','left','top');
+    lab(ctx,'深青：加上 λ/4 轉換器（SWR = '+(isFinite(swrOf(q.G1))?swrOf(q.G1).toFixed(2):'∞')+'）',xL+2,y1+17,'#0f766e','left','top');
+    lab(ctx,'f / f₀ = '+this.fr.toFixed(2),xR,y1+4,'#dc2626','right','top');
+    if(cAbs(q.G1)<0.02)lab(ctx,'✅ 饋線段的包絡被壓平了',xR,y1+17,'#16a34a','right','top');
+    else lab(ctx,'⚠️ 偏離設計條件，波紋回來了',xR,y1+17,'#b45309','right','top');
+  }else{
+    var st=this.calcStub();
+    var schY2=34, ya=64, yb=H-34, yc2=(ya+yb)/2, hh2=(yb-ya)/2-6;
+    if(st.impossible||st.trivial){
+      cfont(ctx,W,11,true);
+      lab(ctx,st.trivial?'Z_L 已經等於 Z₀，本來就匹配':'純電抗負載吃不到功率，單截線無解',
+          W/2,H/2,st.trivial?'#16a34a':'#dc2626','center','middle');
+      return;
+    }
+    var d=st.d, uTot2=Math.max(d+0.45,0.7);
+    var X2=function(uu){ return xL+(1-uu/uTot2)*(xR-xL); };
+    var xs=X2(d);
+    ctx.strokeStyle='#94a3b8'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(xL,schY2); ctx.lineTo(xR,schY2); ctx.stroke();
+    ctx.fillStyle='#be123c'; ctx.fillRect(xR-9,schY2-9,9,18);
+    var stubLen=clamp(st.ls/0.5,0.08,1)*26+8;
+    ctx.strokeStyle='#16a34a'; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(xs,schY2); ctx.lineTo(xs,schY2+stubLen); ctx.stroke();
+    if(this.stubType==='short'){ lineSeg(ctx,xs-7,schY2+stubLen,xs+7,schY2+stubLen,'#16a34a',3.4); }
+    else { ctx.strokeStyle='#16a34a'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(xs,schY2+stubLen+3,3,0,TAU); ctx.stroke(); }
+    ctx.fillStyle='#16a34a'; ctx.beginPath(); ctx.arc(xs,schY2,3.6,0,TAU); ctx.fill();
+    cfont(ctx,W,9.5,true);
+    lab(ctx,'Z_L',xR-12,schY2-12,'#be123c','right','bottom');
+    lab(ctx,'電源 →',xL,schY2-12,'#64748b','left','bottom');
+    lab(ctx,(this.stubType==='short'?'短路':'開路')+'截線 ℓ_s = '+st.ls.toFixed(4)+'λ',xs+6,schY2+stubLen+2,'#15803d','left','top');
+    drawArrow(ctx,xR-2,schY2-22,xs,schY2-22,'#2563eb',1.4,6);
+    drawArrow(ctx,xs,schY2-22,xR-2,schY2-22,'#2563eb',1.4,6);
+    ctx.fillStyle='#fff'; ctx.fillRect((xs+xR)/2-30,schY2-29,60,13);
+    lab(ctx,'d = '+d.toFixed(3)+'λ',(xs+xR)/2,schY2-22,'#1d4ed8','center');
+    lineSeg(ctx,xL,yc2,xR,yc2,'#e2e8f0',1);
+    var mxv=0,arr=[],uu2,vv2;
+    for(j=0;j<=300;j++){ uu2=uTot2*j/300; vv2=(uu2<=d)?envV(st.G,uu2):envV(st.G,d); arr.push(vv2); if(vv2>mxv)mxv=vv2; }
+    var sV2=hh2/Math.max(mxv,0.2);
+    ctx.fillStyle='rgba(22,163,74,.07)'; ctx.fillRect(xL,ya-6,xs-xL,yb-ya+12);
+    ctx.strokeStyle='#0f766e'; ctx.lineWidth=2.6; ctx.lineJoin='round';
+    ctx.beginPath();
+    for(j=0;j<=300;j++){ uu2=uTot2*j/300; if(j===0)ctx.moveTo(X2(uu2),yc2-arr[j]*sV2); else ctx.lineTo(X2(uu2),yc2-arr[j]*sV2); }
+    ctx.stroke();
+    ctx.beginPath();
+    for(j=0;j<=300;j++){ uu2=uTot2*j/300; if(j===0)ctx.moveTo(X2(uu2),yc2+arr[j]*sV2); else ctx.lineTo(X2(uu2),yc2+arr[j]*sV2); }
+    ctx.stroke();
+    lineSeg(ctx,xs,ya-6,xs,yb+6,'rgba(22,163,74,.7)',1.8,[4,3]);
+    cfont(ctx,W,9.5,true);
+    lab(ctx,'← 已匹配：SWR = 1，包絡是平的',xL+3,ya-4,'#15803d','left','top');
+    lab(ctx,'仍有駐波（SWR = '+(isFinite(st.S)?st.S.toFixed(2):'∞')+'）→',xR-3,ya-4,'#b45309','right','top');
+    lab(ctx,'負載 z′ = 0',xR,yb+8,'#be123c','right','top');
+  }
+};
+
+M4.readout=function(){
+  var fl=[], f, fm;
+  if(this.mode==='qw'){
+    var q=this.calcQW();
+    setTxt('k4a','轉換器阻抗 Z₁ = √(Z₀·R_L)');
+    setTxt('k4b','轉換器長度');
+    setTxt('k4c','轉換器輸入端的 Z_in');
+    setTxt('r4zl',fmtOhm(q.ZL,1));
+    setTxt('r4a',q.Z1.toFixed(3)+' Ω');
+    setTxt('r4b','λ₀/4（此頻率下電長度 '+(90*this.fr).toFixed(1)+'°）');
+    setTxt('r4g0',cAbs(q.G0).toFixed(4));
+    setTxt('r4s0',isFinite(swrOf(q.G0))?swrOf(q.G0).toFixed(3):'∞');
+    setTxt('r4g1',cAbs(q.G1).toFixed(4));
+    setTxt('r4s1',isFinite(swrOf(q.G1))?swrOf(q.G1).toFixed(3):'∞');
+    setTxt('r4c',fmtOhm(q.Zin2,2));
+    if(Math.abs(this.XL)>1e-9)fl.push({c:'r',t:'⚠️ Z_L 含電抗 → λ/4 轉換器無法完全匹配（|Γ_in| ≠ 0）'});
+    if(Math.abs(this.fr-1)<0.005&&Math.abs(this.XL)<1e-9)fl.push({c:'g',t:'✅ 在設計頻率上：|Γ_in| = 0，完全沒有反射'});
+    if(Math.abs(this.fr-2)<0.02)fl.push({c:'r',t:'⚠️ f = 2f₀：那段線變成 λ/2，轉換器完全失效'});
+    fl.push({c:'b',t:'Γ₁（Z₀→Z₁ 界面）= '+cAbs(q.Gj1).toFixed(4)+'，Γ₂（Z₁→Z_L 界面）= '+cAbs(q.G2).toFixed(4)+' → 大小相同，來回 λ/2 後反相相消'});
+    f=$('m4focus');
+    if(f)f.innerHTML='<strong>🎯 該注意哪裡：</strong><ul class="tight" style="margin-top:6px">'+
+      '<li>Z₁ = √(Z₀·Z_L) 是<strong>幾何平均</strong>，一定落在 '+Math.min(this.Z0,this.RL).toFixed(0)+' Ω 與 '+Math.max(this.Z0,this.RL).toFixed(0)+' Ω 之間。</li>'+
+      '<li>右圖：<u>灰虛線</u>是沒有轉換器的包絡（有波紋）、<u>深青線</u>是加上轉換器後的包絡。在 f = f₀ 時<strong>饋線那一段被壓成兩條平的直線</strong>。</li>'+
+      '<li>轉換器<u>內部</u>（橘色區域）仍然有小駐波，那是正常的——我們只要求「從電源看進去沒有反射」。</li>'+
+      '<li>左圖是<strong>頻寬</strong>：碗底只有一個點，離開 f₀ 就爬升。這就是 λ/4 轉換器<strong>窄頻</strong>的意思。</li></ul>';
+    fm=$('m4form');
+    if(fm)fm.innerHTML='<div class="label">四分之一波長轉換器</div>'+
+      'λ/4 線：Z_in = Z₁²/Z_L　⇒　要 Z_in = Z₀ 就必須 <strong>Z₁ = √(Z₀·Z_L)</strong><br>'+
+      '一般長度：Z_in = Z₁(Z_L + jZ₁tan βℓ)/(Z₁ + jZ_L tan βℓ)，其中 βℓ = (π/2)(f/f₀)<br>'+
+      'Γ_in = (Z_in − Z₀)/(Z_in + Z₀)　　SWR = (1+|Γ_in|)/(1−|Γ_in|)<br>'+
+      '<span style="font-family:\'Segoe UI\',sans-serif;font-size:.9em">目前：Z₀ = '+this.Z0+' Ω、Z_L = '+this.RL.toFixed(1)+
+      (this.XL>=0?' + j':' − j')+Math.abs(this.XL).toFixed(1)+' Ω　→　<strong>Z₁ = '+q.Z1.toFixed(3)+' Ω</strong></span>';
+  }else{
+    var st=this.calcStub();
+    setTxt('k4a','截線接點位置 d（從負載量起）');
+    setTxt('k4b','截線長度 ℓ_s');
+    setTxt('k4c','接點處正規化導納 y(d)');
+    setTxt('r4zl',fmtOhm(cx(this.RL,this.XL),1));
+    if(st.ok){
+      setTxt('r4a',st.d.toFixed(4)+' λ');
+      setTxt('r4b',st.ls.toFixed(4)+' λ　('+(this.stubType==='short'?'短路':'開路')+')');
+      setTxt('r4g0',st.m.toFixed(4));
+      setTxt('r4s0',isFinite(st.S)?st.S.toFixed(3):'∞');
+      setTxt('r4g1','0.0000');
+      setTxt('r4s1','1.000');
+      setTxt('r4c',fmtZn(st.y,4));
+      fl.push({c:'g',t:'✅ 接點處 y = 1 '+(st.b<0?'− j':'+ j')+Math.abs(st.b).toFixed(3)+'，截線補上 '+(st.b<0?'+ j':'− j')+Math.abs(st.b).toFixed(3)+' → y = 1 完全匹配'});
+      fl.push({c:'b',t:'另一組解：d = '+st.sols[1-clamp(this.stubSol,0,1)].d.toFixed(4)+'λ（用上面的「解 1／解 2」切換）'});
+      fl.push({c:'y',t:'注意：負載到截線之間仍有駐波（SWR = '+(isFinite(st.S)?st.S.toFixed(2):'∞')+'），那一段消不掉'});
+    }else{
+      setTxt('r4a','—'); setTxt('r4b','—'); setTxt('r4c','—');
+      setTxt('r4g0',st.m.toFixed(4)); setTxt('r4s0',isFinite(st.S)?st.S.toFixed(3):'∞');
+      setTxt('r4g1','—'); setTxt('r4s1','—');
+      if(st.trivial)fl.push({c:'g',t:'Z_L 已經等於 Z₀，不需要匹配網路'});
+      if(st.impossible)fl.push({c:'r',t:'⚠️ |Γ| = 1（純電抗負載）：等 SWR 圓與 g = 1 圓不相交，單截線無解'});
+    }
+    f=$('m4focus');
+    if(f)f.innerHTML='<strong>🎯 該注意哪裡：</strong><ul class="tight" style="margin-top:6px">'+
+      '<li>左圖三段顏色就是三個步驟：<u>灰→紫</u>（轉 180° 把阻抗換成導納）、<u>藍弧</u>（沿等 SWR 圓往電源走 d，直到碰上綠色的 g = 1 圓）、<u>綠弧</u>（截線提供 −jb，沿 g = 1 圓滑到圓心）。</li>'+
+      '<li>藍弧一定會碰到 g = 1 圓<strong>兩次</strong> → 永遠有<u>兩組解</u>。工程上通常選 d 比較短的那一組（線比較好做、頻寬也比較寬）。</li>'+
+      '<li>右圖最重要：<strong>截線左邊（往電源）包絡是平的，右邊（往負載）仍然有駐波</strong>。單截線只保護電源那一側。</li>'+
+      '<li>把 R_L 拉到 0（純電抗負載），會發現無解——因為負載一點功率都不吃，怎麼調都不可能匹配。</li></ul>';
+    fm=$('m4form');
+    if(fm)fm.innerHTML='<div class="label">單截線匹配：並聯截線</div>'+
+      '導納：y(d) = (1 − Γ_L e<sup>−j2βd</sup>)/(1 + Γ_L e<sup>−j2βd</sup>)　　要求 <strong>Re{y(d)} = 1</strong><br>'+
+      '解得條件：<strong>cos(θ_Γ − 2βd) = −|Γ|</strong>（兩個解）；此時 b = −2|Γ|sin ψ/(1−|Γ|²)，ψ = θ_Γ − 2βd<br>'+
+      '短路截線：y_stub = −j cot(βℓ_s) ⇒ cot(βℓ_s) = b　｜　開路截線：y_stub = +j tan(βℓ_s) ⇒ tan(βℓ_s) = −b<br>'+
+      '<span style="font-family:\'Segoe UI\',sans-serif;font-size:.9em">'+
+      (st.ok?('目前：y(d) = '+fmtZn(st.y,4)+'　→　d = <strong>'+st.d.toFixed(4)+'λ</strong>、ℓ_s = <strong>'+st.ls.toFixed(4)+'λ</strong>'):'目前無解')+'</span>';
+  }
+  setFlags('f4',fl);
+  var wt=$('m4what');
+  if(wt)wt.innerHTML='<strong>👀 你現在在看什麼：</strong>'+
+    (this.mode==='qw'
+      ? '<strong>四分之一波長轉換器</strong>——在 Z₀ 線與負載之間插一段長度 λ₀/4、特性阻抗 Z₁ = √(Z₀Z_L) 的線。<strong>左圖</strong>是它的頻率響應（碗形，只有碗底才完美）、<strong>右圖</strong>是線上的電壓包絡（灰虛線＝沒裝，深青＝裝了）。'
+      : '<strong>單截線匹配</strong>——在距離負載 d 的地方<u>並聯</u>一段長度 ℓ_s 的截線。<strong>左圖</strong>是史密斯圖上的三步作圖（此時把圖當導納圖用）、<strong>右圖</strong>是電路配置與電壓包絡。');
+};
+
+/* 第 ⑤ 頁沒有動畫，用一個空模式佔位 */
+var M5={t:0,playing:false,speed:1,dirty:false,draw:function(){}};
+
+MODES=[M1,M2,M3,M4,M5];
+
+/* ============ 版面／尺寸 ============ */
+function layout(){
+  if(M1.cv){fit(M1.cv,1.55,300,470);M1.dirty=true;}
+  if(M2.cv){fit(M2.cv,1.05,420,600);M2.dirty=true;}
+  if(M3.cv){fit(M3.cv,1.02,330,540);M3.dirty=true;}
+  if(M4.cvA){fit(M4.cvA,1.00,290,420);}
+  if(M4.cvB){fit(M4.cvB,1.30,250,380);M4.dirty=true;}
+}
+
+/* ============ 控制項 ============ */
+function bindRange(id,fn){
+  var el=$(id); if(!el)return;
+  var h=function(){fn(parseFloat(el.value));};
+  el.addEventListener('input',h);
+  el.addEventListener('change',h);
+  h();
+}
+function setRange(id,val){ var e=$(id); if(e){e.value=val; e.dispatchEvent(new Event('input'));} }
+
+function initControls(){
+  /* --- 模式 ① --- */
+  bindRange('s1z0',function(v){ M1.Z0=v; setTxt('v1z0',v.toFixed(0)+' Ω'); M1.dirty=true; });
+  bindRange('s1rl',function(v){ M1.RL=v/2; M1.isOpen=false; setTxt('v1rl',(v/2).toFixed(1)+' Ω'); M1.dirty=true; });
+  bindRange('s1xl',function(v){ M1.XL=v/2; M1.isOpen=false; setTxt('v1xl',(v/2).toFixed(1)+' Ω'); M1.dirty=true; });
+  bindRange('s1len',function(v){ M1.len=v/100; setTxt('v1len',(v/100).toFixed(2)+' λ'); setTxt('v1p',(M1.len*M1.pf).toFixed(3)+' λ'); M1.dirty=true; });
+  bindRange('s1p',function(v){ M1.pf=v/200; setTxt('v1p',(M1.len*v/200).toFixed(3)+' λ'); M1.dirty=true; });
+  bindRange('s1s',function(v){ M1.speed=lerpLog(v/100,0.05,3); setTxt('v1s',M1.speed.toFixed(2)+'×'); });
+
+  /* --- 模式 ② --- */
+  bindRange('s2z0',function(v){ M2.Z0=v; setTxt('v2z0',v.toFixed(0)+' Ω'); M2.dirty=true; });
+  bindRange('s2len',function(v){ M2.len=v/100; setTxt('v2len',(v/100).toFixed(2)+' λ'); setTxt('v2p',(M2.len*M2.pf).toFixed(3)+' λ'); M2.dirty=true; });
+  bindRange('s2p',function(v){ M2.pf=v/200; setTxt('v2p',(M2.len*v/200).toFixed(3)+' λ'); M2.dirty=true; });
+  bindRange('s2s',function(v){ M2.speed=lerpLog(v/100,0.05,3); setTxt('v2s',M2.speed.toFixed(2)+'×'); });
+
+  /* --- 模式 ③ --- */
+  bindRange('s3z0',function(v){ M3.Z0=v; setTxt('v3z0',v.toFixed(0)+' Ω'); M3.dirty=true; M3.draw(); });
+  bindRange('s3r',function(v){ M3.RL=v/2; M3.isOpen=false; setTxt('v3r',(v/2).toFixed(1)+' Ω'); M3.dirty=true; M3.draw(); });
+  bindRange('s3x',function(v){ M3.XL=v/2; setTxt('v3x',(v/2).toFixed(1)+' Ω'); M3.dirty=true; M3.draw(); });
+  bindRange('s3d',function(v){ M3.d=v/1000; setTxt('v3d',(v/1000).toFixed(3)+' λ'); M3.dirty=true; M3.draw(); });
+
+  /* --- 模式 ④ --- */
+  bindRange('s4z0',function(v){ M4.Z0=v; setTxt('v4z0',v.toFixed(0)+' Ω'); M4.dirty=true; M4.draw(); });
+  bindRange('s4rl',function(v){ M4.RL=v/2; setTxt('v4rl',(v/2).toFixed(1)+' Ω'); M4.dirty=true; M4.draw(); });
+  bindRange('s4xl',function(v){ M4.XL=v/2; setTxt('v4xl',(v/2).toFixed(1)+' Ω'); M4.dirty=true; M4.draw(); });
+  bindRange('s4fr',function(v){ M4.fr=v/100; setTxt('v4fr',(v/100).toFixed(2)); M4.dirty=true; M4.draw(); });
+}
+
+/* ============ 進度（localStorage 全部用 try/catch 包住）============ */
+var done=[false,false,false,false];
+var LSKEY='em2ch09_progress_v1';
+function saveState(){
+  try{ window.localStorage.setItem(LSKEY,JSON.stringify({d:done,a:active})); }catch(e){}
+}
+function loadState(){
+  try{
+    var s=window.localStorage.getItem(LSKEY); if(!s)return null;
+    var o=JSON.parse(s);
+    if(o&&Object.prototype.toString.call(o.d)==='[object Array]')return o;
+  }catch(e){}
+  return null;
+}
+function refreshProgress(){
+  var n=0,i,b;
+  for(i=0;i<4;i++){ if(done[i]){ n++; b=$('badge'+i); if(b)b.classList.add('done'); } }
+  var pf=$('progressFill'); if(pf)pf.style.width=(n/4*100)+'%';
+  setTxt('progressText',n+' / 4 個模式已探索');
+}
+function markDone(i){ if(i<0||i>3)return; done[i]=true; refreshProgress(); saveState(); }
+function showSection(i){
+  active=i;
+  var secs=document.querySelectorAll('.section'), a,b;
+  for(a=0;a<secs.length;a++)secs[a].classList.toggle('active',a===i);
+  var tabs=document.querySelectorAll('#navTabs .nav-tab');
+  for(b=0;b<tabs.length;b++)tabs[b].classList.toggle('active',b===i);
+  layout();
+  MODES[i].dirty=true; MODES[i].draw();
+  saveState();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* Event delegation; no inline handlers. */
+function initEvents(){
+  document.body.addEventListener('click',function(e){
+    var t=e.target.closest('[data-action]'); if(!t)return;
+    var act=t.dataset.action, i, bs, k;
+
+    if(act==='show'){ showSection(parseInt(t.dataset.idx,10)); }
+
+    else if(act==='col'){ t.classList.toggle('open'); t.nextElementSibling.classList.toggle('open'); }
+
+    else if(act==='check'){ t.classList.toggle('checked');
+      t.querySelector('.check').textContent=t.classList.contains('checked')?'✓':''; }
+
+    else if(act==='done'){
+      markDone(parseInt(t.dataset.idx,10));
+      var nx=parseInt(t.dataset.next,10);
+      if(nx>=0)showSection(nx);
+    }
+
+    else if(act==='play'){
+      var m=MODES[parseInt(t.dataset.m,10)];
+      m.playing=!m.playing;
+      t.classList.toggle('on',m.playing);
+      t.textContent=m.playing?'⏸ 暫停':'▶ 播放';
+      m.dirty=true;
+    }
+
+    else if(act==='tog'){
+      var mm=MODES[parseInt(t.dataset.m,10)], key=t.dataset.key;
+      mm[key]=!mm[key];
+      t.classList.toggle('on',mm[key]);
+      mm.dirty=true; mm.draw();
+    }
+
+    else if(act==='view1'){
+      M1.view=t.dataset.v;
+      $('v1anim').classList.toggle('on',M1.view==='anim');
+      $('v1env').classList.toggle('on',M1.view==='env');
+      M1.playing=(M1.view==='anim');
+      var pb=$('p1'); if(pb){ pb.classList.toggle('on',M1.playing); pb.textContent=M1.playing?'⏸ 暫停':'▶ 播放'; }
+      M1.dirty=true; M1.draw();
+    }
+
+    else if(act==='probe-reset'){ setRange('s1p',0); M1.dirty=true; M1.draw(); }
+
+    else if(act==='load1'){
+      k=t.dataset.t;
+      M1.isOpen=false;
+      if(k==='match'){ setRange('s1rl',Math.round(M1.Z0*2)); setRange('s1xl',0); }
+      else if(k==='short'){ setRange('s1rl',0); setRange('s1xl',0); }
+      else if(k==='open'){ setRange('s1rl',0); setRange('s1xl',0); M1.isOpen=true; }
+      else if(k==='react'){ setRange('s1rl',0); setRange('s1xl',100); }
+      else if(k==='cplx'){ setRange('s1rl',50); setRange('s1xl',100); }
+      else if(k==='hiR'){ setRange('s1rl',200); setRange('s1xl',0); }
+      M1.dirty=true; M1.draw();
+    }
+
+    else if(act==='focus2'){
+      M2.focus=parseInt(t.dataset.k,10);
+      bs=document.querySelectorAll('[data-action="focus2"]');
+      for(i=0;i<bs.length;i++)bs[i].classList.toggle('on',parseInt(bs[i].dataset.k,10)===M2.focus);
+      M2.dirty=true; M2.draw();
+    }
+
+    else if(act==='sp'){
+      k=t.dataset.t; M3.demo=0;
+      if(k==='short'){ setRange('s3r',0); setRange('s3x',0); M3.isOpen=false; }
+      else if(k==='open'){ setRange('s3r',600); setRange('s3x',0); M3.isOpen=true; }
+      else if(k==='match'){ setRange('s3r',Math.round(M3.Z0*2)); setRange('s3x',0); M3.isOpen=false; }
+      else if(k==='ind'){ setRange('s3r',0); setRange('s3x',Math.round(M3.Z0*2)); M3.isOpen=false; }
+      else if(k==='cap'){ setRange('s3r',0); setRange('s3x',-Math.round(M3.Z0*2)); M3.isOpen=false; }
+      else if(k==='ex'){ setRange('s3z0',50); setRange('s3r',50); setRange('s3x',100); M3.isOpen=false; }
+      M3.dirty=true; M3.draw();
+    }
+
+    else if(act==='draglock'){
+      M3.dragLock=!M3.dragLock;
+      t.classList.toggle('on',M3.dragLock);
+      if(M3.cv)M3.cv.classList.toggle('draglock',M3.dragLock);
+      M3.dirty=true; M3.draw();
+    }
+
+    else if(act==='demo'){ runDemo(parseInt(t.dataset.k,10)); }
+
+    else if(act==='mm'){
+      M4.mode=t.dataset.k;
+      bs=document.querySelectorAll('[data-action="mm"]');
+      for(i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].dataset.k===M4.mode);
+      $('qwrow').style.display=(M4.mode==='qw')?'flex':'none';
+      $('stubrow').style.display=(M4.mode==='qw')?'none':'flex';
+      $('ctlFR').style.display=(M4.mode==='qw')?'flex':'none';
+      setTxt('h4a',(M4.mode==='qw')?'左圖：|Γ_in| 的頻率響應':'左圖：史密斯圖上的三步作圖（當導納圖用）');
+      setTxt('h4b',(M4.mode==='qw')?'右圖：線上的電壓包絡與電路配置':'右圖：截線的接法與電壓包絡');
+      layout(); M4.dirty=true; M4.draw();
+    }
+
+    else if(act==='qwp'){
+      setRange('s4z0',parseFloat(t.dataset.z0));
+      setRange('s4rl',Math.round(parseFloat(t.dataset.zl)*2));
+      setRange('s4xl',0);
+      setRange('s4fr',100);
+      M4.dirty=true; M4.draw();
+    }
+
+    else if(act==='stubtype'){
+      M4.stubType=t.dataset.k;
+      bs=document.querySelectorAll('[data-action="stubtype"]');
+      for(i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].dataset.k===M4.stubType);
+      M4.dirty=true; M4.draw();
+    }
+    else if(act==='stubsol'){
+      M4.stubSol=parseInt(t.dataset.k,10);
+      bs=document.querySelectorAll('[data-action="stubsol"]');
+      for(i=0;i<bs.length;i++)bs[i].classList.toggle('on',parseInt(bs[i].dataset.k,10)===M4.stubSol);
+      M4.dirty=true; M4.draw();
+    }
+  });
+}
+
+/* ============ 模式 ③ 的示範流程 ============ */
+var DEMO=[
+  '<strong>👉 目前狀態：</strong>還沒開始。按「步驟 1」。',
+  '<strong>步驟 1　正規化：</strong>Z₀ = 50 Ω、Z_L = 25 + j50 Ω　→　<strong>z_L = Z_L/Z₀ = 0.5 + j1.0</strong>。'+
+   '史密斯圖上只認這個沒有單位的數字。（畫面已自動把 Z₀、R_L、X_L 設好。）',
+  '<strong>步驟 2　標點、讀 Γ：</strong>沿 <span style="color:#0f766e">r = 0.5 的圓</span>和 <span style="color:#be123c">x = +1 的弧</span>找交點，就是紫色那顆點。'+
+   '從圓心到它的<u>長度＝|Γ|、角度＝θ_Γ</u>。讀數：<strong>Γ = 0.620 ∠82.9°</strong>。'+
+   '（用公式核對：(25+j50−50)/(25+j50+50) = (−25+j50)/(75+j50)，算出來完全一樣。）',
+  '<strong>步驟 3　畫等 SWR 圓：</strong>以圓心為心、|Γ| = 0.620 為半徑畫圓（橘色虛線）。'+
+   '它與正實軸的交點讀到 <strong>r = 4.27</strong>，正好等於 SWR = (1+0.620)/(1−0.620) = <strong>4.266</strong>。<u>整條線的 SWR 都是這個值。</u>',
+  '<strong>步驟 4　往電源轉 2βd：</strong>線長 ℓ = 0.125λ　→　要轉 <strong>2βℓ = 4π(0.125) = π/2 = 90°</strong>，方向是<u>順時針</u>（往電源）。'+
+   '藍色圓弧就是這 90°。轉動時<u>半徑完全不變</u>——這是無損耗線的特徵。',
+  '<strong>步驟 5　讀 z_in、還原 Z_in：</strong>轉完落在藍點：<strong>z_in = 4.000 − j1.000</strong>。'+
+   '最後<u>乘回 Z₀</u>：<strong>Z_in = (4.000 − j1.000) × 50 = 200 − j50 Ω</strong>。'+
+   '用 tan 公式核對：Z₀(Z_L + jZ₀tan45°)/(Z₀ + jZ_L tan45°) 也得到 200 − j50 Ω ✅'
+];
+function runDemo(k){
+  M3.demo=k;
+  if(k>=1){ M3.isOpen=false; setRange('s3z0',50); setRange('s3r',50); setRange('s3x',100); }
+  setRange('s3d',(k>=4)?125:0);
+  var e=$('demoText'); if(e)e.innerHTML=DEMO[clamp(k,0,5)];
+  M3.demo=k; M3.dirty=true; M3.draw();
+}
+
+/* ============ 觸控／滑鼠互動 ============ */
+/* 水平拖曳改滑桿（模式①、②）：垂直方向留給頁面捲動，配合 CSS touch-action:pan-y */
+function hDrag(cv,sliderId){
+  var drag=false,lx=0;
+  cv.addEventListener('pointerdown',function(e){
+    drag=true; lx=e.clientX;
+    try{cv.setPointerCapture(e.pointerId);}catch(err){}
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    var dx=e.clientX-lx; lx=e.clientX;
+    var el=$(sliderId); if(!el)return;
+    var mn=parseFloat(el.min), mx=parseFloat(el.max);
+    var gain=(mx-mn)/Math.max(120,(cv._w||600)-62);
+    el.value=clamp(parseFloat(el.value)-dx*gain,mn,mx);
+    el.dispatchEvent(new Event('input'));
+    e.preventDefault();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(tt){
+    cv.addEventListener(tt,function(){drag=false;});
+  });
+}
+/* 史密斯圖拖曳：
+   滑鼠可在圖上任意處拖；觸控時只有「按在紫色點附近」或「開啟拖曳鎖定」才進入拖曳，
+   其餘情況完全不攔截，手指上下滑動仍可正常捲動頁面。 */
+function smithDrag(){
+  var cv=M3.cv; if(!cv)return;
+  var drag=false;
+  function nearMarker(clientX,clientY){
+    if(!cv._w)return false;
+    var rect=cv.getBoundingClientRect(), m=M3.markerPx();
+    var grab=Math.max(38,m.R*0.20);      /* 觸控目標至少 38px，符合行動裝置建議 */
+    return Math.hypot(clientX-rect.left-m.x, clientY-rect.top-m.y)<=grab;
+  }
+  cv.addEventListener('touchstart',function(e){
+    if(M3.dragLock){ e.preventDefault(); return; }
+    var t=e.touches&&e.touches[0]; if(!t)return;
+    if(nearMarker(t.clientX,t.clientY))e.preventDefault();   /* 只有抓到點時才吃掉捲動 */
+  },{passive:false});
+  cv.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='touch'&&!M3.dragLock&&!nearMarker(e.clientX,e.clientY))return;
+    drag=true;
+    try{cv.setPointerCapture(e.pointerId);}catch(err){}
+    M3.setFromPixel(e.clientX,e.clientY);
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    M3.setFromPixel(e.clientX,e.clientY);
+    e.preventDefault();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(tt){
+    cv.addEventListener(tt,function(){drag=false;});
+  });
+}
+
+/* ============ 初始化 ============ */
+function init(){
+  M1.cv=$('c1'); M2.cv=$('c2'); M3.cv=$('c3'); M4.cvA=$('c4a'); M4.cvB=$('c4b');
+  layout();
+  initControls();
+  initEvents();
+  smithDrag();
+  hDrag(M1.cv,'s1p');
+  hDrag(M2.cv,'s2p');
+
+  var st=loadState(), q;
+  if(st){ for(q=0;q<4;q++)done[q]=!!st.d[q]; }
+  refreshProgress();
+
+  var rt=null;
+  window.addEventListener('resize',function(){
+    if(rt)clearTimeout(rt);
+    rt=setTimeout(function(){layout();MODES[active].draw();},160);
+  });
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden){ last=0; layout(); MODES[active].dirty=true; MODES[active].draw(); }
+  });
+
+  for(var i=0;i<4;i++)MODES[i].dirty=true;
+  M1.draw(); M2.draw(); M3.draw(); M4.draw();
+  runDemo(0);
+  requestAnimationFrame(tick);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+else init();
+
+})();
+</script>
+</body>
+</html>

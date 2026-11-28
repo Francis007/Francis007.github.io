@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 14 週互動動畫</title>
+<meta name="description" content="非同步自學動畫，共五段，從資料變多時間怎麼長，一路講到四種排序方法。">
+<style>
+:root{
+  --bg:#F2EEE3;--ink:#24211D;--ink2:#676158;--line:#B8B1A4;--acc:#C7522A;--acc2:#A8431F;
+  --paper:#FBF8F1;--panel:#E8E1D1;--frame:#8F887C;--teal:#3E6E73;--tealL:#D6E4E1;--ochreL:#F1DEB0;
+  --sans:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Heiti TC",sans-serif;
+  --serif:"Noto Serif TC","Noto Sans TC","Microsoft JhengHei","PingFang TC","Heiti TC",serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:#F2EEE3;color:#24211D;font-family:var(--sans);line-height:1.6;overflow-x:hidden}
+button{font-family:inherit}
+a{color:var(--acc2)}
+#app{min-height:100vh;display:flex;flex-direction:column}
+.view{flex:1 0 auto;width:100%}
+.view[hidden]{display:none!important}
+.foot{flex:0 0 auto;padding:9px 16px;font-size:13px;line-height:1.5;color:var(--ink2);border-top:1px solid var(--line);text-align:center;background:#EFEADD}
+
+/* ---------- 目錄 ---------- */
+#toc{max-width:1100px;margin:0 auto;padding:28px 16px 28px}
+.kicker{margin:0;color:var(--acc2);font-weight:700;font-size:15px;letter-spacing:.04em}
+#toc h1{font-family:var(--serif);font-size:30px;line-height:1.35;margin:4px 0 10px;font-weight:700}
+.lead{margin:0 0 6px;font-size:17px;max-width:46em}
+.lead2{margin:0 0 18px;font-size:15px;color:var(--ink2);max-width:46em}
+.resume{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 18px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;background:var(--paper);font-size:15px}
+.resume[hidden]{display:none}
+.resume a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
+.cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.card a.go{display:flex;gap:14px;padding:16px 16px 12px;color:inherit;text-decoration:none;flex:1;min-height:44px}
+.card a.go:hover{background:#FFFDF7}
+.card a.go:focus-visible,.btn:focus-visible,.sub:focus-visible,.resume a:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.num{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--acc2);color:#fff;font-weight:700;font-size:19px;display:flex;align-items:center;justify-content:center;font-family:var(--serif)}
+.card h3{margin:0 0 4px;font-family:var(--serif);font-size:19px;line-height:1.4}
+.card p{margin:0;font-size:15px}
+.card .meta{margin-top:8px;font-size:13px;color:var(--ink2)}
+.sub{display:flex;align-items:center;min-height:44px;padding:0 16px;border-top:1px solid #E1DACB;font-size:14px;color:var(--acc2);text-decoration:none}
+.sub:hover{background:#FFFDF7}
+.howto{margin:20px 0 0;font-size:14px;color:var(--ink2)}
+
+/* ---------- 播放器 ---------- */
+.p-head{display:flex;align-items:center;gap:12px;padding:8px 20px;border-bottom:1px solid var(--line);background:#EFEADD}
+.p-title{flex:1;min-width:0}
+.p-seg{font-size:13px;color:var(--ink2);display:block;line-height:1.4}
+.p-title h2{font-family:var(--serif);font-size:21px;margin:0;line-height:1.35;font-weight:700}
+.pages{font-size:13px;color:var(--ink2)}
+.btn{min-height:46px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--frame);background:var(--paper);color:var(--ink);font-size:17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1.2;touch-action:manipulation}
+.btn:hover{background:#FFFDF7}
+.btn.primary{background:var(--acc2);border-color:var(--acc2);color:#fff}
+.btn.primary:hover{background:#933A1B}
+.btn:disabled{opacity:.38;cursor:default}
+.btn svg{width:18px;height:18px;flex:0 0 auto}
+.btn.small{font-size:15px;min-height:44px}
+.p-main{padding:10px 20px 12px}
+.stage{background:var(--paper);border:1px solid var(--line);border-radius:14px;position:relative}
+.stage svg.scene{display:block;width:100%;height:auto;aspect-ratio:5/3}
+.stage svg.scene[hidden]{display:none}
+.panel{display:flex;flex-direction:column;gap:10px;padding-top:12px}
+.stepbar{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;color:var(--ink2);flex-wrap:wrap}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:#D8D1C3}
+.dot.done{background:#B9A88E}
+.dot.cur{background:var(--acc)}
+.s-title{font-family:var(--serif);font-size:20px;margin:0;line-height:1.4}
+.cap{font-size:19px;line-height:1.75;margin:0}
+.take{background:#FFF9EE;border:2px solid var(--acc);border-radius:12px;padding:10px 14px 12px}
+.take[hidden]{display:none}
+.take-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 6px;font-weight:700;font-size:17px;color:var(--acc2)}
+.tag{display:inline-block;background:var(--acc2);color:#fff;border-radius:999px;padding:1px 10px;font-size:13px;font-weight:700;line-height:1.7}
+.tag.soft{background:var(--teal)}
+.take p{margin:6px 0 0;font-size:18px;line-height:1.7}
+.take b{color:var(--acc2)}
+.take strong{color:var(--acc);font-weight:700}
+.ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.after{display:flex;gap:8px}
+.after .btn{flex:1}
+.after[hidden]{display:none}
+.keys{margin:0;font-size:13px;color:var(--ink2)}
+.rotate-hint{display:none;margin:6px 0 0;font-size:13px;color:var(--ink2)}
+
+@media (min-width:900px) and (min-height:560px){
+  #player:not([hidden]){display:flex;flex-direction:column;height:calc(100vh - 39px);min-height:520px}
+  .p-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:18px}
+  .stage{min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .stage svg.scene{width:100%;height:100%;aspect-ratio:auto}
+  .panel{padding-top:0;min-height:0;overflow:auto}
+  .ctrls{margin-top:auto}
+}
+@media (max-width:899px),(max-height:559px){
+  .p-head{flex-wrap:wrap;padding:8px 16px;row-gap:2px}
+  .pages{order:3;flex-basis:100%}
+  .p-main{padding:10px 16px 16px}
+  .rotate-hint{display:block}
+}
+@media (max-width:420px){
+  #toc h1{font-size:25px}
+  .p-title h2{font-size:18px}
+  .cap{font-size:18px}
+  .take p{font-size:17px}
+  .btn{font-size:16px;padding:6px 8px}
+  .cards{grid-template-columns:1fr}
+  .keys{display:none}
+}
+
+
+.selfread{margin:18px 0 18px;padding:10px 14px;border-left:4px solid var(--acc);background:var(--paper);font-size:15px;max-width:52em}
+.howto{margin:14px 0 0;font-size:14px;color:var(--ink2)}
+.take p.tk{margin:0 0 12px}
+.take p.tk:last-child{margin-bottom:0}
+.take p.tk b{display:block;margin:0 0 4px;color:var(--acc2)}
+.take .cl{font-size:0;line-height:0}
+.take .tag{font-size:14px}
+.cap .nb{white-space:nowrap}
+
+/* ---------- SVG 場景（第 14 週） ---------- */
+.scene text{font-family:var(--sans)}
+.nt,.nt *{transition:none!important}
+.still .scene *,.still .scene{transition:none!important;animation:none!important}
+@media (prefers-reduced-motion:reduce){.scene *{animation:none!important}}
+/* 卡片：黃＝還沒排，綠＝排好；外框顏色各有各的意思，同一步不重複 */
+.cd .cr{fill:#F6E6B6;stroke:#C99A3A;stroke-width:3;transition:fill .5s,stroke .5s}
+.cd text{fill:#24211D;font-weight:700}
+.cd .ring{fill:none;stroke:none;stroke-width:0;transition:stroke .3s}
+.cd.srt .cr{fill:#CFE3B4;stroke:#6F8A3F}
+.cd.hi .ring{stroke:#C7522A;stroke-width:6}
+.cd.bub .ring{stroke:#4F86A6;stroke-width:5}
+.cd.pv .ring{stroke:#6B5B95;stroke-width:6}
+.cd.tl .ring{stroke:#2F7F86;stroke-width:6}
+.cd.gold .ring{stroke:#D4A017;stroke-width:6}
+.cd.dim .cr{fill:#E9E4D9;stroke:#CFC8BA}
+.cd.dim text{fill:#A39B8D}
+.cd.plain .cr{fill:#FBF8F1;stroke:#B8B1A4}
+.frm{fill:#E4F0D6;stroke:#6F8A3F;stroke-width:3;stroke-dasharray:9 6;vector-effect:non-scaling-stroke}
+.mini .cr{fill:#F6E6B6;stroke:#C99A3A;stroke-width:2.5;transition:fill .5s,stroke .5s}
+.mini.srt .cr{fill:#CFE3B4;stroke:#6F8A3F}
+.mini.hi .cr{stroke:#C7522A;stroke-width:4}
+.blk .cr{fill:#F6E6B6;stroke:#C99A3A;stroke-width:2.5;transition:fill .5s,stroke .5s}
+.blk.srt .cr{fill:#CFE3B4;stroke:#6F8A3F}
+.blk.dm .cr{fill:#EFEBE2;stroke:#D2CBBE}
+.blk.pv .cr{stroke:#6F8A3F;stroke-width:5}
+.cell{fill:#FBF8F1;stroke:#C9C1B1;stroke-width:2}
+.tick rect{fill:#EBD79A;stroke:none}
+.tick path{fill:none;stroke:#7A5A12;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.tag2 rect{fill:#E3EEEC;stroke:#8FB0AA;stroke-width:2;transition:fill .4s,stroke .4s}
+.tag2 text{fill:#8A857A;font-weight:700;transition:fill .4s}
+.tag2.on rect{fill:#3E6E73;stroke:#2F5559}
+.tag2.on text{fill:#FFFFFF}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="toc" class="view" aria-labelledby="tocTitle">
+    
+    <h1 id="tocTitle">互動動畫：演算法效率與排序</h1>
+    <p class="lead">五段動畫。按「下一步」或鍵盤右鍵，一步一步往下看；每一步都有文字說明，不開聲音也看得懂。每段最後一步是「這段要記得」。</p>
+    <p class="lead2">建議先看完五段動畫。</p>
+    <p class="selfread">動畫裡的步驟與數字是示範例子，少數圖示的數字只是示意。看懂做法就好，不用自己算。</p>
+    <div id="resume" class="resume" hidden></div>
+    <ol id="cards" class="cards"></ol>
+    <p class="howto">分享時，網址後面加 ?a=段號&amp;s=步號，可以直接打開某一段的某一步，例如 ?a=3&amp;s=4。</p>
+  </section>
+
+  <section id="player" class="view" hidden aria-label="動畫播放">
+    <header class="p-head">
+      <button id="bToc" class="btn small" type="button">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>回目錄</button>
+      <div class="p-title">
+        <span id="pSeg" class="p-seg"></span>
+        <h2 id="pTitle"></h2>
+      </div>
+      <span id="pPages" class="pages"></span>
+    </header>
+    <div class="p-main">
+      <div id="stage" class="stage"></div>
+      <div class="panel">
+        <p class="rotate-hint">手機橫放，圖會比較大。</p>
+        <div class="stepbar"><span id="pStep"></span><span id="dots" class="dots" aria-hidden="true"></span></div>
+        <h3 id="sTitle" class="s-title"></h3>
+        <p id="cap" class="cap" aria-live="polite"></p>
+        <div id="take" class="take" hidden aria-live="polite"></div>
+        <div class="ctrls">
+          <button id="bPrev" class="btn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>上一步</button>
+          <button id="bNext" class="btn primary" type="button">下一步<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button id="bAuto" class="btn" type="button" aria-pressed="false"></button>
+          <button id="bHome" class="btn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10a5.5 5.5 0 1 0 1.8-4.1M4.5 3.5v3.2h3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>從頭</button>
+        </div>
+        <div id="after" class="after" hidden>
+          <button id="bNextSeg" class="btn primary" type="button"></button>
+        </div>
+        <p class="keys">鍵盤左右鍵也能換步。</p>
+      </div>
+    </div>
+  </section>
+  <footer class="foot">非同步自學動畫</footer>
+</div>
+<script>
+(function () {
+'use strict';
+var DATA = {"animations":[{"no":1,"title":"資料變多，時間怎麼長：平方成長和指數成長","tocLine":"客人多一倍，工作會多幾倍？看清楚平方成長和指數成長差在哪裡。","tocPages":"","steps":[{"title":"兩種做法，客人 n 位","caption":"今天有 n 位客人。做法甲把每位客人的菜各炒一次。做法乙要把每位客人的菜，和每一位的菜都核對一次，大約 n 乘 n 次。"},{"title":"客人多一倍","caption":"客人多一倍，做法甲的工作也多一倍。做法乙的核對表，橫的直的都多一倍，工作變成四倍。"},{"title":"取名字：線性和平方","caption":"做法甲要做的事和 n 一樣多，叫線性成長，記成 O(n)。做法乙要做 n 乘 n 件事，叫平方成長，也就是二次方，記成 O(n²)。"},{"title":"對數成長：一直對半切","caption":"長得最慢的一種叫對數成長，寫成 log n。把 n 一直對半切，切到剩 1 為止。8 個數切 3 次，一千個數大約也只要切 10 次。"},{"title":"指數成長：n 只多 1","caption":"再看 2 的 n 次方、10 的 n 次方。n 只要多 1，時間就翻倍或乘十，很快就算不完，叫指數成長。"},{"title":"分辨平方和指數","caption":"分辨平方和指數，看 n 在哪裡。n 在底下、次方固定是 2，是平方；n 跑到次方的位置，才是指數。"},{"title":"這段要記得","caption":"這段要記得：O(n²) 叫平方成長，也就是二次方。n 在底下、次方固定是 2，是平方；n 在次方的位置，才是指數。"}],"takeaway":[{"tag":"重點","text":"O(n²) 叫平方成長，也就是二次方。n 在底下、次方固定是 2，是平方；n 在次方的位置，才是指數。"}],"tocLinks":[]},{"no":2,"title":"選擇排序法：挑最小的，換到前面","tocLine":"7 張卡片，每一輪挑出最小的，和最前面的互換，六輪排好。","tocPages":"","steps":[{"title":"示範例，7 張卡片","caption":"示範例是 7 張卡片：16、77、25、85、12、8、36。一開始全都還沒排。每一輪做兩件事：挑出最小的，換到最前面。"},{"title":"第一輪","caption":"第一輪：你把還沒排的 7 張全部看一遍，最小的是 8。8 和最前面的 16 互換，8 就排好了。"},{"title":"第二輪、第三輪","caption":"第二輪，還沒排的裡最小的是 12，和 77 互換。第三輪，最小的是 16，和 25 互換。已排好的是 8、12、16。"},{"title":"第四輪","caption":"第四輪，最小的是 25，和最前面的 85 互換。已排好的是 8、12、16、25。"},{"title":"第五輪、第六輪","caption":"第五輪，最小的是 36，和 77 互換。剩 85 和 77，最小的是 77，和 85 互換，全部排好了。"},{"title":"回到第三輪：16 為什麼站好了","caption":"回到第三輪看 16。左邊已排好的都比 16 小，右邊還沒排的都比 16 大，所以 16 已經站到自己的位置。"},{"title":"這段要記得","caption":"這段要記得：選擇排序，每一輪挑出未排序裡最小的，和未排序最前面的互換，已排序的多一張。"}],"takeaway":[{"tag":"練習","text":"選擇排序，每一輪挑出未排序裡最小的，和未排序最前面的互換，已排序的多一張。"}],"tocLinks":[]},{"no":3,"title":"插入排序法：插進排好的，最慘的情況要挪很多次","tocLine":"拿下一張，插進排好的那排；最慘的情況，後面的要一張張往後挪。","tocPages":"","steps":[{"title":"拿下一張，插進排好的","caption":"一開始只有 16 算已排序。每一輪你拿還沒排的第一張，插進已排序那排。77 放後面，25 插中間，85 放最後。"},{"title":"插入 12，最前面","caption":"輪到 12，插到最前面，16、25、77、85 四張都往後挪一格。"},{"title":"插入 8 和 36","caption":"輪到 8，插到最前面，五張都要挪。最後 36 插在 25 和 77 中間，77 和 85 挪一格，全部排好。"},{"title":"找位置和挪位置","caption":"回到插入 36 那一次。找位置靠比較，大約 log n 個比較，很快。挪位置叫做移動，後面的都要往後挪一格。"},{"title":"最慘的情況，原本由大排到小","caption":"最慘的是數列原本由大排到小：4、3、2、1，目標仍是由小排到大。3 插到最前面，4 挪一格；2 插到最前面，3 和 4 各挪一格。"},{"title":"越往後挪越多","caption":"插入 1，三張都挪一格，移動 3 次。1 加 2 加 3，一共 6 次。張數越多，要挪的越多，總次數和 n² 成正比，也就是平方成長。"},{"title":"這段要記得","caption":"這段要記得：由大排到小的數列用插入排序法，移動次數約與 n² 成正比，也就是平方成長。練習會用到插入排序，拿下一張，插進已排序的那排。找位置靠比較，挪位置是移動。"}],"takeaway":[{"tag":"重點","text":"由大排到小的數列用插入排序法，移動次數約與 n² 成正比，也就是平方成長。"},{"tag":"練習","text":"插入排序，拿下一張，插進已排序的那排。找位置靠比較，挪位置是移動。"}],"tocLinks":[{"s":4,"label":"從第 4 步開始看（找位置和最慘的情況）"}]},{"no":4,"title":"泡沫排序法：小的往前浮","tocLine":"從最後一張看起，比前面小就往前移，最小的一路浮到最前面。","tocPages":"","steps":[{"title":"從最後一張看起","caption":"你從還沒排那段的最後一張看起，比前面那張小，就往前移。氣泡排序又稱為泡沫排序法。"},{"title":"第一輪，8 一路往前浮","caption":"第一輪：36 沒比 8 小，不動。看到 8，比前面的小，就一格一格往前，一路浮到最前面。"},{"title":"第二輪，12 往前浮","caption":"第二輪：36 沒比 12 小，不動。看到 12，也一格一格往前浮，浮到還沒排那段的最前面。已排好的是 8、12。"},{"title":"第三輪，一次只和前一張比","caption":"第三輪：36 比 85 小，往前一格，比 25 大就停。接著 25 比 77 小，往前一格，比 16 大就停。16 在還沒排的最前面，也排好了。"},{"title":"第四輪、第五輪","caption":"第四輪：85 不動，36 比 77 小，往前一格就停，25 也排好了。第五輪從 85 看到 36，都沒有往前，表示全排好了。"},{"title":"這段要記得","caption":"這段要記得：用泡沫排序法由小到大排序，最小的數會像泡沫一樣往前浮到最前面。練習會用到泡沫排序，從最後面往前看，比前面那張小的就往前移。"}],"takeaway":[{"tag":"重點","text":"用泡沫排序法由小到大排序，最小的數會像泡沫一樣往前浮到最前面。"},{"tag":"練習","text":"泡沫排序，從最後面往前看，比前面那張小的就往前移。"}],"tocLinks":[]},{"no":5,"title":"快速排序法：先站好一個，再分兩邊","tocLine":"抽一張當基準，讓它先站好位置，再把兩邊各自分下去。","tocPages":"","steps":[{"title":"抽一張當基準","caption":"快速排序：先抽一張當基準，通常是最前面的 16。目標是比 16 小的都到它前面，比 16 大的都到它後面。"},{"title":"兩頭往中間找","caption":"前面的手指往後找比 16 大的，後面的手指往前找比 16 小的，都停下來就對調：先是 77 和 8，再是 25 和 12。"},{"title":"16 就定位","caption":"兩隻手指交錯了，把 16 和 12 對調。現在 16 前面都比它小，後面都比它大，16 已經站好位置。"},{"title":"兩邊再各做一次","caption":"16 不會再動。前面 12、8 這堆，後面 85、25、77、36 這堆，各自再用同一招，分到每堆只剩一張。"},{"title":"選擇排序，每輪只少一張","caption":"再和選擇排序比一比。選擇排序每一輪都要把剩下的全部看一遍，下一輪要處理的只少一張，7 張、6 張、5 張慢慢減。"},{"title":"快速排序，每次少一半","caption":"快速排序每分一次，如果切成差不多大的兩半，要處理的那堆就少一半，大約切 log n 次。兩堆之間也不用再互相比。"},{"title":"這段要記得","caption":"這段要記得：快速排序，先讓一個數就定位，小的在前、大的在後，前後兩堆再用同一招。"}],"takeaway":[{"tag":"練習","text":"快速排序，先讓一個數就定位，小的在前、大的在後，前後兩堆再用同一招。"}],"tocLinks":[]}]};
+var Q = new URLSearchParams(location.search);
+var STILL = Q.get('still') === '1';
+var RM = false;
+try { RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+if (STILL) document.documentElement.classList.add('still');
+
+var NS = 'http://www.w3.org/2000/svg';
+var C = {
+  ink:'#24211D', ink2:'#676158', line:'#B8B1A4', acc:'#C7522A', acc2:'#A8431F', paper:'#FBF8F1',
+  frame:'#8F887C', teal:'#3E6E73', tealL:'#D6E4E1', ochre:'#B98A2E', ochreL:'#F1DEB0',
+  violet:'#6B5B95', violetL:'#E4DEF0', steel:'#4F7F99', steelL:'#D5E3EC',
+  skin:'#EBCBA7', white:'#FFFDF8', mute:'#A39B8D', grey:'#EFEBE2', green:'#6F8A3F', greenL:'#CFE3B4',
+  yel:'#F6E6B6', yelS:'#C99A3A'
+};
+
+/* ---------- SVG 小工具 ---------- */
+function S(tag, a, p) {
+  var e = document.createElementNS(NS, tag);
+  if (a) { for (var k in a) { if (a[k] !== null && a[k] !== undefined) e.setAttribute(k, a[k]); } }
+  if (p) p.appendChild(e);
+  return e;
+}
+function T(p, x, y, s, o) {
+  o = o || {};
+  var e = S('text', {x: x, y: y, 'font-size': o.fs || 22, 'text-anchor': o.a || 'middle', fill: o.c || C.ink,
+    'font-weight': o.w || null, 'class': o.cls || null}, p);
+  e.textContent = s;
+  return e;
+}
+function G(p, a) { return S('g', a || null, p); }
+function at(p, x, y, sc) { return S('g', {transform: 'translate(' + x + ',' + y + ')' + (sc ? ' scale(' + sc + ')' : '')}, p); }
+function line(p, x1, y1, x2, y2, o) {
+  o = o || {};
+  return S('line', {x1: x1, y1: y1, x2: x2, y2: y2, stroke: o.c || C.frame, 'stroke-width': o.w || 2,
+    'stroke-dasharray': o.dash || null, 'stroke-linecap': o.cap || 'round', 'marker-end': o.me || null, 'marker-start': o.ms || null, 'class': o.cls || null}, p);
+}
+function rect(p, x, y, w, h, o) {
+  o = o || {};
+  return S('rect', {x: x, y: y, width: w, height: h, rx: o.rx === undefined ? 4 : o.rx, fill: o.f || 'none', stroke: o.s || null,
+    'stroke-width': o.sw || (o.s ? 1.5 : null), 'stroke-dasharray': o.dash || null, 'class': o.cls || null}, p);
+}
+function path(p, d, o) {
+  o = o || {};
+  return S('path', {d: d, fill: o.f || 'none', stroke: o.s || null, 'stroke-width': o.sw || (o.s ? 2 : null),
+    'stroke-dasharray': o.dash || null, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'marker-end': o.me || null, 'class': o.cls || null}, p);
+}
+function circ(p, cx, cy, r, o) {
+  o = o || {};
+  return S('circle', {cx: cx, cy: cy, r: r, fill: o.f || 'none', stroke: o.s || null, 'stroke-width': o.sw || (o.s ? 2 : null), 'stroke-dasharray': o.dash || null, 'class': o.cls || null}, p);
+}
+
+/* ---------- 場景 ---------- */
+function Scene(no, title) {
+  this.no = no;
+  this.svg = S('svg', {viewBox: '0 0 1000 600', 'class': 'scene', role: 'img', 'aria-label': title, preserveAspectRatio: 'xMidYMid meet'});
+  this.defs = S('defs', null, this.svg);
+  this.root = G(this.svg);
+  this.reg = {}; this.base = {};
+}
+Scene.prototype.R = function (id, el, props) {
+  props = props || {};
+  if (this.reg[id]) throw new Error('duplicate id ' + id);
+  var b = {o: 1, x: 0, y: 0, s: 1, sx: 1, r: 0, c: {}, tx: null};
+  for (var k in props) { if (k === 'origin') continue; if (k === 'c') b.c = Object.assign({}, props.c); else b[k] = props[k]; }
+  if (el.tagName === 'text' && b.tx === null) b.tx = el.textContent;
+  var og = props.origin;
+  if (Array.isArray(og)) { el.style.transformBox = 'view-box'; el.style.transformOrigin = og[0] + 'px ' + og[1] + 'px'; }
+  else { el.style.transformBox = 'fill-box'; el.style.transformOrigin = og === 'left' ? '0% 50%' : (og === 'top' ? '50% 0%' : (og === 'bottom' ? '50% 100%' : '50% 50%')); }
+  this.reg[id] = el; this.base[id] = b;
+  return el;
+};
+Scene.prototype.marker = function (name, color) {
+  var id = 'mk' + this.no + name;
+  var m = S('marker', {id: id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse', markerUnits: 'strokeWidth'}, this.defs);
+  S('path', {d: 'M0 0 L10 5 L0 10 z', fill: color}, m);
+  return 'url(#' + id + ')';
+};
+/* 註冊一個「可移動」的群組：群組本身不帶 transform 屬性 */
+Scene.prototype.box = function (p, id, props) { var g = G(p); this.R(id, g, props); return g; };
+Scene.prototype.T = function (id, p, x, y, s, o, props) { var t = T(p, x, y, s, o); this.R(id, t, props); return t; };
+
+/* 事件清單：每個事件 [開始毫秒, 長度毫秒, {元件: 狀態}, 旗標]。旗標 'tr'＝只在過場裡出現、不進最後狀態；'lin'＝線性移動 */
+function EQ() { this.a = []; }
+EQ.prototype.e = function (t, d, set, flag) { this.a.push([Math.round(t), Math.round(d), set, flag]); return this; };
+EQ.prototype.list = function () {
+  var idx = this.a.map(function (v, i) { return i; });
+  var a = this.a;
+  idx.sort(function (i, j) { return (a[i][0] - a[j][0]) || (i - j); });
+  return idx.map(function (i) { return a[i]; });
+};
+function one(id, st) { var o = {}; o[id] = st; return o; }
+function many(ids, st) { var o = {}; ids.forEach(function (id) { o[id] = st; }); return o; }
+function merge2() { var o = {}; for (var i = 0; i < arguments.length; i++) { var s = arguments[i]; for (var k in s) o[k] = s[k]; } return o; }
+
+/* ---------- 共用圖示 ---------- */
+function banner(sc, x, y) {
+  var g = sc.box(sc.root, 'banner', {o: 0});
+  S('rect', {x: x - 105, y: y - 24, width: 210, height: 46, rx: 23, fill: C.acc}, g);
+  T(g, x, y + 8, '這段要記得', {fs: 24, w: 700, c: '#FFFFFF'});
+  return g;
+}
+/* 藥丸標籤：回傳群組（未註冊） */
+function pill(p, cx, cy, w, h, txt, o) {
+  o = o || {};
+  var g = G(p);
+  S('rect', {x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: o.rx === undefined ? h / 2 : o.rx, fill: o.f || C.acc, stroke: o.s || null, 'stroke-width': o.s ? (o.sw || 2) : null}, g);
+  T(g, cx, cy + (o.fs || 22) * 0.36, txt, {fs: o.fs || 22, w: o.w === undefined ? 700 : o.w, c: o.c || '#FFFFFF'});
+  return g;
+}
+/* 手：指尖在原點；向上（up）或向下（down）。你的手指 */
+function hand(p, dir) {
+  var g = G(p);
+  var h = dir === 'down' ? G(g, {transform: 'scale(1,-1)'}) : g;
+  S('rect', {x: -7, y: 0, width: 14, height: 42, rx: 7, fill: C.skin, stroke: C.frame, 'stroke-width': 2}, h);
+  S('rect', {x: -19, y: 34, width: 38, height: 34, rx: 11, fill: C.skin, stroke: C.frame, 'stroke-width': 2}, h);
+  S('rect', {x: -29, y: 46, width: 15, height: 15, rx: 7, fill: C.skin, stroke: C.frame, 'stroke-width': 2}, h);
+  S('line', {x1: 0, y1: 44, x2: 0, y2: 58, stroke: '#C9A27C', 'stroke-width': 2, 'stroke-linecap': 'round'}, h);
+  return g;
+}
+
+/* ---------- 排序舞台 ---------- */
+var PITCH = 108, CWD = 90, CHT = 110, X0 = 96, CY0 = 250;
+function slotL(i) { return X0 + PITCH * i; }
+function slotC(i) { return X0 + PITCH * i + CWD / 2; }
+/* 一張卡片：外層 x 位移、內層 y 位移＋外觀 class（黃／綠／外框） */
+function mkCard(sc, p, pre, val, slot, o) {
+  o = o || {};
+  var ox = sc.box(p, pre + 'x' + val, o.px || {});
+  var oy = sc.box(ox, pre + 'y' + val, o.py || {});
+  oy.setAttribute('class', 'cd' + (o.cls ? ' ' + o.cls : ''));
+  var L = slotL(slot);
+  S('rect', {'class': 'ring', x: L - 6, y: CY0 - 6, width: CWD + 12, height: CHT + 12, rx: 16}, oy);
+  S('rect', {'class': 'cr', x: L, y: CY0, width: CWD, height: CHT, rx: 12}, oy);
+  T(oy, L + CWD / 2, CY0 + 71, String(val), {fs: 44, w: 700});
+  return {x: pre + 'x' + val, y: pre + 'y' + val};
+}
+/* arr：目前由左到右的卡片；init：起始排列。回傳每張卡 x 位移的狀態 */
+function posSet(pre, arr, init) {
+  var o = {};
+  arr.forEach(function (v, i) { o[pre + 'x' + v] = {x: (i - init.indexOf(v)) * PITCH}; });
+  return o;
+}
+/* 兩張卡互換：a 往上抬、b 往下抬（抬開的高度比卡片高），抬開後左右交換，再放回同一列。
+   ia、ib 是 a、b「目前」所在的格：a 移到 ib，b 移到 ia。
+   10/1 第四版：原本 y 只抬 62、x 從一開始就等速移動，卡片經過時會蓋住中間那幾張的數字；
+   改成先抬（前 30%，先快後慢）、中段左右移（12%～88%，慢進慢出）、最後放下（後 30%，先慢後快），
+   抬到 124 單位（卡片高 110，加外框 9），左右移的時候完全不碰到同一列的卡。 */
+function swapEv(q, t, pre, a, b, ia, ib, init, dur, arc, arcB) {
+  arc = arc === undefined ? 124 : arc;
+  arcB = arcB === undefined ? arc : arcB;
+  var xa = {}, xb = {};
+  xa[pre + 'x' + a] = {x: (ib - init.indexOf(a)) * PITCH};
+  xb[pre + 'x' + b] = {x: (ia - init.indexOf(b)) * PITCH};
+  var up = Math.round(dur * 0.3), x0 = Math.round(dur * 0.12), xd = Math.round(dur * 0.76), dn = Math.round(dur * 0.7);
+  q.e(t, up, merge2(one(pre + 'y' + a, {y: -arc}), one(pre + 'y' + b, {y: arcB})), 'eo');
+  q.e(t + x0, xd, merge2(xa, xb));
+  q.e(t + dn, dur - dn, merge2(one(pre + 'y' + a, {y: 0}), one(pre + 'y' + b, {y: 0})), 'ei');
+  return t + dur;
+}
+var SEQ = {};
+/* ================= 動畫 1：資料變多，時間怎麼長 ================= */
+(function () {
+var TX = 600, TY = 160, CS = 40;             /* 核對表：左上角與格子大小 */
+function cx(i) { return 70 + 72 * i; }        /* 客人 i 的 x */
+function cust(p, x) {
+  var g = G(p);
+  circ(g, x, 152, 13, {f: C.skin, s: C.frame, sw: 2});
+  rect(g, x - 16, 168, 32, 34, {rx: 12, f: '#B9CFC9', s: C.frame, sw: 2});
+  return g;
+}
+function plateAt(p, x) {
+  var g = G(p);
+  S('ellipse', {cx: x, cy: 262, rx: 32, ry: 21, fill: '#FFFFFF', stroke: C.frame, 'stroke-width': 2}, g);
+  return g;
+}
+function flameAt(p, x) {
+  var g = G(p);
+  S('path', {d: 'M' + x + ' 204 Q' + (x + 12) + ' 218 ' + (x + 8) + ' 229 Q' + x + ' 237 ' + (x - 8) + ' 229 Q' + (x - 12) + ' 218 ' + x + ' 204 Z', fill: '#E8873A', stroke: '#B5561E', 'stroke-width': 1.5}, g);
+  S('path', {d: 'M' + x + ' 216 Q' + (x + 5) + ' 224 ' + (x + 3) + ' 229 Q' + x + ' 232 ' + (x - 3) + ' 229 Q' + (x - 5) + ' 224 ' + x + ' 216 Z', fill: '#F7D060'}, g);
+  return g;
+}
+function tickAt(p, r, c) {
+  var g = G(p, {'class': 'tick'}), x = TX + CS * c, y = TY + CS * r;
+  S('rect', {x: x + 3, y: y + 3, width: CS - 6, height: CS - 6, rx: 5}, g);
+  S('path', {d: 'M' + (x + 10) + ' ' + (y + 21) + ' L' + (x + 17) + ' ' + (y + 29) + ' L' + (x + 31) + ' ' + (y + 11)}, g);
+  return g;
+}
+function nameCard(p, x, y, w, h, fillC, strokeC, chamfer) {
+  if (chamfer) {
+    var c = 22;
+    return S('polygon', {points: [x + c, y, x + w - c, y, x + w, y + c, x + w, y + h - c, x + w - c, y + h, x + c, y + h, x, y + h - c, x, y + c].join(' '), fill: fillC, stroke: strokeC, 'stroke-width': 5, 'stroke-linejoin': 'round'}, p);
+  }
+  return S('rect', {x: x, y: y, width: w, height: h, rx: 20, fill: fillC, stroke: strokeC, 'stroke-width': 5}, p);
+}
+var BAR_X = [40, 186, 332, 478], BAR_H = [30, 60, 120, 240], BAR2_X = [610, 746, 882], BAR2_H = [20, 200, 560], BASE = 420;
+/* 對半切：每切一刀只跟著前一半，另一半先往右讓出刀縫，再往下放一邊、淡掉。8→4→2→1，三刀 */
+var CUTS = [{keep: 4, from: 4, to: 8}, {keep: 2, from: 2, to: 4}, {keep: 1, from: 1, to: 2}], SLIDE = 16, DROP = 96;
+function cutX(c) { return 50 + 74 * (c.keep - 1) + 64 + (10 + SLIDE) / 2; }
+var TKQ = [];   /* 各格打勾的順序：先 3 乘 3，再右上、左下、右下 */
+[[0, 0], [0, 3], [3, 0], [3, 3]].forEach(function (q) { var a = []; for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) a.push([q[0] + r, q[1] + c]); TKQ.push(a); });
+
+SEQ[1] = {
+  build: function (sc) {
+    var R = sc.root, mk = sc.marker('a', C.ink2);
+    var gA = sc.box(R, 'gA', {y: 40});
+    var ban = sc.box(gA, 'ban');
+    S('rect', {x: 350, y: 18, width: 300, height: 50, rx: 25, fill: '#E8E1D1', stroke: C.frame, 'stroke-width': 2}, ban);
+    T(ban, 500, 52, '今天有 n 位客人', {fs: 28, w: 700});
+    sc.T('hdA', gA, 250, 104, '做法甲', {fs: 32, w: 700, c: C.teal});
+    sc.T('hdB', gA, 660, 104, '做法乙', {fs: 32, w: 700, c: C.ochre});
+
+    /* 左邊：做法甲 */
+    var pL = sc.box(gA, 'pairL', {origin: [250, 260]});
+    var cuA = G(pL), cuB = sc.box(pL, 'cuB', {o: 0});
+    for (var i = 0; i < 6; i++) { var pp = i < 3 ? cuA : cuB; cust(pp, cx(i)); plateAt(pp, cx(i)); }
+    for (i = 0; i < 6; i++) sc.R('fl' + i, flameAt(pL, cx(i)), {o: 0});
+    var nL = sc.box(pL, 'numsL'), nLB = sc.box(pL, 'numsLB', {o: 0});
+    for (i = 0; i < 6; i++) T(i < 3 ? nL : nLB, cx(i), 269, String(i + 1), {fs: 22, w: 700});
+    sc.R('bar', rect(pL, 70, 352, 120, 26, {rx: 6, f: C.teal}), {o: 0, origin: 'left'});
+    sc.T('lb1', pL, 70, 318, '各炒一次', {fs: 24, a: 'start', c: C.ink2}, {o: 0});
+    sc.T('barLbl', pL, 70, 416, '工作量', {fs: 24, a: 'start', c: C.ink2}, {o: 0});
+
+    /* 右邊：做法乙，核對表 */
+    var pR = sc.box(gA, 'pairR', {origin: [712, 270]});
+    var gr = G(pR), gB = sc.box(pR, 'gridB', {o: 0});
+    for (var r = 0; r < 6; r++) for (var c = 0; c < 6; c++) {
+      var inA = r < 3 && c < 3;
+      S('rect', {x: TX + CS * c, y: TY + CS * r, width: CS, height: CS, rx: 3, 'class': 'cell' + (inA ? '' : ' cb')}, inA ? gr : gB);
+    }
+    var nR = sc.box(pR, 'numsR'), nRB = sc.box(pR, 'numsRB', {o: 0});
+    for (c = 0; c < 6; c++) T(c < 3 ? nR : nRB, TX + CS * c + CS / 2, TY - 24, String(c + 1), {fs: 22, w: 700, c: C.ink2});
+    for (r = 0; r < 6; r++) T(r < 3 ? nR : nRB, TX - 14, TY + CS * r + 28, String(r + 1), {fs: 22, w: 700, c: C.ink2, a: 'end'});
+    for (r = 0; r < 6; r++) for (c = 0; c < 6; c++) sc.R('tk' + r + c, tickAt(pR, r, c), {o: 0});
+    var qc = ['#8A6A1E', '#B98A2E', '#B98A2E', '#D4B060'];
+    [[0, 0], [0, 1], [1, 0], [1, 1]].forEach(function (q, k) {
+      sc.R('q' + k, rect(pR, TX - 3 + 3 * CS * q[1], TY - 3 + 3 * CS * q[0], 3 * CS + 6, 3 * CS + 6, {rx: 6, s: qc[k], sw: 5}), {o: k === 0 ? 1 : 0});
+    });
+    sc.T('tl1', pR, 712, 322, '每一盤都和每一盤核對一次', {fs: 24, c: C.ink2}, {o: 0});
+    sc.T('tl2', pR, 712, 446, '橫的直的都多一倍，工作變四倍', {fs: 24, c: C.ink2}, {o: 0});
+    var four = sc.box(pR, 'four', {o: 0});
+    pill(four, 900, 388, 100, 48, '四倍', {fs: 26, f: C.ochre});
+
+    /* 第 3 步：兩張名稱牌 */
+    var cL = sc.box(gA, 'cardL', {o: 0});
+    nameCard(cL, 100, 282, 300, 210, C.tealL, C.teal, false);
+    T(cL, 250, 340, 'n', {fs: 46, w: 700, c: '#2F5559'});
+    T(cL, 250, 388, '線性成長', {fs: 36, w: 700});
+    T(cL, 250, 430, 'O(n)', {fs: 32, c: C.ink2});
+    var cR = sc.box(gA, 'cardR', {o: 0});
+    nameCard(cR, 600, 282, 300, 210, C.ochreL, C.ochre, false);
+    sc.T('nn', cR, 750, 340, 'n 乘 n', {fs: 46, w: 700, c: '#7A5A12'});
+    T(cR, 750, 388, '平方成長', {fs: 36, w: 700});
+    T(cR, 750, 430, 'O(n²)', {fs: 32, c: C.ink2});
+    T(cR, 750, 472, '也叫二次方', {fs: 22, c: C.ink2});
+
+    /* 第 4 步：對數成長 */
+    var g4 = sc.box(R, 'g4', {o: 0});
+    sc.T('n8', g4, 50, 208, '8 個數', {fs: 26, a: 'start', c: C.ink2});
+    var bks = [];
+    for (i = 0; i < 8; i++) {
+      var bk = sc.box(g4, 'bk' + i, {});
+      S('rect', {x: 50 + 74 * i, y: 232, width: 64, height: 62, rx: 8, fill: C.steelL, stroke: C.steel, 'stroke-width': 3}, bk);
+      bks.push(bk);
+    }
+    sc.R('band', rect(g4, 50, 250, 582, 26, {rx: 8, f: C.steelL, s: C.steel, sw: 3}), {o: 0});
+    CUTS.forEach(function (c, k) {
+      sc.R('cut' + (k + 1), line(g4, cutX(c), 222, cutX(c), 304, {c: C.acc, w: 3, dash: '8 6'}), {o: 0});
+    });
+    for (i = 0; i < 3; i++) {
+      var tg = sc.box(g4, 'tok' + i, {c: {on: 0}});
+      tg.setAttribute('class', 'tag2');
+      S('rect', {x: 50 + 56 * i, y: 430, width: 46, height: 40, rx: 20}, tg);
+      T(tg, 73 + 56 * i, 458, String(i + 1), {fs: 24, w: 700});
+    }
+    sc.T('cnt', g4, 230, 460, '切 3 次', {fs: 30, w: 700, a: 'start', c: C.steel}, {o: 0});
+    var lgC = sc.box(g4, 'lgCard', {o: 0});
+    nameCard(lgC, 690, 190, 280, 140, '#EEF3F6', C.steel, false);
+    T(lgC, 830, 250, '對數成長', {fs: 36, w: 700, c: '#33586B'});
+    T(lgC, 830, 300, 'log n', {fs: 32, c: C.ink2});
+    var lgB = sc.box(g4, 'lgBar', {o: 0});
+    rect(lgB, 700, 362, 36, 22, {rx: 5, f: C.steel});
+    T(lgB, 750, 381, '長得最慢', {fs: 24, a: 'start', c: C.ink2});
+
+    /* 第 5 步：指數成長 */
+    var g5 = sc.box(R, 'g5', {o: 0});
+    line(g5, 30, BASE, 560, BASE, {c: C.line, w: 3});
+    line(g5, 590, BASE, 985, BASE, {c: C.line, w: 3});
+    for (i = 0; i < 4; i++) {
+      var b = sc.box(g5, 'e2b' + i, {o: 0, y: 24});
+      rect(b, BAR_X[i], BASE - BAR_H[i], 46, BAR_H[i], {rx: 4, f: C.violet});
+      if (i > 0) {
+        var lg = sc.box(g5, 'e2l' + i, {o: 0});
+        T(lg, (BAR_X[i - 1] + 46 + BAR_X[i]) / 2, BASE - 58, 'n 多 1', {fs: 22, c: C.ink2});
+        T(lg, (BAR_X[i - 1] + 46 + BAR_X[i]) / 2, BASE - 28, '乘 2', {fs: 22, c: C.ink2});
+      }
+    }
+    for (i = 0; i < 3; i++) {
+      var b2 = sc.box(g5, 'e10b' + i, {o: 0, y: 24});
+      rect(b2, BAR2_X[i], BASE - BAR2_H[i], 46, BAR2_H[i], {rx: 4, f: C.violet});
+      if (i > 0) {
+        var lg2 = sc.box(g5, 'e10l' + i, {o: 0});
+        T(lg2, (BAR2_X[i - 1] + 46 + BAR2_X[i]) / 2, BASE - 58, 'n 多 1', {fs: 22, c: C.ink2});
+        T(lg2, (BAR2_X[i - 1] + 46 + BAR2_X[i]) / 2, BASE - 28, '乘 10', {fs: 22, c: C.ink2});
+      }
+    }
+    sc.T('t2', g5, 282, 464, '2 的 n 次方', {fs: 28, w: 700, c: '#4B3F73'}, {o: 0});
+    sc.T('t10', g5, 769, 464, '10 的 n 次方', {fs: 28, w: 700, c: '#4B3F73'}, {o: 0});
+    var arr = sc.box(g5, 'e10arr', {o: 0});
+    line(arr, 962, 120, 962, 40, {c: '#4B3F73', w: 5, me: sc.marker('u', '#4B3F73')});
+    T(arr, 962, 158, '…', {fs: 30, w: 700, c: '#4B3F73'});
+    var exC = sc.box(g5, 'exCard', {o: 0});
+    nameCard(exC, 365, 494, 270, 90, C.violetL, C.violet, true);
+    T(exC, 500, 550, '指數成長', {fs: 38, w: 700, c: '#4B3F73'});
+
+    /* 第 6 步：分辨平方和指數 */
+    var g6 = sc.box(R, 'g6', {o: 0});
+    T(g6, 215, 256, 'n', {fs: 100, w: 700, c: '#7A5A12'});
+    T(g6, 300, 196, '2', {fs: 60, w: 700, c: '#7A5A12'});
+    T(g6, 560, 256, '10', {fs: 100, w: 700, c: '#4B3F73', a: 'start'});
+    T(g6, 738, 208, 'n', {fs: 60, w: 700, c: '#4B3F73'});
+    sc.R('cA', circ(g6, 215, 230, 52, {s: C.acc, sw: 5}), {o: 0});
+    sc.R('cB', circ(g6, 738, 192, 52, {s: C.acc, sw: 5}), {o: 0});
+    var mid = sc.box(g6, 'midL', {o: 0});
+    line(mid, 400, 236, 500, 236, {c: C.ink2, w: 3, me: mk, ms: mk});
+    T(mid, 450, 204, '看 n 在哪裡', {fs: 26, w: 700, c: C.ink2});
+    sc.T('lA', g6, 250, 322, 'n 在底下，2 固定不變', {fs: 26, c: C.ink}, {o: 0});
+    sc.T('lB', g6, 668, 322, 'n 跑到次方的位置', {fs: 26, c: C.ink}, {o: 0});
+    var sq = sc.box(g6, 'sqCard', {o: 0});
+    nameCard(sq, 110, 362, 280, 100, C.ochreL, C.ochre, false);
+    for (var u = 0; u < 4; u++) rect(sq, 134 + 15 * (u % 2), 391 + 15 * Math.floor(u / 2), 12, 12, {rx: 2, f: C.ochre});
+    T(sq, 270, 425, '平方成長', {fs: 38, w: 700});
+    var ex = sc.box(g6, 'exCard6', {o: 0});
+    nameCard(ex, 528, 362, 280, 100, C.violetL, C.violet, true);
+    path(ex, 'M552 418 L562 404 L570 410 L582 390', {s: C.violet, sw: 4});
+    T(ex, 668, 425, '指數成長', {fs: 38, w: 700});
+    banner(sc, 500, 46);
+  },
+  steps: (function () {
+    var s = [], q;
+    /* 1 兩種做法 */
+    q = new EQ();
+    [0, 1, 2].forEach(function (i) { q.e(200 + i * 600, 300, one('fl' + i, {o: 1})); });
+    TKQ[0].forEach(function (rc, i) { q.e(300 + i * 300, 200, one('tk' + rc[0] + rc[1], {o: 1})); });
+    q.e(1500, 400, one('lb1', {o: 1}));
+    q.e(2100, 400, merge2(one('bar', {o: 1}), one('barLbl', {o: 1})));
+    q.e(2900, 400, one('tl1', {o: 1}));
+    s.push({seq: q.list()});
+    /* 2 客人多一倍 */
+    q = new EQ();
+    q.e(0, 500, merge2(one('cuB', {o: 1}), one('numsLB', {o: 1}), one('gridB', {o: 1}), one('numsRB', {o: 1}), one('q1', {o: 1}), one('q2', {o: 1}), one('q3', {o: 1}), one('tl1', {o: 0})));
+    /* 10/1 第五版：小標的字不再直接換掉，先淡出，換字後再淡入（只動透明度） */
+    q.e(0, 200, one('barLbl', {o: 0}), 'fo');
+    q.e(300, 300, one('barLbl', {o: 1, tx: '工作也多一倍'}), 'fo');
+    q.e(0, 500, one('hdB', {x: 52}));
+    [3, 4, 5].forEach(function (i, j) { q.e(500 + j * 300, 300, one('fl' + i, {o: 1})); });
+    q.e(900, 600, one('bar', {sx: 2}));
+    var t = 700;
+    for (var k = 1; k < 4; k++) TKQ[k].forEach(function (rc) { q.e(t, 200, one('tk' + rc[0] + rc[1], {o: 1})); t += 90; });
+    q.e(t + 100, 400, one('tl2', {o: 1}));
+    q.e(t + 500, 400, one('four', {o: 1}));
+    s.push({seq: q.list()});
+    /* 3 取名字 */
+    q = new EQ();
+    q.e(0, 300, merge2(many(['numsL', 'numsLB', 'numsR', 'numsRB', 'hdA', 'hdB', 'barLbl', 'lb1', 'tl2', 'four'], {o: 0})));
+    q.e(200, 700, merge2(one('pairL', {s: 0.5, y: -110}), one('pairR', {s: 0.5, x: 34, y: -120})));
+    q.e(1000, 400, merge2(one('cardL', {o: 1}), one('cardR', {o: 1})));
+    q.e(1900, 300, one('nn', {tx: 'n²'}));
+    s.push({seq: q.list()});
+    /* 4 對數成長 */
+    q = new EQ();
+    q.e(0, 400, one('gA', {o: 0}));
+    q.e(300, 400, one('g4', {o: 1}));
+    CUTS.forEach(function (c, k) {
+      var t0 = 800 + k * 1150, ids = [];
+      for (var i = c.from; i < c.to; i++) ids.push('bk' + i);
+      q.e(t0, 300, many(ids, {x: SLIDE}));
+      q.e(t0 + 330, 150, one('cut' + (k + 1), {o: 1}), 'tr');
+      q.e(t0 + 500, 420, many(ids, {x: SLIDE, y: DROP, o: 0.3}));
+      q.e(t0 + 500, 300, one('tok' + k, {c: {on: 1}}));
+      q.e(t0 + 850, 150, one('cut' + (k + 1), {o: 0}), 'tr');
+    });
+    q.e(4250, 400, one('cnt', {o: 1}));
+    q.e(5000, 500, merge2(many(['bk0', 'bk1', 'bk2', 'bk3', 'bk4', 'bk5', 'bk6', 'bk7', 'tok0', 'tok1', 'tok2'], {o: 0}), one('band', {o: 1})));
+    /* 10/1 第五版：兩個小標先淡出，看不見時換字、「切」那行移到上方，再淡入（只動透明度） */
+    q.e(5000, 200, merge2(one('n8', {o: 0}), one('cnt', {o: 0})), 'fo');
+    q.e(5300, 10, one('cnt', {y: -90}));
+    q.e(5400, 300, merge2(one('n8', {o: 1, tx: '一千個數'}), one('cnt', {o: 1, tx: '大約也只要切 10 次'})), 'fo');
+    q.e(5800, 500, merge2(one('lgCard', {o: 1}), one('lgBar', {o: 1})));
+    s.push({seq: q.list()});
+    /* 5 指數成長 */
+    q = new EQ();
+    q.e(0, 400, one('g4', {o: 0}));
+    q.e(300, 300, one('g5', {o: 1}));
+    q.e(600, 300, one('t2', {o: 1}));
+    for (var i = 0; i < 4; i++) {
+      q.e(900 + i * 450, 400, one('e2b' + i, {o: 1, y: 0}));
+      if (i > 0) q.e(1100 + i * 450, 300, one('e2l' + i, {o: 1}));
+    }
+    q.e(2900, 300, one('t10', {o: 1}));
+    for (i = 0; i < 3; i++) {
+      q.e(3200 + i * 450, 400, one('e10b' + i, {o: 1, y: 0}));
+      if (i > 0) q.e(3400 + i * 450, 300, one('e10l' + i, {o: 1}));
+    }
+    q.e(4700, 400, one('e10arr', {o: 1}));
+    q.e(5200, 500, one('exCard', {o: 1}));
+    s.push({seq: q.list()});
+    /* 6 分辨平方和指數 */
+    q = new EQ();
+    q.e(0, 400, one('g5', {o: 0}));
+    q.e(300, 300, one('g6', {o: 1}));
+    q.e(800, 400, merge2(one('cA', {o: 1}), one('cB', {o: 1})));
+    q.e(1300, 400, merge2(one('lA', {o: 1}), one('lB', {o: 1}), one('midL', {o: 1})));
+    q.e(1900, 500, merge2(one('sqCard', {o: 1}), one('exCard6', {o: 1})));
+    s.push({seq: q.list()});
+    /* 7 這段要記得：第 6 步的畫面淡淡留在底下 */
+    q = new EQ();
+    q.e(0, 500, merge2(one('g6', {o: 0.28}), one('banner', {o: 1})));
+    s.push({seq: q.list()});
+    return s;
+  })()
+};
+})();
+/* ================= 動畫 2：選擇排序法 ================= */
+(function () {
+var INIT = [16, 77, 25, 85, 12, 8, 36], PRE = 'k';
+function barSt(b) { return {x: PITCH * b}; }
+function frmSt(b) { return {sx: (67 + PITCH * b) / 67}; }
+function bumpBar(q, t, b) { q.e(t, 400, merge2(one('bar', barSt(b)), one('frm', frmSt(b)))); }
+/* 一輪：手指從 b 掃到最後，旗子跟著目前最小的走；掃完最小的加外框，和最前面的互換，變綠，木條右移 */
+function round(q, t0, arr, b, per) {
+  var minI = b, t = t0;
+  q.e(t, 10, merge2(one('hd', {x: slotC(b), o: 0}), one('flg', {x: PITCH * b, o: 0})));
+  q.e(t + 20, 300, merge2(one('hd', {o: 1}), one('flg', {o: 1})));
+  t += 380;
+  for (var j = b + 1; j <= 6; j++) {
+    q.e(t, per, one('hd', {x: slotC(j)}), 'lin');
+    t += per;
+    if (arr[j] < arr[minI]) { minI = j; q.e(t - per / 2, 220, one('flg', {x: PITCH * j})); }
+  }
+  t += 150;
+  var a = arr[minI], f = arr[b];
+  q.e(t, 250, merge2(one('hd', {o: 0}), one('flg', {o: 0})));
+  q.e(t, 250, one(PRE + 'y' + a, {c: {hi: 1}}));
+  t += 500;
+  /* 10/1 第四版：「互換」小標淡入淡出，不再一閃就消失 */
+  q.e(t - 100, 10, one('swl', {x: (slotC(minI) + slotC(b)) / 2 - 500}), 'tr');   /* 10/1 第五版：小標看不見的時候先換位置，比淡入早 120 ms；淡入只動透明度 */
+  q.e(t + 20, 200, one('swl', {o: 1}), 'tr fo');
+  var na = arr.slice(); na[b] = a; na[minI] = f;
+  /* a（最小的）目前在 minI、f（最前面的）目前在 b：a 移到 b，f 移到 minI（10/1 第四版修正：原本兩個格號填反，兩張卡原地彈一下才瞬間跳到新位置） */
+  var te = swapEv(q, t + 30, PRE, a, f, minI, b, INIT, 900);
+  q.e(te, 250, one('swl', {o: 0}), 'tr fo');
+  q.e(te, 10, merge2(posSet(PRE, na, INIT)));
+  q.e(te + 20, 350, one(PRE + 'y' + a, {c: {hi: 0, srt: 1}}));
+  bumpBar(q, te + 20, b + 1);
+  return {t: te + 500, arr: na};
+}
+var A0 = INIT, A1, A2, A3, A4, A5, A6;
+SEQ[2] = {
+  build: function (sc) {
+    var R = sc.root, main = sc.box(R, 'main', {x: 50});
+    sc.R('frm', rect(main, 20, 240, 67, 132, {rx: 10, cls: 'frm'}), {origin: 'left'});
+    sc.R('bar', rect(main, 83, 226, 8, 158, {rx: 3, f: '#B08B57', s: '#7E6236', sw: 2}), {});
+    INIT.forEach(function (v, i) { mkCard(sc, main, PRE, v, i); });
+    /* 手、旗、互換小標 */
+    var hd = sc.box(main, 'hd', {o: 0, x: slotC(0), y: 388});
+    hand(hd, 'up');
+    T(hd, 46, 64, '你', {fs: 26, w: 700, c: C.ink2});
+    var fl = sc.box(main, 'flg', {o: 0});
+    line(fl, slotC(0), 230, slotC(0), 248, {c: C.acc, w: 4});
+    pill(fl, slotC(0), 208, 118, 44, '目前最小', {fs: 22, f: C.acc});
+    sc.T('swl', main, 500, 96, '互換', {fs: 28, w: 700, c: C.acc2}, {o: 0, x: 0});   /* 10/1 第四版：弧度加大，小標往上移 */
+    /* 兩個小牌 */
+    [['t1', 96, '一、挑出最小的'], ['t2', 384, '二、換到最前面']].forEach(function (t) {
+      var g = sc.box(main, t[0], {c: {on: 0}});
+      g.setAttribute('class', 'tag2');
+      S('rect', {x: t[1], y: 494, width: 262, height: 48, rx: 24}, g);
+      T(g, t[1] + 131, 526, t[2], {fs: 26, w: 700});
+    });
+    /* 圖例 */
+    rect(main, 676, 508, 24, 24, {rx: 5, f: C.greenL, s: C.green, sw: 2.5});
+    T(main, 710, 528, '已排序', {fs: 24, a: 'start', c: C.ink2});
+    rect(main, 812, 508, 24, 24, {rx: 5, f: C.yel, s: C.yelS, sw: 2.5});
+    T(main, 846, 528, '未排序', {fs: 24, a: 'start', c: C.ink2});
+    /* 第 6 步：括號 */
+    var bl = sc.box(main, 'brL', {o: 0});
+    path(bl, 'M' + slotL(0) + ' 230 L' + slotL(0) + ' 220 L' + (slotL(1) + CWD) + ' 220 L' + (slotL(1) + CWD) + ' 230', {s: C.ink2, sw: 3});
+    T(bl, (slotL(0) + slotL(1) + CWD) / 2, 204, '比它小', {fs: 26, w: 700, c: C.ink2});
+    var br = sc.box(main, 'brR', {o: 0});
+    path(br, 'M' + slotL(3) + ' 230 L' + slotL(3) + ' 220 L' + (slotL(6) + CWD) + ' 220 L' + (slotL(6) + CWD) + ' 230', {s: C.ink2, sw: 3});
+    T(br, (slotL(3) + slotL(6) + CWD) / 2, 204, '比它大', {fs: 26, w: 700, c: C.ink2});
+    var st = sc.box(main, 'stood', {o: 0});
+    pill(st, slotC(2), 188, 116, 46, '站好了', {fs: 24, f: C.green});
+    banner(sc, 500, 46);
+  },
+  steps: (function () {
+    var s = [], q, r;
+    /* 1 示範例 */
+    q = new EQ();
+    q.e(300, 300, one('t1', {c: {on: 1}}));
+    q.e(1100, 300, one('t2', {c: {on: 1}}));
+    s.push({seq: q.list()});
+    /* 2 第一輪 */
+    q = new EQ();
+    r = round(q, 0, A0, 0, 300); A1 = r.arr;
+    s.push({seq: q.list()});
+    /* 3 第二輪、第三輪 */
+    q = new EQ();
+    r = round(q, 0, A1, 1, 150); A2 = r.arr;
+    r = round(q, r.t + 200, A2, 2, 150); A3 = r.arr;
+    s.push({seq: q.list()});
+    /* 4 第四輪 */
+    q = new EQ();
+    r = round(q, 0, A3, 3, 150); A4 = r.arr;
+    s.push({seq: q.list()});
+    /* 5 第五輪、第六輪 */
+    q = new EQ();
+    r = round(q, 0, A4, 4, 150); A5 = r.arr;
+    r = round(q, r.t + 200, A5, 5, 150); A6 = r.arr;
+    bumpBar(q, r.t - 100, 7);
+    q.e(r.t - 100, 350, one(PRE + 'y85', {c: {srt: 1}}));
+    s.push({seq: q.list()});
+    /* 6 換過去就站好位置：第三輪的 16 慢動作重播 */
+    q = new EQ();
+    var back = A2, done = A3;
+    /* 卡片、綠框、木條一起淡出，看不見時倒回第二輪做完的樣子，再一起淡入（10/1 第四版：綠框和木條不再瞬間跳回去） */
+    var fadeIds = INIT.map(function (v) { return PRE + 'x' + v; }).concat(['bar', 'frm']);
+    q.e(0, 300, many(fadeIds, {o: 0}));
+    var setBack = merge2(posSet(PRE, back, INIT), one('bar', barSt(2)), one('frm', frmSt(2)));
+    INIT.forEach(function (v) { setBack[PRE + 'y' + v] = {c: {srt: (v === 8 || v === 12) ? 1 : 0, hi: v === 16 ? 1 : 0}}; });
+    q.e(330, 10, setBack);
+    q.e(400, 300, many(fadeIds, {o: 1}));
+    /* 第二輪做完是 8 12 25 85 77 16 36：16 目前在第 5 格、25 在第 2 格（10/1 第四版修正格號） */
+    var te = swapEv(q, 1000, PRE, 16, 25, 5, 2, INIT, 1300);
+    q.e(te, 10, merge2(posSet(PRE, done, INIT)));
+    q.e(te + 20, 350, one(PRE + 'y16', {c: {hi: 0, srt: 1}}));
+    bumpBar(q, te + 20, 3);
+    q.e(te + 600, 500, merge2(one('brL', {o: 1}), one('brR', {o: 1}), one('stood', {o: 1})));
+    s.push({seq: q.list()});
+    /* 7 這段要記得 */
+    q = new EQ();
+    q.e(0, 500, merge2(one('main', {o: 0.28}), one('banner', {o: 1})));
+    s.push({seq: q.list()});
+    return s;
+  })()
+};
+})();
+/* ================= 動畫 3：插入排序法 ================= */
+(function () {
+var INIT = [16, 77, 25, 85, 12, 8, 36], PRE = 'i', INIT4 = [4, 3, 2, 1], PRE4 = 'q';
+var LIFT = 90, HY = 244;
+function barSt(b) { return {x: PITCH * b}; }
+function frmSt(b) { return {sx: (67 + PITCH * b) / 67}; }
+function bumpBar(q, t, b) { q.e(t, 350, merge2(one('bar', barSt(b)), one('frm', frmSt(b)))); }
+/* 插入：手拿起 arr[b]，放到位置 p；p 到 b-1 的卡片各往右挪一格。回傳 {t, arr, moves} */
+function insertEv(q, t, pre, init, arr, b, p, counter) {
+  var v = arr[b], na = arr.slice();
+  na.splice(b, 1); na.splice(p, 0, v);
+  q.e(t, 10, one('hdT', {x: slotC(b), y: HY, o: 0}));
+  q.e(t + 20, 350, merge2(one('hdT', {o: 1, y: HY - LIFT}), one(pre + 'y' + v, {y: -LIFT})));
+  var tt = t + 400, cnt = 0;
+  if (counter && b > p) q.e(t + 20, 200, merge2(one('mvc', {o: 1}), one('mvt', {tx: '插入 ' + v + '：移動 0 次'})));
+  /* 由右往左挪：最右邊那張先往右挪進空位，才不會壓到還沒挪的卡 */
+  for (var i = b - 1; i >= p; i--) {
+    cnt++;
+    q.e(tt, 260, one(pre + 'x' + arr[i], {x: (i + 1 - init.indexOf(arr[i])) * PITCH}), 'lin');
+    if (counter) q.e(tt, 10, one('mvt', {tx: '插入 ' + v + '：移動 ' + cnt + ' 次'}));
+    tt += 140;
+  }
+  if (cnt) tt += 90;
+  if (p !== b) {
+    q.e(tt, 380, merge2(one(pre + 'x' + v, {x: (p - init.indexOf(v)) * PITCH}), one('hdT', {x: slotC(p)})));
+    tt += 420;
+  } else tt += 100;
+  q.e(tt, 260, merge2(one(pre + 'y' + v, {y: 0}), one('hdT', {y: HY})));
+  q.e(tt + 260, 220, one('hdT', {o: 0}));
+  q.e(tt + 260, 10, merge2(posSet(pre, na, init)));
+  q.e(tt + 300, 320, one(pre + 'y' + v, {c: {srt: 1}}));
+  bumpBar(q, tt + 300, b + 1);
+  return {t: tt + 520, arr: na, moves: cnt};
+}
+/* 第 6 步：n 乘 n 的方格（4 張卡，4 乘 4），階梯是第 2～4 欄由下往上 1、2、3 格 */
+var GX = 560, GC = 72, SBASE = 410, GY = SBASE - 4 * GC;
+var S1, S2, S3;
+SEQ[3] = {
+  build: function (sc) {
+    var R = sc.root, main = sc.box(R, 'main');
+    sc.R('frm', rect(main, 20, 240, 67, 132, {rx: 10, cls: 'frm'}), {origin: 'left', sx: (67 + PITCH) / 67});
+    sc.R('bar', rect(main, 83, 226, 8, 158, {rx: 3, f: '#B08B57', s: '#7E6236', sw: 2}), {x: PITCH});
+    INIT.forEach(function (v, i) { mkCard(sc, main, PRE, v, i, {cls: v === 16 ? 'srt' : ''}); });
+    INIT4.forEach(function (v, i) { mkCard(sc, main, PRE4, v, i, {px: {o: 0}}); });
+    /* 目標：由小排到大（下方左側，一直留著） */
+    var gl = sc.box(main, 'goal');
+    T(gl, 96, 526, '目標：由小排到大', {fs: 26, w: 700, c: C.ink2, a: 'start'});
+    T(gl, 96, 566, '小', {fs: 26, c: C.ink2, a: 'start'});
+    line(gl, 140, 556, 424, 556, {c: C.ink2, w: 3});
+    T(gl, 474, 566, '大', {fs: 26, c: C.ink2, a: 'end'});
+    sc.T('orig', main, 96, 414, '原本：由大排到小', {fs: 26, w: 700, c: C.acc2, a: 'start'}, {o: 0});
+    /* 手（向下抓）、移動計數牌 */
+    var hd = sc.box(main, 'hdT', {o: 0, x: slotC(0), y: HY});
+    hand(hd, 'down');
+    T(hd, 48, -30, '你', {fs: 26, w: 700, c: C.ink2});
+    var mv = sc.box(main, 'mvc', {o: 0});
+    rect(mv, 630, 20, 350, 54, {rx: 27, f: C.ochreL, s: C.ochre, sw: 3});
+    sc.T('mvt', mv, 805, 57, '插入 12：移動 0 次', {fs: 30, w: 700, c: '#7A5A12'});
+    sc.T('back4', main, 96, 124, '回到插入 36 那一次', {fs: 24, w: 700, c: C.ink2, a: 'start'}, {o: 0});
+    /* 第 4 步：兩條色帶、箭頭 */
+    var bu = sc.box(main, 'bandU', {o: 0});
+    rect(bu, 96, 20, 738, 52, {rx: 12, f: C.steel});
+    T(bu, 118, 55, '找位置：比較', {fs: 30, w: 700, c: '#FFFFFF', a: 'start'});
+    T(bu, 812, 54, '大約 log n 個比較，很快', {fs: 26, c: '#FFFFFF', a: 'end'});
+    var bl = sc.box(main, 'bandL', {o: 0});
+    rect(bl, 96, 424, 738, 52, {rx: 12, f: C.ochre});
+    T(bl, 118, 459, '挪位置：移動', {fs: 30, w: 700, c: '#FFFFFF', a: 'start'});
+    sc.T('mv4', bl, 812, 458, '移動 0 次', {fs: 28, w: 700, c: '#FFFFFF', a: 'end'});
+    var aw = sc.box(main, 'arw', {o: 0, x: slotC(3)});
+    line(aw, 0, 176, 0, 240, {c: C.steel, w: 5, me: sc.marker('a', C.steel)});
+    /* 第 6 步：階梯放在 n 乘 n 的方格裡 */
+    var gd = sc.box(main, 'grid', {o: 0});
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) rect(gd, GX + GC * c, GY + GC * r, GC, GC, {rx: 0, f: '#FBF3DE', s: '#D9C38F', sw: 2, dash: '6 5'});
+    rect(gd, GX, GY, 4 * GC, 4 * GC, {rx: 2, s: C.ochre, sw: 3});
+    T(gd, GX + 2 * GC, GY - 16, 'n 乘 n 的方格', {fs: 24, w: 700, c: '#7A5A12'});
+    for (var i = 0; i < 3; i++) {
+      var b = sc.box(main, 'st' + i, {o: 0, y: 20});
+      var col = i + 1, x0 = GX + GC * col;
+      rect(b, x0 + 4, SBASE - GC * col + 4, GC - 8, GC * col - 8, {rx: 4, f: C.ochre});
+      for (var u = 1; u < col; u++) line(b, x0 + 4, SBASE - GC * u, x0 + GC - 4, SBASE - GC * u, {c: '#FBF3DE', w: 3, cap: 'butt'});
+      T(b, x0 + GC / 2, SBASE + 36, '移動', {fs: 22, c: C.ink2});
+      T(b, x0 + GC / 2, SBASE + 64, col + ' 次', {fs: 22, c: C.ink2});
+    }
+    var ba = sc.box(main, 'brA', {o: 0});
+    path(ba, 'M' + (GX + GC) + ' 484 L' + (GX + GC) + ' 494 L' + (GX + 4 * GC) + ' 494 L' + (GX + 4 * GC) + ' 484', {s: C.ink2, sw: 3});
+    T(ba, GX + GC, 526, '1 加 2 加 3，一共 6 次', {fs: 26, c: C.ink, a: 'start'});
+    var bb = sc.box(main, 'brB', {o: 0});
+    path(bb, 'M' + GX + ' 541 L' + GX + ' 551 L' + (GX + 4 * GC) + ' 551 L' + (GX + 4 * GC) + ' 541', {s: C.ink2, sw: 3});   /* 10/1 第三版：括號整個上移 3 個單位，和下面那行字多留距離 */
+    T(bb, GX, 588, '總次數和 n² 成正比', {fs: 28, w: 700, c: '#7A5A12', a: 'start'});
+    banner(sc, 500, 46);
+  },
+  steps: (function () {
+    var s = [], q, r, t;
+    /* 1 拿下一張，插進排好的 */
+    q = new EQ();
+    r = insertEv(q, 0, PRE, INIT, INIT, 1, 1, false);
+    r = insertEv(q, r.t, PRE, INIT, r.arr, 2, 1, false);
+    r = insertEv(q, r.t, PRE, INIT, r.arr, 3, 3, false); S1 = r.arr;
+    s.push({seq: q.list()});
+    /* 2 插入 12 */
+    q = new EQ();
+    r = insertEv(q, 0, PRE, INIT, S1, 4, 0, true); S2 = r.arr;
+    s.push({seq: q.list()});
+    /* 3 插入 8 和 36 */
+    q = new EQ();
+    r = insertEv(q, 0, PRE, INIT, S2, 5, 0, true);
+    r = insertEv(q, r.t, PRE, INIT, r.arr, 6, 4, true); S3 = r.arr;
+    s.push({seq: q.list()});
+    /* 4 找位置和挪位置：回到 36 剛被拿起 */
+    q = new EQ();
+    var pre36 = [8, 12, 16, 25, 77, 85, 36], allv = INIT.map(function (v) { return PRE + 'x' + v; });
+    /* 卡片、綠框、木條一起淡出，看不見時倒回插入 36 之前，再一起淡入（10/1 第四版：綠框和木條不再瞬間跳回去） */
+    q.e(0, 300, merge2(many(allv.concat(['bar', 'frm']), {o: 0}), one('mvc', {o: 0})));
+    q.e(400, 300, one('back4', {o: 1}));
+    var back = merge2(posSet(PRE, pre36, INIT), one('bar', barSt(6)), one('frm', frmSt(6)), one('hdT', {x: slotC(6), y: HY - LIFT, o: 0}), one(PRE + 'y36', {y: -LIFT}));
+    INIT.forEach(function (v) { back[PRE + 'y' + v] = merge2(back[PRE + 'y' + v] || {}, {c: {srt: v === 36 ? 0 : 1}}); });
+    q.e(330, 10, back);
+    q.e(400, 300, merge2(many(allv.concat(['bar', 'frm']), {o: 1}), one('hdT', {o: 1})));
+    q.e(900, 400, one('bandU', {o: 1}));
+    q.e(1400, 350, one('arw', {o: 1}));
+    q.e(2100, 350, one('arw', {x: slotC(4)}));
+    q.e(2800, 350, one('arw', {x: (slotL(3) + CWD + slotL(4)) / 2}));
+    q.e(3500, 400, one('bandL', {o: 1}));
+    q.e(4000, 250, one('arw', {o: 0}));
+    q.e(4100, 260, merge2(one(PRE + 'x85', {x: (6 - INIT.indexOf(85)) * PITCH}), one('mv4', {tx: '移動 1 次'})), 'lin');
+    q.e(4270, 260, merge2(one(PRE + 'x77', {x: (5 - INIT.indexOf(77)) * PITCH}), one('mv4', {tx: '移動 2 次'})), 'lin');
+    q.e(4700, 480, merge2(one(PRE + 'x36', {x: (4 - INIT.indexOf(36)) * PITCH}), one('hdT', {x: slotC(4)})));
+    q.e(5250, 260, merge2(one(PRE + 'y36', {y: 0}), one('hdT', {y: HY})));
+    q.e(5510, 220, one('hdT', {o: 0}));
+    q.e(5550, 320, one(PRE + 'y36', {c: {srt: 1}}));
+    q.e(5550, 350, merge2(one('bar', barSt(7)), one('frm', frmSt(7))));
+    s.push({seq: q.list()});
+    /* 5 最慘的情況：4、3、2、1 */
+    q = new EQ();
+    /* 綠框和木條也跟著淡出，看不見時移到 4 的右邊，再和 4 張新卡一起淡入（10/1 第四版） */
+    q.e(0, 400, merge2(many(allv.concat(['bandU', 'bandL', 'arw', 'back4', 'bar', 'frm']), {o: 0}), one('hdT', {o: 0})));
+    var set5 = merge2(one('bar', barSt(1)), one('frm', frmSt(1)), one('mv4', {tx: '移動 0 次'}));
+    q.e(430, 10, set5);
+    q.e(500, 400, merge2(many(INIT4.map(function (v) { return PRE4 + 'x' + v; }).concat(['bar', 'frm']), {o: 1}), one('orig', {o: 1})));
+    q.e(500, 10, one(PRE4 + 'y4', {c: {srt: 1}}));
+    r = insertEv(q, 1200, PRE4, INIT4, INIT4, 1, 0, true);
+    r = insertEv(q, r.t, PRE4, INIT4, r.arr, 2, 0, true);
+    s.push({seq: q.list()});
+    /* 6 越往後挪越多 */
+    q = new EQ();
+    r = insertEv(q, 0, PRE4, INIT4, [2, 3, 4, 1], 3, 0, true);
+    t = r.t;
+    for (var i = 0; i < 3; i++) q.e(t + i * 420, 400, one('st' + i, {o: 1, y: 0}));
+    q.e(t + 1250, 400, one('brA', {o: 1}));
+    q.e(t + 1750, 500, one('grid', {o: 1}));
+    q.e(t + 2400, 400, one('brB', {o: 1}));
+    s.push({seq: q.list()});
+    /* 7 這段要記得 */
+    q = new EQ();
+    q.e(0, 500, merge2(one('main', {o: 0.28}), one('banner', {o: 1})));
+    s.push({seq: q.list()});
+    return s;
+  })()
+};
+})();
+/* ================= 動畫 4：泡沫排序法 ================= */
+(function () {
+var INIT = [16, 77, 25, 85, 12, 8, 36], PRE = 'b';
+function barSt(b) { return {x: PITCH * b}; }
+function frmSt(b) { return {sx: (67 + PITCH * b) / 67}; }
+function bumpBar(q, t, b) { q.e(t, 350, merge2(one('bar', barSt(b)), one('frm', frmSt(b)))); }
+var HOP = 450, FPS = [];
+/* 手指移到某一格，標籤換成 txt（先淡出再換再淡入，約 0.4 秒） */
+function look(q, t, slot, txt, moveMs) {
+  q.e(t, 150, one('lbl', {o: 0}), 'fo');
+  q.e(t, moveMs || 350, one('hd', {x: slotC(slot)}), 'lin');
+  if (txt) {
+    /* 10/1 第五版：淡出結束後隔 50 ms 才換字換位置，再隔 100 ms 才淡入，淡入只動透明度 */
+    q.e(t + 200, 10, one('lbl', {x: slotC(slot) - 500, tx: txt}));
+    q.e(t + 300, 200, one('lbl', {o: 1}), 'fo');
+  }
+}
+/* 卡片 arr[s] 往前一格（和 arr[s-1] 換位置），每一格微微上浮，身後留一個腳印 */
+function hop(q, t, arr, s, rd) {
+  var v = arr[s], u = arr[s - 1];
+  q.e(t, HOP, merge2(one(PRE + 'x' + v, {x: (s - 1 - INIT.indexOf(v)) * PITCH}), one(PRE + 'x' + u, {x: (s - INIT.indexOf(u)) * PITCH}), one('hd', {x: slotC(s - 1)})), 'lin');
+  q.e(t, HOP / 2, one(PRE + 'y' + v, {y: -16}));
+  q.e(t + HOP / 2, HOP / 2, one(PRE + 'y' + v, {y: 0}));
+  q.e(t, 200, one('fp' + rd + '_' + s, {o: 1}));
+  var na = arr.slice(); na[s] = u; na[s - 1] = v;
+  return na;
+}
+function bub(q, t, v, on) { q.e(t, 250, one(PRE + 'y' + v, {c: {bub: on ? 1 : 0}})); }
+function done(q, t, v, b) { q.e(t, 350, one(PRE + 'y' + v, {c: {srt: 1, bub: 0}})); bumpBar(q, t, b); }
+function clearFp(q, upto) { var ids = []; for (var r = 1; r <= upto; r++) for (var s = 0; s < 7; s++) ids.push('fp' + r + '_' + s); q.e(0, 300, many(ids, {o: 0})); }
+var A0 = INIT, A1, A2, A3, A4;
+SEQ[4] = {
+  build: function (sc) {
+    var R = sc.root, main = sc.box(R, 'main');
+    sc.R('frm', rect(main, 20, 240, 67, 132, {rx: 10, cls: 'frm'}), {origin: 'left'});
+    sc.R('bar', rect(main, 83, 226, 8, 158, {rx: 3, f: '#B08B57', s: '#7E6236', sw: 2}), {});
+    INIT.forEach(function (v, i) { mkCard(sc, main, PRE, v, i); });
+    /* 兩端小標：最前面、最後面（灰字，各一小段橫線，沒有箭頭） */
+    T(main, slotL(0), 206, '最前面', {fs: 24, c: C.ink2, a: 'start'});
+    line(main, slotL(0), 218, slotL(0) + 90, 218, {c: C.mute, w: 3});
+    T(main, slotL(6) + CWD, 206, '最後面', {fs: 24, c: C.ink2, a: 'end'});
+    line(main, slotL(6), 218, slotL(6) + CWD, 218, {c: C.mute, w: 3});
+    /* 腳印 */
+    for (var r = 1; r <= 5; r++) for (var s = 0; s < 7; s++) sc.R('fp' + r + '_' + s, circ(main, slotC(s), 374, 6, {f: '#8FB2C6'}), {o: 0});
+    /* 手、標籤 */
+    var hd = sc.box(main, 'hd', {o: 0, x: slotC(6), y: 396});
+    hand(hd, 'up');
+    T(hd, 46, 64, '你', {fs: 26, w: 700, c: C.ink2});
+    sc.T('lbl', main, 500, 500, '沒比 8 小，不動', {fs: 26, w: 700, c: C.ink2}, {o: 0});
+    /* 圖例 */
+    rect(main, 676, 548, 24, 24, {rx: 5, f: C.greenL, s: C.green, sw: 2.5});
+    T(main, 710, 568, '已排序', {fs: 24, a: 'start', c: C.ink2});
+    rect(main, 812, 548, 24, 24, {rx: 5, f: C.yel, s: C.yelS, sw: 2.5});
+    T(main, 846, 568, '未排序', {fs: 24, a: 'start', c: C.ink2});
+    /* 第 1 步：右上角的小插圖，數字直著放 */
+    var ins = sc.box(main, 'inset', {o: 0});
+    T(ins, 904, 70, '最前面', {fs: 24, c: C.ink2});
+    INIT.forEach(function (v, i) {
+      var g = G(ins, {'class': 'mini'});
+      S('rect', {'class': 'cr', x: 872, y: 84 + 44 * i, width: 64, height: 38, rx: 8}, g);
+      T(g, 904, 84 + 44 * i + 27, String(v), {fs: 22, w: 700});
+    });
+    circ(ins, 962, 320, 10, {f: '#DCEBF3', s: C.bub, sw: 3});
+    circ(ins, 968, 294, 8, {f: '#DCEBF3', s: C.bub, sw: 3});
+    circ(ins, 962, 272, 6, {f: '#DCEBF3', s: C.bub, sw: 3});
+    T(ins, 930, 432, '小的像泡沫', {fs: 24, c: C.ink});
+    T(ins, 930, 462, '往上浮', {fs: 24, c: C.ink});
+    banner(sc, 500, 46);
+  },
+  steps: (function () {
+    var s = [], q, t, a, h;
+    function hops(q, t, a, from, to, rd) { for (var k = from; k > to; k--) { a = hop(q, t, a, k, rd); t += HOP; } return {t: t, a: a}; }
+    function handIn(q, slot) { q.e(0, 10, one('hd', {x: slotC(slot), o: 0})); q.e(20, 250, one('hd', {o: 1})); }
+    function fin(q, t, a) { q.e(t, 10, merge2(posSet(PRE, a, INIT))); }
+    /* 1 從最後一張看起 */
+    q = new EQ();
+    q.e(300, 500, one('inset', {o: 1}));
+    q.e(1100, 10, one('hd', {x: slotC(6)}));
+    q.e(1120, 400, one('hd', {o: 1}));
+    s.push({seq: q.list()});
+    /* 2 第一輪：8 一路往前浮 */
+    q = new EQ();
+    q.e(0, 300, one('inset', {o: 0}));
+    look(q, 100, 6, '沒比 8 小，不動', 10); t = 1100;
+    look(q, t, 5, '比 12 小，往前', 350); bub(q, t + 100, 8, true); t += 950;
+    q.e(t, 150, one('lbl', {o: 0})); t += 200;
+    h = hops(q, t, A0, 5, 0, 1); t = h.t; A1 = h.a;
+    done(q, t + 50, 8, 1); q.e(t + 50, 300, one('hd', {o: 0})); fin(q, t + 60, A1);
+    s.push({seq: q.list()});
+    /* 3 第二輪：12 往前浮 */
+    q = new EQ(); clearFp(q, 1); handIn(q, 6);
+    look(q, 300, 6, '沒比 12 小，不動', 10); t = 1200;
+    look(q, t, 5, '比 85 小，往前', 350); bub(q, t + 100, 12, true); t += 950;
+    q.e(t, 150, one('lbl', {o: 0})); t += 200;
+    h = hops(q, t, A1, 5, 1, 2); t = h.t; A2 = h.a;
+    done(q, t + 50, 12, 2); q.e(t + 50, 300, one('hd', {o: 0})); fin(q, t + 60, A2);
+    s.push({seq: q.list()});
+    /* 4 第三輪：36、25 各往前一格就停，16 在還沒排的最前面，也排好了（10/1 第四版：小標不再寫「不用動」，免得和選項「固定在原地」連在一起） */
+    q = new EQ(); clearFp(q, 2); handIn(q, 6);
+    look(q, 300, 6, '比 85 小，往前', 10); bub(q, 400, 36, true); t = 1200;
+    q.e(t, 150, one('lbl', {o: 0})); t += 200;
+    a = hop(q, t, A2, 6, 3); t += HOP;
+    look(q, t + 50, 5, '比 25 大，停住', 10); bub(q, t + 100, 36, false); t += 1050;
+    look(q, t, 4, '比 77 小，往前', 350); bub(q, t + 100, 25, true); t += 950;
+    q.e(t, 150, one('lbl', {o: 0})); t += 200;
+    a = hop(q, t, a, 4, 3); t += HOP;
+    look(q, t + 50, 3, '比 16 大，停住', 10); bub(q, t + 100, 25, false); t += 1050;
+    look(q, t, 2, '在還沒排的最前面', 450); t += 1100;
+    q.e(t - 150, 150, one('lbl', {o: 0}));
+    done(q, t, 16, 3); q.e(t, 300, one('hd', {o: 0})); A3 = a; fin(q, t + 10, A3);
+    s.push({seq: q.list()});
+    /* 5 第四輪、第五輪 */
+    q = new EQ(); clearFp(q, 3); handIn(q, 6);
+    look(q, 300, 6, '沒比 36 小，不動', 10); t = 1200;
+    look(q, t, 5, '比 77 小，往前', 350); bub(q, t + 100, 36, true); t += 950;
+    q.e(t, 150, one('lbl', {o: 0})); t += 200;
+    a = hop(q, t, A3, 5, 4); t += HOP;
+    look(q, t + 50, 4, '比 25 大，停住', 10); bub(q, t + 100, 36, false); t += 1050;
+    look(q, t, 3, '在還沒排的最前面', 450); t += 1100;
+    q.e(t - 150, 150, one('lbl', {o: 0}));
+    done(q, t, 25, 4); q.e(t, 300, one('hd', {o: 0}));
+    t += 600;
+    q.e(t, 300, many(['fp4_0', 'fp4_1', 'fp4_2', 'fp4_3', 'fp4_4', 'fp4_5', 'fp4_6'], {o: 0}));
+    q.e(t, 10, one('hd', {x: slotC(6)})); q.e(t + 20, 250, one('hd', {o: 1}));
+    look(q, t + 400, 6, '沒比 77 小，不動', 10); t += 1200;
+    look(q, t, 5, '沒比 36 小，不動', 350); t += 1000;
+    look(q, t, 4, '', 350); t += 500;
+    done(q, t, 36, 5); done(q, t + 250, 77, 6); done(q, t + 500, 85, 7);
+    q.e(t + 500, 300, one('hd', {o: 0}));
+    A4 = a; fin(q, t + 900, INIT.slice().sort(function (x, y) { return x - y; }));
+    s.push({seq: q.list()});
+    /* 6 這段要記得 */
+    q = new EQ();
+    q.e(0, 500, merge2(one('main', {o: 0.28}), one('banner', {o: 1})));
+    s.push({seq: q.list()});
+    return s;
+  })()
+};
+})();
+/* ================= 動畫 5：快速排序法 ================= */
+(function () {
+var INIT = [16, 77, 25, 85, 12, 8, 36], PRE = 'p';
+var ROW_Y = [326, 384, 442];
+var MX = 60, MP = 56, MW = 46;   /* 小方塊：起點、間距、寬 */
+/* 7 個方塊：第 0 層一列；第 1 層中間那塊（第 3 塊）站好，左右三塊各往外分開；第 2 層兩堆各自中間那塊站好，兩旁各一塊 */
+function qbx(r, i) {
+  var x = MX + MP * i;
+  if (r >= 1 && i !== 3) x += i < 3 ? -22 : 22;
+  if (r >= 2) { if (i === 0 || i === 4) x -= 11; if (i === 2 || i === 6) x += 11; }
+  return x;
+}
+function handP(sc, p, id, x, col, ch, dirId, dirTx) {
+  var hd = sc.box(p, id, {o: 0, x: x, y: 396});
+  hand(hd, 'up');
+  circ(hd, 0, 100, 26, {f: col});
+  T(hd, 0, 109, ch, {fs: 26, w: 700, c: '#FFFFFF'});
+  sc.T(dirId, hd, 0, 162, dirTx, {fs: 22, w: 700, c: col}, {o: 0});
+  return hd;
+}
+var A0 = INIT, A2, A2b, A3;
+SEQ[5] = {
+  build: function (sc) {
+    var R = sc.root, g1 = sc.box(R, 'g1', {x: 50});
+    /* 第 1 步：目標示意（不是要放卡片的框）：比 16 小的在前、16、比 16 大的在後 */
+    var gl = sc.box(g1, 'goal', {o: 0}), gx = 450;
+    T(gl, gx - 262, 484, '目標', {fs: 26, w: 700, c: C.ink2, a: 'end'});
+    rect(gl, gx - 250, 450, 200, 50, {rx: 25, f: '#E2F0EF', s: '#2F7F86', sw: 3});
+    T(gl, gx - 150, 484, '比 16 小的', {fs: 26, w: 700, c: '#2F7F86'});
+    rect(gl, gx - 32, 442, 64, 66, {rx: 10, f: '#F6E6B6', s: C.acc, sw: 4});
+    T(gl, gx, 487, '16', {fs: 32, w: 700, c: C.ink});
+    rect(gl, gx + 50, 450, 200, 50, {rx: 25, f: C.violetL, s: C.violet, sw: 3});
+    T(gl, gx + 150, 484, '比 16 大的', {fs: 26, w: 700, c: C.violet});
+    var hl = sc.box(g1, 'hpL', {o: 0});
+    rect(hl, slotL(0) - 34, 238, 2 * PITCH - 8 + 20, 134, {rx: 12, f: '#FBF3D8', s: C.yelS, sw: 3, dash: '9 6'});
+    T(hl, slotL(0) - 34 + (2 * PITCH + 12) / 2, 412, '再用同一招', {fs: 26, w: 700, c: C.ink});
+    var hr = sc.box(g1, 'hpR', {o: 0});
+    rect(hr, slotL(3) - 4 - 10, 238, 4 * PITCH - 8 + 34, 134, {rx: 12, f: '#FBF3D8', s: C.yelS, sw: 3, dash: '9 6'});
+    T(hr, slotL(3) - 14 + (4 * PITCH + 26) / 2, 412, '再用同一招', {fs: 26, w: 700, c: C.ink});
+    INIT.forEach(function (v, i) { mkCard(sc, g1, PRE, v, i, {cls: v === 16 ? 'hi' : ''}); });
+    /* 基準小牌 */
+    var bp = sc.box(g1, 'basep', {o: 0});
+    line(bp, slotC(0), 226, slotC(0), 246, {c: C.acc, w: 4});
+    pill(bp, slotC(0), 206, 100, 46, '基準', {fs: 26, f: C.acc});
+    /* 第 2、3 步：兩隻手、停下來的標小牌 */
+    handP(sc, g1, 'hdL', slotC(1), C.violet, '前', 'dirL', '往後找比 16 大的');
+    handP(sc, g1, 'hdR', slotC(6), '#2F7F86', '後', 'dirR', '往前找比 16 小的');
+    sc.T('tgA', g1, slotC(0), 166, '比 16 大', {fs: 26, w: 700, c: C.violet}, {o: 0});
+    sc.T('tgB', g1, slotC(0), 166, '比 16 小', {fs: 26, w: 700, c: '#2F7F86'}, {o: 0});
+    sc.T('swl', g1, 500, 96, '對調', {fs: 28, w: 700, c: C.acc2}, {o: 0});   /* 10/1 第四版：弧度加大，小標往上移 */
+    /* 第 3 步：括號與站好了 */
+    var bl = sc.box(g1, 'brL', {o: 0});
+    path(bl, 'M' + slotL(0) + ' 232 L' + slotL(0) + ' 222 L' + (slotL(1) + CWD) + ' 222 L' + (slotL(1) + CWD) + ' 232', {s: C.ink2, sw: 3});
+    T(bl, (slotL(0) + slotL(1) + CWD) / 2, 204, '都比 16 小', {fs: 26, w: 700, c: C.ink2});
+    var br = sc.box(g1, 'brR', {o: 0});
+    path(br, 'M' + slotL(3) + ' 232 L' + slotL(3) + ' 222 L' + (slotL(6) + CWD) + ' 222 L' + (slotL(6) + CWD) + ' 232', {s: C.ink2, sw: 3});
+    T(br, (slotL(3) + slotL(6) + CWD) / 2, 204, '都比 16 大', {fs: 26, w: 700, c: C.ink2});
+    var st = sc.box(g1, 'stood', {o: 0});
+    pill(st, slotC(2), 188, 116, 46, '站好了', {fs: 24, f: C.green});
+    /* 第 4 步：兩堆 */
+    var bp2 = sc.box(g1, 'basep2', {o: 0});
+    line(bp2, slotC(0) - 20, 226, slotC(0) - 20, 246, {c: C.acc, w: 4});
+    pill(bp2, slotC(0) - 20, 206, 100, 46, '基準', {fs: 26, f: C.acc});
+    var bp3 = sc.box(g1, 'basep3', {o: 0});
+    line(bp3, slotC(3) + 20, 226, slotC(3) + 20, 246, {c: C.acc, w: 4});
+    pill(bp3, slotC(3) + 20, 206, 100, 46, '基準', {fs: 26, f: C.acc});
+    sc.T('tail4', g1, 500, 520, '分到每堆只剩一張，就排好了', {fs: 28, c: C.ink2}, {o: 0});
+
+    /* 第 5 步：選擇排序，每輪只少一張 */
+    var g5 = sc.box(R, 'g5', {o: 0, y: 150});
+    T(g5, MX, 84, '選擇排序', {fs: 32, w: 700, a: 'start', c: C.ink});
+    for (var i = 0; i < 7; i++) {
+      var m = sc.box(g5, 'sm' + i, {c: {srt: 0}});
+      m.setAttribute('class', 'mini');
+      S('rect', {'class': 'cr', x: MX + 62 * i, y: 110, width: 50, height: 46, rx: 8}, m);
+    }
+    sc.R('scan', line(g5, MX - 8, 98, MX - 8, 168, {c: C.acc, w: 5}), {o: 0});
+    sc.T('rem', g5, 600, 152, '剩 7', {fs: 46, w: 700, a: 'start', c: C.ink}, {});
+    T(g5, 600, 200, '每輪只少一張', {fs: 30, w: 700, a: 'start', c: C.ink2});
+    sc.T('remDots', g5, 752, 152, '…', {fs: 46, w: 700, a: 'start', c: C.ink}, {o: 0});
+    /* 第 6 步：快速排序，每次少一半 */
+    var g6 = sc.box(R, 'g6', {o: 0});
+    T(g6, MX, 298, '快速排序', {fs: 32, w: 700, a: 'start', c: C.ink});
+    for (var r = 0; r < 3; r++) for (i = 0; i < 7; i++) {
+      if (r === 2 && i === 3) continue;   /* 第 1 層站好的那一塊不再往下分 */
+      var st0 = (r === 1 && i === 3) || (r === 2 && (i === 1 || i === 5)) ? 1 : 0;
+      var b = sc.box(g6, 'qb' + r + '_' + i, {o: r === 0 ? 1 : 0, c: {srt: st0, pv: 0}});
+      b.setAttribute('class', 'blk' + (st0 ? ' srt' : ''));
+      S('rect', {'class': 'cr', x: qbx(r, i), y: ROW_Y[r], width: MW, height: 40, rx: 7}, b);
+    }
+    var wx = MX + MP * 3 + MW / 2, wall = sc.box(g6, 'wall', {o: 0});
+    line(wall, wx, 432, wx, 528, {c: C.ink2, w: 6});
+    T(wall, wx, 562, '兩堆之間不用再互相比', {fs: 24, c: C.ink});
+    for (r = 1; r <= 2; r++) sc.T('lv' + r, g6, 566, ROW_Y[r] + 29, '要處理的那一堆少一半', {fs: 22, a: 'start', c: C.ink}, {o: 0});
+    sc.T('cond', g6, 566, 352, '切成差不多大的兩半時', {fs: 26, w: 700, a: 'start', c: C.ink2}, {o: 0});
+    var lg = sc.box(g6, 'lgn', {o: 0});
+    pill(lg, 880, 568, 204, 50, '切 log n 次左右', {fs: 24, f: C.steel});
+    banner(sc, 500, 46);
+  },
+  steps: (function () {
+    var s = [], q, t, te;
+    var ringOff = function (q, t, vals, cls) { vals.forEach(function (v) { var c = {}; c[cls] = 0; q.e(t, 250, one(PRE + 'y' + v, {c: c})); }); };
+    /* 1 抽一張當基準 */
+    q = new EQ();
+    q.e(300, 400, one('basep', {o: 1}));
+    q.e(900, 400, one('goal', {o: 1}));
+    s.push({seq: q.list()});
+    /* 2 兩頭往中間找：77 和 8 對調，25 和 12 對調 */
+    q = new EQ();
+    q.e(0, 300, one('goal', {o: 0}));
+    q.e(300, 300, merge2(one('hdL', {o: 1}), one('hdR', {o: 1}), one('dirL', {o: 1}), one('dirR', {o: 1})));
+    q.e(700, 10, one('tgA', {x: slotC(1) - slotC(0)}));   /* 10/1 第五版：小標看不見的時候先換位置，比淡入早 100 ms；淡入只動透明度 */
+    q.e(800, 250, one(PRE + 'y77', {c: {pv: 1}}));
+    q.e(800, 250, one('tgA', {o: 1}), 'fo');
+    q.e(1500, 400, one('hdR', {x: slotC(5)}), 'lin');
+    q.e(1500, 10, one('tgB', {x: slotC(5) - slotC(0)}));
+    q.e(1950, 250, one(PRE + 'y8', {c: {tl: 1}}));
+    q.e(1950, 250, one('tgB', {o: 1}), 'fo');
+    /* 10/1 第四版：對調時兩張卡會抬到手指的位置，手指先淡出，對調完再出現 */
+    q.e(2550, 250, merge2(one('tgA', {o: 0}), one('tgB', {o: 0}), one('hdL', {o: 0}), one('hdR', {o: 0})));
+    q.e(2800, 10, one('swl', {x: (slotC(1) + slotC(5)) / 2 - 500}), 'tr');   /* 10/1 第四版：「對調」小標淡入淡出；第五版：換位置提早 100 ms */
+    q.e(2920, 200, one('swl', {o: 1}), 'tr fo');
+    A2 = [16, 8, 25, 85, 12, 77, 36];
+    te = swapEv(q, 2930, PRE, 77, 8, 1, 5, INIT, 1100);
+    q.e(te, 250, one('swl', {o: 0}), 'tr fo');
+    q.e(te, 10, merge2(posSet(PRE, A2, INIT)));
+    ringOff(q, te + 20, [77, 8], 'pv'); ringOff(q, te + 20, [8], 'tl');
+    q.e(te + 20, 250, merge2(one('tgA', {o: 0}), one('tgB', {o: 0}), one('hdL', {o: 1}), one('hdR', {o: 1})));
+    t = te + 600;
+    q.e(t, 400, one('hdL', {x: slotC(2)}), 'lin');
+    q.e(t, 10, one('tgA', {x: slotC(2) - slotC(0)}));
+    q.e(t, 400, one('hdR', {x: slotC(4)}), 'lin');
+    q.e(t, 10, one('tgB', {x: slotC(4) - slotC(0)}));
+    q.e(t + 450, 250, merge2(one(PRE + 'y25', {c: {pv: 1}}), one(PRE + 'y12', {c: {tl: 1}}), one('tgA', {o: 1}), one('tgB', {o: 1})));
+    t += 1400;
+    q.e(t - 300, 250, merge2(one('tgA', {o: 0}), one('tgB', {o: 0}), one('hdL', {o: 0}), one('hdR', {o: 0})));
+    q.e(t - 100, 10, one('swl', {x: (slotC(2) + slotC(4)) / 2 - 500}), 'tr');
+    q.e(t + 20, 200, one('swl', {o: 1}), 'tr fo');
+    A2b = [16, 8, 12, 85, 25, 77, 36];
+    te = swapEv(q, t + 30, PRE, 25, 12, 2, 4, INIT, 1100);
+    q.e(te, 250, one('swl', {o: 0}), 'tr fo');
+    q.e(te, 10, merge2(posSet(PRE, A2b, INIT)));
+    ringOff(q, te + 20, [25], 'pv'); ringOff(q, te + 20, [12], 'tl');
+    q.e(te + 20, 250, merge2(one('tgA', {o: 0}), one('tgB', {o: 0}), one('hdL', {o: 1}), one('hdR', {o: 1})));
+    s.push({seq: q.list()});
+    /* 3 16 就定位 */
+    q = new EQ();
+    q.e(0, 200, merge2(one('dirL', {o: 0}), one('dirR', {o: 0})));
+    q.e(0, 400, one('hdL', {x: slotC(3)}), 'lin');
+    q.e(0, 10, one('tgA', {x: slotC(3) - slotC(0) + 58}));
+    q.e(0, 700, one('hdR', {x: slotC(2)}), 'lin');
+    q.e(0, 10, one('tgB', {x: slotC(2) - slotC(0) - 58}));
+    q.e(750, 250, merge2(one(PRE + 'y85', {c: {pv: 1}}), one(PRE + 'y12', {c: {tl: 1}}), one('tgA', {o: 1}), one('tgB', {o: 1})));
+    /* 10/1 第四版：16 對調時會往上抬，基準小牌和兩隻手指先收起，免得卡片從它們後面穿過去 */
+    q.e(1550, 250, merge2(one('tgA', {o: 0}), one('tgB', {o: 0}), one('basep', {o: 0}), one('hdL', {o: 0}), one('hdR', {o: 0})));
+    q.e(1800, 10, one('swl', {x: (slotC(0) + slotC(2)) / 2 - 500}), 'tr');
+    q.e(1920, 200, one('swl', {o: 1}), 'tr fo');
+    A3 = [12, 8, 16, 85, 25, 77, 36];
+    te = swapEv(q, 1930, PRE, 16, 12, 0, 2, INIT, 1300);
+    q.e(te, 250, one('swl', {o: 0}), 'tr fo');
+    q.e(te, 10, merge2(posSet(PRE, A3, INIT)));
+    ringOff(q, te + 20, [85], 'pv'); ringOff(q, te + 20, [12], 'tl');
+    q.e(te + 20, 350, merge2(one(PRE + 'y16', {c: {hi: 0, srt: 1}}), one('tgA', {o: 0}), one('tgB', {o: 0})));
+    q.e(te + 500, 500, merge2(one('brL', {o: 1}), one('brR', {o: 1}), one('stood', {o: 1})));
+    s.push({seq: q.list()});
+    /* 4 兩邊再各做一次 */
+    q = new EQ();
+    q.e(0, 300, merge2(many(['brL', 'brR', 'stood'], {o: 0})));
+    var sh = {};
+    A3.forEach(function (v, i) { if (i < 2) sh[PRE + 'x' + v] = {x: (i - INIT.indexOf(v)) * PITCH - 20}; else if (i > 2) sh[PRE + 'x' + v] = {x: (i - INIT.indexOf(v)) * PITCH + 20}; });
+    q.e(400, 600, sh);
+    q.e(1100, 400, merge2(one('hpL', {o: 1}), one('hpR', {o: 1})));
+    q.e(1600, 400, merge2(one('basep2', {o: 1}), one('basep3', {o: 1})));
+    q.e(2200, 400, one('tail4', {o: 1}));
+    s.push({seq: q.list()});
+    /* 5 選擇排序：每輪只少一張 */
+    q = new EQ();
+    q.e(0, 400, one('g1', {o: 0}));
+    q.e(300, 300, one('g5', {o: 1}));
+    for (var r = 0; r < 2; r++) {
+      var t0 = 900 + r * 1500, x0 = MX + 62 * r - 8;
+      q.e(t0, 10, one('scan', {x: x0 - (MX - 8), o: 0}));
+      q.e(t0 + 20, 150, one('scan', {o: 1}));
+      q.e(t0 + 200, 900, one('scan', {x: MX + 62 * 6 + 58 - (MX - 8)}), 'lin');
+      q.e(t0 + 1150, 150, one('scan', {o: 0}));
+      q.e(t0 + 1150, 300, one('sm' + r, {c: {srt: 1}}));
+      q.e(t0 + 1150, 10, one('rem', {tx: '剩 ' + (6 - r)}));
+    }
+    q.e(4000, 300, one('remDots', {o: 1}));
+    s.push({seq: q.list()});
+    /* 6 快速排序：每次少一半 */
+    q = new EQ();
+    q.e(0, 600, one('g5', {y: 0}));
+    q.e(500, 300, one('g6', {o: 1}));
+    q.e(900, 300, one('cond', {o: 1}));
+    /* 先在上一層標出這次站好的那一塊（綠色外框；10/1 第四版由橘紅改綠，橘紅在這一段只代表基準），再長出下一層 */
+    var lvT = [1700, 3300], pvs = [['qb0_3'], ['qb1_1', 'qb1_5']];
+    for (r = 1; r <= 2; r++) {
+      var ev = {};
+      for (var i = 0; i < 7; i++) if (!(r === 2 && i === 3)) ev['qb' + r + '_' + i] = {o: 1};
+      q.e(lvT[r - 1] - 500, 300, many(pvs[r - 1], {c: {pv: 1}}));
+      q.e(lvT[r - 1], 500, ev);
+      q.e(lvT[r - 1] + 300, 400, one('lv' + r, {o: 1}));
+    }
+    q.e(2500, 400, one('wall', {o: 1}));
+    q.e(4300, 400, one('lgn', {o: 1}));
+    s.push({seq: q.list()});
+    /* 7 這段要記得 */
+    q = new EQ();
+    q.e(0, 500, merge2(one('g6', {o: 0.28}), one('g5', {o: 0.28}), one('banner', {o: 1})));
+    s.push({seq: q.list()});
+    return s;
+  })()
+};
+})();
+/* ---------- 狀態計算 ---------- */
+function cloneP(p) { return {o: p.o, x: p.x, y: p.y, s: p.s, sx: p.sx, r: p.r, c: Object.assign({}, p.c), tx: p.tx}; }
+function cloneSt(st) { var o = {}; for (var k in st) o[k] = cloneP(st[k]); return o; }
+function mergeInto(st, set, no) {
+  for (var id in set) {
+    var p = st[id];
+    if (!p) throw new Error('動畫 ' + no + ' 沒有這個元件：' + id);
+    var d = set[id];
+    for (var k in d) { if (k === 'c') Object.assign(p.c, d.c); else p[k] = d[k]; }
+  }
+}
+function isTr(ev) { return typeof ev[3] === 'string' && ev[3].indexOf('tr') >= 0; }
+function isLin(ev) { return typeof ev[3] === 'string' && ev[3].indexOf('lin') >= 0; }
+/* 'fo'＝只做透明度的過場（標籤淡入淡出用）：位置與大小不跟著過場，就算同一個畫格裡先換了位置也不會滑過來 */
+function isFo(ev) { return typeof ev[3] === 'string' && ev[3].indexOf('fo') >= 0; }
+/* 過場的速度曲線：'lin' 等速；'eo' 先快後慢（抬起）；'ei' 先慢後快（放下）；其餘慢進慢出。只影響過場，不影響每一步的最後樣子 */
+function easeOf(ev) {
+  var f = typeof ev[3] === 'string' ? ev[3] : '';
+  if (f.indexOf('lin') >= 0) return 'linear';
+  if (f.indexOf('eo') >= 0) return 'cubic-bezier(.2,.7,.35,1)';
+  if (f.indexOf('ei') >= 0) return 'cubic-bezier(.6,0,.8,.3)';
+  return 'cubic-bezier(.45,.05,.35,1)';
+}
+var SCENES = {}, CACHE = {};
+function getScene(a) {
+  if (SCENES[a]) return SCENES[a];
+  var sc = new Scene(a, DATA.animations[a - 1].title);
+  SEQ[a].build(sc);
+  registerLooks(sc, a);
+  SCENES[a] = sc; CACHE[a] = {};
+  document.getElementById('stage').appendChild(sc.svg);
+  return sc;
+}
+/* 起點狀態要登錄每個元件所有會用到的外觀。
+   paint 只會切換狀態裡列出的 class 與文字；後面步驟才加上的 class（hi、srt、on…）如果起點沒有列出，
+   回到前面的步驟時就拿不掉。所以建好場景後，把每一步（含過場中的短暫提示）會切換的 class 都登錄到起點，
+   值取建置當下元件有沒有這個 class；會被換字的元件也登錄建置當下的文字。
+   之後每次 render 都把這些 class、文字設回該步應有的值，從哪裡來都一樣。 */
+function registerLooks(sc, a) {
+  var cls = {}, txt = {};
+  SEQ[a].steps.forEach(function (step) {
+    step.seq.forEach(function (ev) {
+      for (var id in ev[2]) {
+        var d = ev[2][id];
+        if (d.c) { cls[id] = cls[id] || {}; for (var c in d.c) cls[id][c] = 1; }
+        if (d.tx !== undefined) txt[id] = 1;
+      }
+    });
+  });
+  Object.keys(cls).forEach(function (id) {
+    var b = sc.base[id];
+    if (!b) return;
+    for (var c in cls[id]) if (!(c in b.c)) b.c[c] = sc.reg[id].classList.contains(c) ? 1 : 0;
+  });
+  Object.keys(txt).forEach(function (id) {
+    var b = sc.base[id];
+    if (b && b.tx === null) b.tx = sc.reg[id].textContent;
+  });
+}
+function stateAt(a, k) {
+  var sc = getScene(a);
+  if (CACHE[a][k]) return CACHE[a][k];
+  var st = k === 0 ? cloneSt(sc.base) : cloneSt(stateAt(a, k - 1));
+  if (k > 0) SEQ[a].steps[k - 1].seq.forEach(function (ev) { if (!isTr(ev)) mergeInto(st, ev[2], a); });
+  CACHE[a][k] = st;
+  return st;
+}
+function paint(sc, id, p, d, fadeOnly, ease) {
+  var el = sc.reg[id];
+  ease = ease || 'cubic-bezier(.45,.05,.35,1)';
+  /* 長度 20 ms 以內的事件是「瞬間換位置、換字」（標籤、手指在看不見的時候先換到新的地方）：不做過場，直接到位 */
+  if (d > 20) el.style.transition = fadeOnly ? ('opacity ' + d + 'ms ease') : ('opacity ' + d + 'ms ease, transform ' + d + 'ms ' + ease);
+  else el.style.transition = 'none';
+  el.style.opacity = p.o;
+  el.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) rotate(' + p.r + 'deg) scale(' + (p.s * p.sx) + ',' + p.s + ')';
+  for (var c in p.c) el.classList.toggle(c, !!p.c[c]);
+  if (p.tx !== null && el.textContent !== p.tx) el.textContent = p.tx;
+}
+function render(sc, st, d, fadeOnly) {
+  if (!d) sc.svg.classList.add('nt');
+  for (var id in st) paint(sc, id, st[id], d || 0, fadeOnly);
+  if (!d) {
+    void sc.svg.getBoundingClientRect(); sc.svg.classList.remove('nt');
+    /* 過場跑過的元素，瀏覽器可能留著獨立的繪圖層，邊緣的反鋸齒和新開頁面直接畫出來的差一點點。
+       把舞台收起來再放回去（同一個畫格內完成，看不出來），讓每一次「停住的畫面」都從頭畫，不管從哪裡來都一樣 */
+    var stg = sc.svg.parentNode;
+    if (stg && stg.style) { stg.style.display = 'none'; void stg.offsetHeight; stg.style.display = ''; void stg.offsetHeight; }
+  }
+}
+
+/* ---------- 播放器 ---------- */
+var P = {a: 0, k: 0, sc: null, timers: [], auto: false, autoTimer: null};
+var $ = function (id) { return document.getElementById(id); };
+function clearTimers() {
+  P.timers.forEach(clearTimeout); P.timers = [];
+  if (P.autoTimer) { clearTimeout(P.autoTimer); P.autoTimer = null; }
+}
+function capLen(a, k) { return DATA.animations[a - 1].steps[k - 1].caption.replace(/\s/g, '').length; }
+/* 停留＝max(4000, 字數×250)，單步上限 14 秒；最後一步（這段要記得）的 caption 是整個整理框要念的字，不受上限 */
+function dwell(a, k) {
+  var v = Math.max(4000, capLen(a, k) * 250);
+  return k === DATA.animations[a - 1].steps.length ? v : Math.min(14000, v);
+}
+function seqEnd(a, k) { var e = 0; SEQ[a].steps[k - 1].seq.forEach(function (ev) { e = Math.max(e, ev[0] + ev[1]); }); return e; }
+function playStep(n) {
+  var def = SEQ[P.a].steps[n - 1], sc = P.sc, target = stateAt(P.a, n);
+  if (STILL) { render(sc, target, 0); return 0; }
+  if (RM) { render(sc, target, 400, true); P.timers.push(setTimeout(function () { render(sc, target, 0); }, 460)); return 450; }
+  var cur = cloneSt(stateAt(P.a, n - 1)), end = 0;
+  def.seq.forEach(function (ev) {
+    end = Math.max(end, ev[0] + ev[1]);
+    P.timers.push(setTimeout(function () {
+      mergeInto(cur, ev[2], P.a);
+      for (var id in ev[2]) paint(sc, id, cur[id], ev[1], isFo(ev), easeOf(ev));
+      /* 每個事件各自重算一次樣式：電腦忙、兩個計時器落在同一個畫格時，前一個事件的過場也會先照它自己的設定開始，不會和下一個事件混在一起（例如先換位置、再淡入的小標，不會一邊淡入一邊滑過來） */
+      void sc.svg.getBoundingClientRect();
+    }, ev[0] + 30));
+  });
+  P.timers.push(setTimeout(function () { render(sc, target, 0); }, end + 90));
+  return end + 90;
+}
+function go(n, animate) {
+  var N = SEQ[P.a].steps.length;
+  n = Math.max(1, Math.min(N, n));
+  clearTimers();
+  var end = 0;
+  P.k = n;
+  if (animate) { render(P.sc, stateAt(P.a, n - 1), 0); end = playStep(n); }
+  else render(P.sc, stateAt(P.a, n), 0);
+  if (P.auto) {
+    if (n >= N) setAuto(false);
+    else P.autoTimer = setTimeout(function () { go(P.k + 1, true); }, end + dwell(P.a, n));
+  }
+  updateUI(); updateURL(); save();
+}
+function restart() {
+  clearTimers();
+  P.k = 0;
+  render(P.sc, stateAt(P.a, 0), 0);
+  go(1, true);
+}
+function setAuto(on) {
+  P.auto = on;
+  var b = $('bAuto');
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  b.innerHTML = on
+    ? '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="4" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="11.5" y="4" width="3.5" height="12" rx="1" fill="currentColor"/></svg>暫停'
+    : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4l10 6-10 6z" fill="currentColor"/></svg>自動播放';
+  if (!on && P.autoTimer) { clearTimeout(P.autoTimer); P.autoTimer = null; }
+}
+function toggleAuto() {
+  if (P.auto) { setAuto(false); return; }
+  setAuto(true);
+  var N = SEQ[P.a].steps.length;
+  if (P.k >= N) restart();
+  else P.autoTimer = setTimeout(function () { go(P.k + 1, true); }, 700);
+}
+function kw(parent, text, words) {
+  if (!words || !words.length) { parent.appendChild(document.createTextNode(text)); return; }
+  var re = new RegExp('(' + words.map(function (w) { return w.replace(/[()（）²]/g, '\\$&'); }).join('|') + ')', 'g');
+  text.split(re).forEach(function (part) {
+    if (!part) return;
+    if (words.indexOf(part) >= 0) { var s = document.createElement('strong'); s.textContent = part; parent.appendChild(s); }
+    else parent.appendChild(document.createTextNode(part));
+  });
+}
+var BOLD = {1: ['O(n²) 叫平方成長'], 3: ['n² 成正比'], 4: ['往前浮到最前面']};
+/* 字卡裡的「log n」不要在中間斷行：只多包一層 span，文字（旁白與字幕讀到的 textContent）完全不變 */
+function setCap(el, text) {
+  el.textContent = '';
+  text.split(/(log n)/).forEach(function (part) {
+    if (!part) return;
+    if (part === 'log n') { var s = document.createElement('span'); s.className = 'nb'; s.textContent = part; el.appendChild(s); }
+    else el.appendChild(document.createTextNode(part));
+  });
+}
+function updateUI() {
+  var A = DATA.animations[P.a - 1], N = A.steps.length, st = A.steps[P.k - 1], last = P.k === N;
+  $('pSeg').textContent = '第 ' + P.a + ' 段／共 ' + DATA.animations.length + ' 段';
+  $('pTitle').textContent = A.title;
+  $('pPages').textContent = '對應' + A.tocPages;
+  $('pStep').textContent = '第 ' + P.k + ' 步／共 ' + N + ' 步';
+  $('sTitle').textContent = st.title;
+  var dots = $('dots'); dots.textContent = '';
+  for (var i = 1; i <= N; i++) { var d = document.createElement('span'); d.className = 'dot' + (i < P.k ? ' done' : '') + (i === P.k ? ' cur' : ''); dots.appendChild(d); }
+  var cap = $('cap'), take = $('take');
+  if (last) {
+    cap.hidden = true; cap.textContent = ''; take.hidden = false; take.textContent = '';
+    /* 每一條前面是一個標籤，冒號藏起來，旁白與字幕照念「標籤：內文」 */
+    A.takeaway.forEach(function (it) {
+      var p = document.createElement('p'); p.className = 'tk';
+      var b = document.createElement('b');
+      var tg = document.createElement('span'); tg.className = 'tag' + (it.tag === '重點' ? '' : ' soft'); tg.textContent = it.tag;
+      var cl = document.createElement('span'); cl.className = 'cl'; cl.textContent = '：';
+      b.appendChild(tg); b.appendChild(cl); p.appendChild(b);
+      kw(p, it.text, BOLD[P.a]);
+      take.appendChild(p);
+    });
+  } else { take.hidden = true; take.textContent = ''; cap.hidden = false; setCap(cap, st.caption); }
+  $('bPrev').disabled = P.k <= 1;
+  $('bNext').disabled = last;
+  var after = $('after'), nb = $('bNextSeg');
+  after.hidden = !last;
+  nb.textContent = P.a < DATA.animations.length ? '看下一段：第 ' + (P.a + 1) + ' 段' : '回目錄';
+}
+function buildURL(a, s, play) {
+  var q = new URLSearchParams();
+  if (a) { q.set('a', a); if (s) q.set('s', s); if (s && play) q.set('play', '1'); }
+  if (STILL) q.set('still', '1');
+  var str = q.toString();
+  return location.pathname + (str ? '?' + str : '');
+}
+function updateURL() { try { history.replaceState(null, '', buildURL(P.a, P.k)); } catch (e) {} }
+function save() { try { localStorage.setItem('w14anim-last', JSON.stringify({a: P.a, s: P.k})); } catch (e) {} }
+function load() { try { var v = JSON.parse(localStorage.getItem('w14anim-last') || 'null'); if (v && v.a >= 1 && v.a <= DATA.animations.length && v.s >= 1) return v; } catch (e) {} return null; }
+
+function showToc() {
+  clearTimers(); setAuto(false);
+  $('player').hidden = true; $('toc').hidden = false;
+  document.title = '第 14 週互動動畫';
+  var last = load(), rs = $('resume');
+  rs.textContent = '';
+  if (last && DATA.animations[last.a - 1] && last.s <= DATA.animations[last.a - 1].steps.length) {
+    rs.appendChild(document.createTextNode('上次看到第 ' + last.a + ' 段第 ' + last.s + ' 步。'));
+    var a = document.createElement('a'); a.href = buildURL(last.a, last.s); a.textContent = '從那裡接著看';
+    a.addEventListener('click', function (e) { e.preventDefault(); nav(last.a, last.s); });
+    rs.appendChild(a); rs.hidden = false;
+  } else rs.hidden = true;
+}
+function openAnim(a, s, play) {
+  clearTimers(); setAuto(false);
+  $('toc').hidden = true; $('player').hidden = false;
+  var sc = getScene(a);
+  for (var k in SCENES) SCENES[k].svg.style.display = (Number(k) !== a) ? 'none' : '';
+  P.a = a; P.sc = sc;
+  document.title = '第 ' + a + ' 段｜第 14 週互動動畫';
+  var N = SEQ[a].steps.length;
+  if (s >= 1 && s <= N) {
+    if (play && s > 1) {
+      /* 先停在前一步的最後樣子，再自動演這一步 */
+      P.k = s - 1; render(sc, stateAt(a, s - 1), 0);
+      updateUI();
+      P.timers.push(setTimeout(function () { go(s, true); }, 900));
+    } else if (play) restart();
+    else go(s, false);
+  } else restart();
+}
+function nav(a, s, play) {
+  try { history.pushState(null, '', buildURL(a, s, play)); } catch (e) {}
+  if (a) openAnim(a, s, play); else showToc();
+  window.scrollTo(0, 0);
+}
+function parse(search) {
+  var q = new URLSearchParams(search), a = parseInt(q.get('a'), 10), s = parseInt(q.get('s'), 10);
+  if (!(a >= 1 && a <= DATA.animations.length)) return {a: 0, s: 0, play: false};
+  var N = SEQ[a].steps.length;
+  return {a: a, s: (s >= 1 && s <= N) ? s : 0, play: q.get('play') === '1'};
+}
+function route() { var r = parse(location.search); if (r.a) openAnim(r.a, r.s, r.play); else showToc(); }
+
+/* 目錄卡片 */
+function buildToc() {
+  var ol = $('cards');
+  DATA.animations.forEach(function (A, i) {
+    var a = i + 1, li = document.createElement('li'); li.className = 'card';
+    var go1 = document.createElement('a'); go1.className = 'go'; go1.href = buildURL(a, 0);
+    go1.addEventListener('click', function (e) { e.preventDefault(); nav(a, 0); });
+    var n = document.createElement('span'); n.className = 'num'; n.textContent = a; go1.appendChild(n);
+    var box = document.createElement('span');
+    var h = document.createElement('h3'); h.textContent = A.title; box.appendChild(h);
+    var p = document.createElement('p'); p.textContent = A.tocLine; box.appendChild(p);
+    var m = document.createElement('p'); m.className = 'meta'; m.textContent = '對應' + A.tocPages + '・' + A.steps.length + ' 步'; box.appendChild(m);
+    go1.appendChild(box); li.appendChild(go1);
+    (A.tocLinks || []).forEach(function (c) {
+      var sub = document.createElement('a'); sub.className = 'sub'; sub.href = buildURL(a, c.s, true);
+      sub.textContent = c.label;
+      sub.addEventListener('click', function (e) { e.preventDefault(); nav(a, c.s, true); });
+      li.appendChild(sub);
+    });
+    ol.appendChild(li);
+  });
+}
+
+$('bToc').addEventListener('click', function () { nav(0, 0); });
+$('bPrev').addEventListener('click', function () { setAuto(false); if (P.k > 1) go(P.k - 1, false); });
+$('bNext').addEventListener('click', function () { if (P.k < SEQ[P.a].steps.length) go(P.k + 1, true); });
+$('bHome').addEventListener('click', function () { restart(); });
+$('bAuto').addEventListener('click', toggleAuto);
+$('bNextSeg').addEventListener('click', function () { if (P.a < DATA.animations.length) nav(P.a + 1, 0); else nav(0, 0); });
+document.addEventListener('keydown', function (e) {
+  if ($('player').hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); if (P.k < SEQ[P.a].steps.length) go(P.k + 1, true); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); setAuto(false); if (P.k > 1) go(P.k - 1, false); }
+});
+window.addEventListener('popstate', route);
+
+setAuto(false);
+buildToc();
+route();
+
+/* 給影片流程與測試用的介面：名稱要符合 ^__W\d+$ */
+window.__W14 = {
+  parse: parse,
+  steps: function (a) { return SEQ[a].steps.length; },
+  state: function () { return {a: P.a, k: P.k, still: STILL, auto: P.auto}; },
+  show: function (a, s) { openAnim(a, s); return {a: P.a, k: P.k, caption: $('cap').hidden ? $('take').textContent : $('cap').textContent}; },
+  seqEnd: seqEnd, dwell: dwell,
+  /* 測試用：第 k 步過場進行到第 i 個事件（含短暫提示）之後、沒有過場的樣子；回傳這一步的事件數 */
+  mid: function (a, k, i) {
+    openAnim(a, k);
+    var st = cloneSt(stateAt(a, k - 1)), evs = SEQ[a].steps[k - 1].seq;
+    for (var j = 0; j < i && j < evs.length; j++) mergeInto(st, evs[j][2], a);
+    render(P.sc, st, 0);
+    return evs.length;
+  },
+  /* 測試用：第 k 步過場裡「沒有任何事件正在進行」的時刻，回傳對應的事件數（給 mid 用） */
+  quiet: function (a, k) {
+    var evs = SEQ[a].steps[k - 1].seq, ts = {}, out = [];
+    evs.forEach(function (e) { ts[e[0] + e[1]] = 1; });
+    Object.keys(ts).map(Number).sort(function (x, y) { return x - y; }).forEach(function (T) {
+      var ok = true, n = 0;
+      evs.forEach(function (e) { if (e[0] < T && T < e[0] + e[1]) ok = false; if (e[0] < T) n++; });
+      if (ok && out.indexOf(n) < 0) out.push(n);
+    });
+    return out;
+  },
+  timing: function () { var out = []; for (var a = 1; a <= DATA.animations.length; a++) { var t = 0; for (var k = 1; k <= SEQ[a].steps.length; k++) t += seqEnd(a, k) + 90 + dwell(a, k); out.push(t); } return out; }
+};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3/31 區塊鏈技術 Blockchain Technology｜智慧科技密碼</title>
+<style>
+  
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #818CF8;
+    --primary-dark: #3730A3;
+    --accent: #F59E0B;
+    --accent-light: #FCD34D;
+    --success: #10B981;
+    --danger: #EF4444;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --text: #1E293B;
+    --text-secondary: #64748B;
+    --border: #E2E8F0;
+    --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    background: var(--gradient-1);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08) 0%, transparent 40%);
+    animation: heroFloat 20s ease-in-out infinite;
+  }
+  @keyframes heroFloat {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(30px, -30px) rotate(1deg); }
+    66% { transform: translate(-20px, 20px) rotate(-1deg); }
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 900px; }
+  .hero-date {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: 2px;
+  }
+  .hero h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+  .hero h2 {
+    font-size: 1.8rem;
+    font-weight: 300;
+    opacity: 0.9;
+    margin-bottom: 1rem;
+  }
+  .hero-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.8;
+    margin-bottom: 2rem;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #000;
+    padding: 0.3rem 1rem;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .hero-chain {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+  }
+  .hero-block {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(5px);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    animation: blockPulse 2s ease-in-out infinite;
+    margin: 0 -5px;
+  }
+  .hero-block:nth-child(2) { animation-delay: 0.3s; }
+  .hero-block:nth-child(3) { animation-delay: 0.6s; }
+  .hero-block:nth-child(4) { animation-delay: 0.9s; }
+  .hero-block:nth-child(5) { animation-delay: 1.2s; }
+  .hero-link-line {
+    width: 40px;
+    height: 4px;
+    background: rgba(255,255,255,0.5);
+    align-self: center;
+    border-radius: 2px;
+  }
+  @keyframes blockPulse {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: bounce 2s ease-in-out infinite;
+    cursor: pointer;
+    font-size: 2rem;
+    z-index: 2;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(10px); }
+  }
+  .start-btn {
+    display: inline-block;
+    background: #fff;
+    color: var(--primary-dark);
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none;
+  }
+  .start-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+
+  /* ===== NAV ===== */
+  .sticky-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.8rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .nav-logo {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.9rem;
+    min-width: fit-content;
+  }
+  .nav-sep { color: var(--border); }
+  .nav-item {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    background: none;
+    min-width: fit-content;
+  }
+  .nav-item:hover, .nav-item.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: var(--gradient-1);
+    z-index: 101;
+    transition: width 0.3s;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .section-number {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    background: var(--gradient-1);
+    color: #fff;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+  .section-title-en {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    color: var(--primary-dark);
+  }
+  .card-title-en {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+  .card p, .card li {
+    font-size: 1.05rem;
+    color: var(--text);
+    margin-bottom: 0.8rem;
+  }
+
+  /* ===== BILINGUAL ===== */
+  .bilingual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .bi-zh, .bi-en {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+  .bi-zh {
+    background: #EEF2FF;
+    border-left: 4px solid var(--primary);
+  }
+  .bi-en {
+    background: #F0FDF4;
+    border-left: 4px solid var(--success);
+  }
+  .bi-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+  }
+  .bi-zh .bi-label { color: var(--primary); }
+  .bi-en .bi-label { color: var(--success); }
+
+  /* ===== INTERACTIVE HASH DEMO ===== */
+  .hash-demo {
+    background: #1E1E2E;
+    border-radius: 16px;
+    padding: 2rem;
+    color: #CDD6F4;
+    margin: 2rem 0;
+  }
+  .hash-demo h3 {
+    color: #89B4FA;
+    margin-bottom: 1rem;
+  }
+  .hash-input-area {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .hash-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 2px solid #45475A;
+    background: #313244;
+    color: #CDD6F4;
+    font-size: 1rem;
+    font-family: 'Inter', monospace;
+  }
+  .hash-input:focus {
+    outline: none;
+    border-color: #89B4FA;
+  }
+  .hash-btn {
+    padding: 0.8rem 2rem;
+    background: #89B4FA;
+    color: #1E1E2E;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+  }
+  .hash-btn:hover { background: #B4D0FB; }
+  .hash-output {
+    background: #11111B;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+    font-size: 0.95rem;
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    color: #A6E3A1;
+  }
+
+  /* ===== BLOCKCHAIN BUILDER ===== */
+  .blockchain-builder {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    color: #E2E8F0;
+    overflow-x: auto;
+  }
+  .blockchain-builder h3 {
+    color: #60A5FA;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+  }
+  .chain-container {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    padding: 1rem 0;
+    min-width: fit-content;
+  }
+  .block-card {
+    min-width: 220px;
+    background: #334155;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 2px solid #475569;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .block-card.genesis { border-color: #F59E0B; }
+  .block-card.valid { border-color: #10B981; }
+  .block-card.invalid { border-color: #EF4444; background: #3B1C1C; }
+  .block-header {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #94A3B8;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .block-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10B981;
+  }
+  .block-status.invalid { background: #EF4444; }
+  .block-field {
+    margin-bottom: 0.4rem;
+    font-size: 0.8rem;
+  }
+  .block-field label {
+    color: #94A3B8;
+    font-size: 0.7rem;
+    display: block;
+  }
+  .block-field-val {
+    font-family: monospace;
+    color: #A6E3A1;
+    font-size: 0.75rem;
+    word-break: break-all;
+  }
+  .block-data-input {
+    width: 100%;
+    padding: 0.4rem;
+    border: 1px solid #475569;
+    background: #1E293B;
+    color: #E2E8F0;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+  }
+  .chain-link {
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    color: #60A5FA;
+    font-size: 1.5rem;
+    font-weight: 900;
+  }
+
+  /* ===== COMPARISON TABLE ===== */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+  }
+  .comp-table th {
+    background: var(--primary);
+    color: #fff;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+  }
+  .comp-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table tr:nth-child(even) { background: #F8FAFC; }
+  .comp-table tr:hover { background: #EEF2FF; }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    position: relative;
+    padding-left: 3rem;
+    margin: 2rem 0;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gradient-1);
+    border-radius: 2px;
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 1.5rem;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2.3rem;
+    top: 0.5rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+  .timeline-year {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.1rem;
+  }
+
+  /* ===== QUIZ ===== */
+  .quiz-container {
+    background: linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+  .quiz-container h3 {
+    color: #92400E;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+  }
+  .quiz-q {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .quiz-q p {
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+  }
+  .quiz-q-en {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 0.8rem;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-opt {
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+    background: #fff;
+  }
+  .quiz-opt:hover { border-color: var(--primary-light); background: #EEF2FF; }
+  .quiz-opt.correct {
+    border-color: var(--success);
+    background: #ECFDF5;
+    color: #065F46;
+  }
+  .quiz-opt.wrong {
+    border-color: var(--danger);
+    background: #FEF2F2;
+    color: #991B1B;
+  }
+  .quiz-feedback {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .quiz-feedback.show { display: block; }
+
+  /* ===== FLOW DIAGRAM ===== */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: 1.5rem 0;
+    margin: 1.5rem 0;
+  }
+  .flow-step {
+    min-width: 150px;
+    padding: 1rem;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+  }
+  .flow-step:hover { transform: scale(1.05); }
+  .flow-step .step-num {
+    display: block;
+    font-size: 1.5rem;
+    margin-bottom: 0.3rem;
+  }
+  .flow-arrow {
+    font-size: 1.5rem;
+    color: var(--primary);
+    flex-shrink: 0;
+    padding: 0 0.3rem;
+  }
+
+  /* ===== ACCORDION ===== */
+  .accordion {
+    margin: 1.5rem 0;
+  }
+  .acc-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 0.8rem;
+    overflow: hidden;
+    background: #fff;
+  }
+  .acc-header {
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1.05rem;
+    transition: background 0.3s;
+  }
+  .acc-header:hover { background: #F8FAFC; }
+  .acc-arrow { transition: transform 0.3s; font-size: 1.2rem; }
+  .acc-item.open .acc-arrow { transform: rotate(180deg); }
+  .acc-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    padding: 0 1.5rem;
+  }
+  .acc-item.open .acc-body {
+    max-height: 2000px;
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  /* ===== INFO BOX ===== */
+  .info-box {
+    padding: 1.2rem 1.5rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .info-box.tip {
+    background: #ECFDF5;
+    border: 1px solid #A7F3D0;
+  }
+  .info-box.warn {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+  }
+  .info-box.note {
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+  }
+  .info-box.research {
+    background: #FAF5FF;
+    border: 1px solid #DDD6FE;
+  }
+  .info-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+  /* ===== KEY TERMS ===== */
+  .key-term {
+    display: inline-block;
+    background: #EEF2FF;
+    color: var(--primary-dark);
+    padding: 0.1rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  /* ===== ANALOGY BOX ===== */
+  .analogy {
+    background: linear-gradient(135deg, #FEFCE8 0%, #FEF9C3 100%);
+    border: 2px dashed #CA8A04;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .analogy-title {
+    font-weight: 700;
+    color: #92400E;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: var(--text);
+    color: #94A3B8;
+    text-align: center;
+    padding: 3rem 2rem;
+    margin-top: 3rem;
+  }
+  .footer strong { color: #fff; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 2rem; }
+    .hero h2 { font-size: 1.2rem; }
+    .bilingual { grid-template-columns: 1fr; }
+    .section { padding: 2rem 1rem; }
+    .flow-diagram { flex-wrap: nowrap; }
+    .comp-table { font-size: 0.8rem; }
+    .comp-table th, .comp-table td { padding: 0.5rem; }
+  }
+
+  /* Tabs */
+  .tab-container { margin: 1.5rem 0; }
+  .tab-buttons { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 0.5rem 1.2rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+  }
+  .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Mining animation */
+  .mining-sim {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 2rem;
+    color: #e0e0e0;
+    margin: 2rem 0;
+    text-align: center;
+  }
+  .mining-sim h3 { color: #ffd700; margin-bottom: 1rem; }
+  .nonce-display {
+    font-family: monospace;
+    font-size: 2rem;
+    color: #00ff88;
+    margin: 1rem 0;
+  }
+  .mine-btn {
+    padding: 1rem 3rem;
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #000;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .mine-btn:hover { transform: scale(1.05); }
+  .mine-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .mining-log {
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+    font-family: monospace;
+    font-size: 0.8rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #0d0d1a;
+    border-radius: 8px;
+    color: #888;
+  }
+  .mining-log .found { color: #00ff88; font-weight: bold; }
+
+  /* Crypto cards */
+  .crypto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .crypto-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .crypto-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+  .crypto-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+  .crypto-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.3rem; }
+  .crypto-desc { font-size: 0.85rem; color: var(--text-secondary); }
+
+  /* Drag and drop matching */
+  .match-game { margin: 1.5rem 0; }
+  .match-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .match-term {
+    padding: 0.6rem 1.2rem;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    min-width: 120px;
+    text-align: center;
+  }
+  .match-drop {
+    flex: 1;
+    min-width: 200px;
+    min-height: 44px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .match-drop:hover { border-color: var(--primary-light); }
+  .match-drop.correct { border-color: var(--success); background: #ECFDF5; }
+  .match-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .match-opt {
+    padding: 0.5rem 1rem;
+    background: #F1F5F9;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+  }
+  .match-opt:hover { background: #E2E8F0; }
+  .match-opt.used { opacity: 0.3; pointer-events: none; }
+
+  .score-display {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--gradient-1);
+    border-radius: 16px;
+    color: #fff;
+    margin: 2rem 0;
+    font-size: 1.2rem;
+  }
+  .score-display .score-num {
+    font-size: 3rem;
+    font-weight: 900;
+    display: block;
+  }
+
+  /* Highlight */
+  mark {
+    background: #FDE68A;
+    padding: 0 0.2rem;
+    border-radius: 2px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 1.5rem 0;
+  }
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <div class="hero-date">2026 / 03 / 31（二）Tuesday</div>
+    <div class="hero-badge">THEME 2｜智慧科技密碼 Secret Codes in Intelligent Technologies</div>
+    <h1>區塊鏈技術</h1>
+    <h2>Blockchain Technology</h2>
+    <p class="hero-subtitle">
+      Prof. Francis Chen（陳建宏）
+    </p>
+    <div class="hero-chain">
+      <div class="hero-block">🔗</div>
+      <div class="hero-link-line"></div>
+      <div class="hero-block">📦</div>
+      <div class="hero-link-line"></div>
+      <div class="hero-block">#️⃣</div>
+      <div class="hero-link-line"></div>
+      <div class="hero-block">⛏️</div>
+      <div class="hero-link-line"></div>
+      <div class="hero-block">💰</div>
+    </div>
+    <button class="start-btn" onclick="document.getElementById('nav').scrollIntoView({behavior:'smooth'})">
+      開始學習 Start Learning ▼
+    </button>
+  </div>
+  <div class="scroll-hint">⬇</div>
+</section>
+
+<!-- ==================== NAV ==================== -->
+<nav class="sticky-nav" id="nav">
+  <span class="nav-logo">🔗 T2 區塊鏈</span>
+  <span class="nav-sep">|</span>
+  <button class="nav-item active" onclick="scrollToSection('sec1')">1 概論</button>
+  <button class="nav-item" onclick="scrollToSection('sec2')">2 運作原理</button>
+  <button class="nav-item" onclick="scrollToSection('sec3')">3 Hash與挖礦</button>
+  <button class="nav-item" onclick="scrollToSection('sec4')">4 區塊鏈類型</button>
+  <button class="nav-item" onclick="scrollToSection('sec5')">5 加密貨幣</button>
+  <button class="nav-item" onclick="scrollToSection('sec6')">6 以太坊</button>
+  <button class="nav-item" onclick="scrollToSection('sec7')">7 智能合約</button>
+  <button class="nav-item" onclick="scrollToSection('sec8')">8 應用場景</button>
+  <button class="nav-item" onclick="scrollToSection('sec9')">9 實例演練</button>
+  <button class="nav-item" onclick="scrollToSection('sec10')">🧠 測驗</button>
+</nav>
+
+<!-- ==================== SECTION 1: 區塊鏈概論 ==================== -->
+<section class="section" id="sec1">
+  <div class="section-header">
+    <div class="section-number">1</div>
+    <h2 class="section-title">區塊鏈概論</h2>
+    <p class="section-title-en">Introduction to Blockchain</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">什麼是區塊鏈？</div>
+    <div class="card-title-en">What is Blockchain?</div>
+
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p>區塊鏈（Blockchain）是一種<mark>分散式帳本</mark>技術。簡單來說，它就像一本<strong>所有人共同維護的帳本</strong>，沒有任何單一中心伺服器控制。每一筆交易紀錄都被打包成「區塊（Block）」，再用密碼學的方式將區塊一個接一個串聯起來，形成一條「鏈（Chain）」。</p>
+        <p>區塊鏈以複雜的<span class="key-term">密碼學</span>來加密資料，並透過巧妙的<span class="key-term">數學分散式演算法</span>，讓互聯網最令人擔憂的分散式系統安全信任問題，可以在不需要第三方介入的前提下讓使用者達成共識。</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p>Blockchain is a <strong>distributed ledger technology</strong>. Think of it as a shared notebook maintained by everyone, with no single central server in control. Each transaction record is packed into a "Block," then linked together using cryptography to form a "Chain."</p>
+        <p>Blockchain uses complex <strong>cryptography</strong> to encrypt data, and through clever <strong>distributed algorithms</strong>, solves the trust problem in decentralized systems — allowing users to reach consensus without any third-party intermediary.</p>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">💡 生活比喻 Life Analogy</div>
+      <p>想像你和朋友們一起記帳。每個人手上都有一本完全相同的帳本。每次有人花錢或收錢，所有人同時更新自己的帳本。如果有人想偷改帳目，其他人馬上就會發現——因為大家的帳本不一致了。這就是區塊鏈的核心概念！</p>
+      <p style="color:#64748B; font-size:0.9rem; margin-top:0.5rem;">Imagine you and your friends all keep the same notebook. Every time someone spends or receives money, everyone updates their copy simultaneously. If anyone tries to cheat, others will notice immediately because the records won't match. That's blockchain!</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">區塊鏈的四大特色</div>
+    <div class="card-title-en">Four Key Features of Blockchain</div>
+    <div class="two-col">
+      <div style="padding:1.5rem; background:#EEF2FF; border-radius:12px; text-align:center;">
+        <div style="font-size:2.5rem;">🔒</div>
+        <h4>不可篡改 Immutable</h4>
+        <p style="font-size:0.9rem;">一旦資料上鏈，幾乎不可能修改。<br>Once data is on-chain, it's nearly impossible to alter.</p>
+      </div>
+      <div style="padding:1.5rem; background:#F0FDF4; border-radius:12px; text-align:center;">
+        <div style="font-size:2.5rem;">🌐</div>
+        <h4>去中心化 Decentralized</h4>
+        <p style="font-size:0.9rem;">沒有中央伺服器，所有節點平等參與。<br>No central server; all nodes participate equally.</p>
+      </div>
+      <div style="padding:1.5rem; background:#FFF7ED; border-radius:12px; text-align:center;">
+        <div style="font-size:2.5rem;">🔍</div>
+        <h4>透明公開 Transparent</h4>
+        <p style="font-size:0.9rem;">所有交易紀錄對所有參與者可見。<br>All transaction records are visible to participants.</p>
+      </div>
+      <div style="padding:1.5rem; background:#FDF4FF; border-radius:12px; text-align:center;">
+        <div style="font-size:2.5rem;">🤝</div>
+        <h4>共識機制 Consensus</h4>
+        <p style="font-size:0.9rem;">透過數學演算法達成信任共識。<br>Trust is achieved through mathematical algorithms.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">區塊鏈演進 Blockchain Evolution</div>
+    <div class="card-title-en">From Bitcoin to Smart Platforms</div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">2008 — 比特幣白皮書 Bitcoin Whitepaper</div>
+        <p>中本聰（Satoshi Nakamoto）發表比特幣白皮書，提出點對點電子現金系統，標誌著區塊鏈 1.0 時代。<br><em>Satoshi Nakamoto published the Bitcoin whitepaper, proposing a peer-to-peer electronic cash system — marking Blockchain 1.0.</em></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2009 — 第一個比特幣區塊 Genesis Block</div>
+        <p>2009年1月3日，比特幣創世區塊（Genesis Block）被挖出，區塊鏈正式運行。<br><em>On January 3, 2009, the Genesis Block was mined. Blockchain officially began operating.</em></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2013–2015 — 以太坊 Ethereum</div>
+        <p>Vitalik Buterin 提出以太坊概念，2015年上線。引入「智能合約（Smart Contract）」，開創區塊鏈 2.0 時代。<br><em>Vitalik Buterin proposed Ethereum, which launched in 2015. It introduced "Smart Contracts," ushering in Blockchain 2.0.</em></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2017–Now — 多元應用 Diverse Applications</div>
+        <p>DeFi（去中心化金融）、NFT（非同質化代幣）、DApp 等多元應用蓬勃發展，區塊鏈進入 3.0 時代。<br><em>DeFi, NFTs, DApps, and more flourish — Blockchain enters its 3.0 era.</em></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 2: 運作原理 ==================== -->
+<section class="section" id="sec2">
+  <div class="section-header">
+    <div class="section-number">2</div>
+    <h2 class="section-title">區塊鏈運作原理</h2>
+    <p class="section-title-en">How Blockchain Works</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">從一筆交易看區塊鏈運作流程</div>
+    <div class="card-title-en">Blockchain Transaction Flow</div>
+
+    <div class="flow-diagram">
+      <div class="flow-step" style="background:#7C3AED">
+        <span class="step-num">➊</span>
+        使用者發起交易<br><small>User initiates transaction</small>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#2563EB">
+        <span class="step-num">➋</span>
+        交易廣播到網路<br><small>Broadcast to network</small>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#0891B2">
+        <span class="step-num">➌</span>
+        節點收集入區塊<br><small>Nodes collect into block</small>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#059669">
+        <span class="step-num">➍</span>
+        礦工挖礦驗證<br><small>Miners validate (PoW)</small>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#D97706">
+        <span class="step-num">➎</span>
+        區塊廣播確認<br><small>Block broadcast & confirm</small>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="background:#DC2626">
+        <span class="step-num">➏</span>
+        接上區塊鏈完成<br><small>Appended to chain</small>
+      </div>
+    </div>
+
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文詳解</div>
+        <p><strong>➊</strong> 使用者由錢包（Wallet）產生一筆新交易。</p>
+        <p><strong>➋</strong> 交易被廣播到區塊鏈網絡中的所有參與節點。</p>
+        <p><strong>➌</strong> 每個節點會將數筆未驗證的交易（Unconfirmed Transaction）收集到區塊中，每個區塊可以包含數百筆至上千筆交易。</p>
+        <p><strong>➍</strong> 各節點進行工作量證明（Proof of Work, PoW）的計算來決定誰可以驗證交易，最快算出結果的節點取得記帳權——這就是<mark>挖礦</mark>。</p>
+        <p><strong>➎</strong> 最快完成 PoW 的節點，會將自己的區塊廣播給其他所有節點。其他節點確認交易是否有效、未被重複花費。</p>
+        <p><strong>➏</strong> 驗證通過後，此區塊正式接上區塊鏈，無法再被篡改。所有節點重新開始下一回合的 PoW 計算。</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English Explanation</div>
+        <p><strong>➊</strong> A user creates a new transaction from their wallet.</p>
+        <p><strong>➋</strong> The transaction is broadcast to all participating nodes in the blockchain network.</p>
+        <p><strong>➌</strong> Each node collects multiple unconfirmed transactions into a block. Each block can contain hundreds to thousands of transactions.</p>
+        <p><strong>➍</strong> Nodes perform Proof of Work (PoW) calculations to determine who verifies the transactions. The fastest node earns the right to record — this is called <strong>mining</strong>.</p>
+        <p><strong>➎</strong> The winning node broadcasts its block to all other nodes for verification — confirming transactions are valid and not double-spent.</p>
+        <p><strong>➏</strong> Once verified, the block is permanently appended to the blockchain. All nodes begin the next round of PoW computation.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">交易（Transaction）vs 區塊（Block）</div>
+    <div class="card-title-en">Transactions vs Blocks</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p>比特幣區塊鏈運作，是由多個區塊鏈結在一起而成。每一個區塊包含了許多<span class="key-term">交易（Transaction）</span>紀錄。</p>
+        <p>礦工挖礦，其實就是在競逐<span class="key-term">記帳權</span>，而挖到礦，則有固定數額的比特幣獎勵。</p>
+        <p>一個區塊包含：<strong>區塊頭（Block Header）</strong>= 前一個區塊的 Hash + Merkle Root + 時間戳 + 難度值 + Nonce 值，以及<strong>區塊體</strong>= 本區塊的所有交易紀錄。</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p>The Bitcoin blockchain operates by linking multiple blocks together. Each block contains many <strong>transaction</strong> records.</p>
+        <p>Mining is actually a competition for the <strong>right to record</strong> transactions, and the reward is a fixed amount of Bitcoin.</p>
+        <p>A block contains: <strong>Block Header</strong> = Previous Block Hash + Merkle Root + Timestamp + Difficulty + Nonce, and <strong>Block Body</strong> = All transaction records in this block.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">比特幣交易與密碼學 Bitcoin Transactions & Cryptography</div>
+    <div class="card-title-en">Public Key, Private Key, and Wallet Address</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p><strong>交易流程：</strong>比特幣交易從位址 A 傳送到位址 B 時，交易資料經由<span class="key-term">數位簽章</span>加密，傳送者（sender）須經由<mark>私鑰</mark>證明擁有比特幣。收受方提供<mark>公鑰</mark>（轉換成位址形式，公開、可追蹤）。</p>
+        <p><strong>密碼學流程：</strong></p>
+        <p>➊ 隨機產生一把<strong>私鑰</strong>（2<sup>256</sup> 種可能）</p>
+        <p>➋ 透過橢圓曲線演算法（SECP256K1）產生對應<strong>公鑰</strong></p>
+        <p>➌ 公鑰經 SHA-256 + RIPEMD-160 雜湊得到<strong>公鑰雜湊</strong></p>
+        <p>➍ 再經 Base58Check 編碼得到<strong>錢包地址</strong></p>
+        <p><strong>重點：</strong>私鑰 → 公鑰 → 地址，這個過程是<mark>單向不可逆</mark>的！</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p><strong>Transaction flow:</strong> When sending Bitcoin from Address A to B, the data is encrypted via <strong>digital signature</strong>. The sender proves ownership using their <strong>private key</strong>. The receiver provides their <strong>public key</strong> (converted to an address format, publicly trackable).</p>
+        <p><strong>Cryptography flow:</strong></p>
+        <p>➊ Randomly generate a <strong>private key</strong> (2<sup>256</sup> possibilities)</p>
+        <p>➋ Use elliptic curve algorithm (SECP256K1) to derive the <strong>public key</strong></p>
+        <p>➌ Hash the public key with SHA-256 + RIPEMD-160 to get <strong>public key hash</strong></p>
+        <p>➍ Encode with Base58Check to get the <strong>wallet address</strong></p>
+        <p><strong>Key point:</strong> Private Key → Public Key → Address is a <strong>one-way, irreversible</strong> process!</p>
+      </div>
+    </div>
+    <div class="info-box note">
+      <span class="info-icon">🔑</span>
+      <div>
+        <strong>關鍵比喻 Key Analogy：</strong><br>
+        私鑰 = 你的密碼（絕對不能給別人）Private Key = Your password (never share!)<br>
+        公鑰 = 你的銀行帳號（可以給人轉帳）Public Key = Your bank account number (safe to share)<br>
+        錢包地址 = 你的收款二維碼 Wallet Address = Your payment QR code
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 3: Hash 與挖礦 ==================== -->
+<section class="section" id="sec3">
+  <div class="section-header">
+    <div class="section-number">3</div>
+    <h2 class="section-title">Hash 與挖礦</h2>
+    <p class="section-title-en">Hash Functions & Mining</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">何謂 Hash（雜湊／哈希）？</div>
+    <div class="card-title-en">What is a Hash Function?</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p>Hash（雜湊函數）是一種數學函數，具有以下三大特性：</p>
+        <p>✅ <strong>固定長度輸出：</strong>不管輸入多長多短，都產生相同長度的輸出（例如 SHA-256 永遠輸出 64 個十六進位字元）</p>
+        <p>✅ <strong>抗碰撞性：</strong>無法找到「不同輸入」來源，得到相同輸出</p>
+        <p>✅ <strong>單向性：</strong>無法反推輸出的字串回去輸入（不可逆）</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p>A Hash function is a mathematical function with three key properties:</p>
+        <p>✅ <strong>Fixed-length output:</strong> Regardless of input length, the output is always the same length (e.g., SHA-256 always outputs 64 hexadecimal characters)</p>
+        <p>✅ <strong>Collision-resistant:</strong> It's nearly impossible to find two different inputs that produce the same output</p>
+        <p>✅ <strong>One-way:</strong> You cannot reverse-engineer the input from the output</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Hash Demo -->
+  <div class="hash-demo">
+    <h3>🔬 互動實驗：即時體驗 SHA-256 Hash｜Interactive: Try SHA-256 Hash</h3>
+    <p style="margin-bottom:1rem; font-size:0.9rem;">在下方輸入任何文字，看看 Hash 值如何變化！試試只改變一個字元會怎樣？<br>
+    <em>Type anything below and see the hash change! Try changing just one character.</em></p>
+    <div class="hash-input-area">
+      <input type="text" class="hash-input" id="hashInput" placeholder="在此輸入文字 Type here..." value="Hello Blockchain">
+      <button class="hash-btn" onclick="computeHash()">計算 Hash</button>
+    </div>
+    <div class="hash-output" id="hashOutput">按下「計算 Hash」或直接輸入文字 Click "計算 Hash" or start typing...</div>
+    <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button class="hash-btn" style="font-size:0.8rem; padding:0.5rem 1rem; background:#F59E0B;" onclick="document.getElementById('hashInput').value='Hello'; computeHash();">試試「Hello」</button>
+      <button class="hash-btn" style="font-size:0.8rem; padding:0.5rem 1rem; background:#F59E0B;" onclick="document.getElementById('hashInput').value='Hello!'; computeHash();">試試「Hello!」（多一個驚嘆號）</button>
+      <button class="hash-btn" style="font-size:0.8rem; padding:0.5rem 1rem; background:#10B981;" onclick="document.getElementById('hashInput').value='Francis'; computeHash();">試試「Francis」</button>
+    </div>
+    <div class="info-box tip" style="margin-top:1rem; background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3);">
+      <span class="info-icon">💡</span>
+      <div style="color:#A6E3A1;">
+        <strong>觀察重點：</strong>即使只改變一個字元，Hash 值也會完全不同（雪崩效應 Avalanche Effect）。這就是區塊鏈防篡改的核心原理！<br>
+        <em>Even changing one character completely changes the hash (Avalanche Effect). This is the core anti-tampering principle of blockchain!</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mining Simulation -->
+  <div class="mining-sim">
+    <h3>⛏️ 模擬挖礦 Mining Simulation</h3>
+    <p>挖礦 = 不斷嘗試不同的 Nonce 值，直到找到一個 Hash 值開頭有足夠多的「0」<br>
+    <em>Mining = Keep trying different Nonce values until finding a hash starting with enough zeros</em></p>
+    <p style="margin-top:0.5rem;">目標：找到開頭有 <strong>4 個零</strong> 的 Hash｜Target: Find a hash starting with <strong>4 zeros</strong></p>
+    <div class="nonce-display">Nonce: <span id="nonceVal">—</span></div>
+    <p style="font-family:monospace; font-size:0.8rem; color:#888; word-break:break-all;" id="currentHash">Hash: waiting...</p>
+    <div style="margin:1rem 0;">
+      <button class="mine-btn" id="mineBtn" onclick="startMining()">⛏️ 開始挖礦 Start Mining</button>
+    </div>
+    <div class="mining-log" id="miningLog"></div>
+  </div>
+
+  <!-- Interactive Blockchain Builder -->
+  <div class="blockchain-builder">
+    <h3>🧱 互動區塊鏈建構器｜Interactive Blockchain Builder</h3>
+    <p style="font-size:0.9rem; margin-bottom:1rem;">試著修改某個區塊的資料，觀察後續所有區塊的 Hash 如何變化（防篡改機制！）<br>
+    <em>Try modifying a block's data and see how all subsequent block hashes change (tamper-proof!).</em></p>
+    <div class="chain-container" id="chainContainer"></div>
+    <div style="margin-top:1rem;">
+      <button class="hash-btn" onclick="addBlock()">+ 新增區塊 Add Block</button>
+      <button class="hash-btn" style="background:#EF4444; margin-left:0.5rem;" onclick="resetChain()">🔄 重置 Reset</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 4: 區塊鏈類型 ==================== -->
+<section class="section" id="sec4">
+  <div class="section-header">
+    <div class="section-number">4</div>
+    <h2 class="section-title">區塊鏈類型</h2>
+    <p class="section-title-en">Types of Blockchain</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">三大類型比較 Three Types Comparison</div>
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>特性 Feature</th>
+          <th>🌐 公有鏈 Public</th>
+          <th>🏢 私有鏈 Private</th>
+          <th>🤝 聯盟鏈 Federated</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>參與權限<br>Access</strong></td>
+          <td>任何人都可以在任何時候加入，完全去中心化。<br><em>Anyone can join anytime; fully decentralized.</em></td>
+          <td>僅限組織內部成員。<br><em>Organization members only.</em></td>
+          <td>預選節點控制，多家機構聯盟。<br><em>Pre-selected nodes; multi-org alliance.</em></td>
+        </tr>
+        <tr>
+          <td><strong>透明度<br>Transparency</strong></td>
+          <td>完全透明，所有人可查看帳戶餘額與交易。<br><em>Fully transparent; all balances & transactions visible.</em></td>
+          <td>部分開放或完全限制。<br><em>Partially open or fully restricted.</em></td>
+          <td>外部可查詢但不可交易。<br><em>External queries OK, but no transactions.</em></td>
+        </tr>
+        <tr>
+          <td><strong>速度<br>Speed</strong></td>
+          <td>較慢（需全網共識）<br><em>Slower (network-wide consensus)</em></td>
+          <td>很快（節點少）<br><em>Very fast (fewer nodes)</em></td>
+          <td>快速（預選節點）<br><em>Fast (pre-selected nodes)</em></td>
+        </tr>
+        <tr>
+          <td><strong>範例<br>Examples</strong></td>
+          <td>Bitcoin, Ethereum, Litecoin</td>
+          <td>Hyperledger（企業內部）<br><em>Company internal use</em></td>
+          <td>R3, B3I, EWF</td>
+        </tr>
+        <tr>
+          <td><strong>去中心化程度<br>Decentralization</strong></td>
+          <td>⭐⭐⭐⭐⭐ 完全去中心化</td>
+          <td>⭐ 完全中心化</td>
+          <td>⭐⭐⭐ 部分去中心化</td>
+        </tr>
+        <tr>
+          <td><strong>缺點<br>Drawbacks</strong></td>
+          <td>更新慢、擴容問題、建置成本高。<br><em>Slow updates, scalability issues.</em></td>
+          <td>代幣價格可被操作，集中風險大。<br><em>Token prices manipulable, centralization risk.</em></td>
+          <td>需要多方協調治理。<br><em>Requires multi-party governance.</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">公有鏈開發目的 Purpose of Public Chains</div>
+    <div class="card-title-en">Why Build Different Public Chains?</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p><strong>問題導向：</strong>每條公有鏈的誕生都是為了解決特定問題。</p>
+        <p>• <strong>Bitcoin</strong> — 去仲介的點對點交易</p>
+        <p>• <strong>Litecoin（萊特幣）</strong> — 為了處理更快的交易速度</p>
+        <p>• <strong>Ripple（瑞波幣）</strong> — 針對國際轉帳節省成本</p>
+        <p>• <strong>USDT（穩定幣）</strong> — 以美元作為擔保，解決貨幣波動問題</p>
+        <p>• <strong>Ethereum</strong> — 用區塊鏈技術開發智慧合約，讓使用者能發行自己的代幣</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p><strong>Problem-oriented:</strong> Each public chain was born to solve specific problems.</p>
+        <p>• <strong>Bitcoin</strong> — Peer-to-peer transactions without intermediaries</p>
+        <p>• <strong>Litecoin</strong> — Faster transaction processing</p>
+        <p>• <strong>Ripple</strong> — Lower-cost international transfers</p>
+        <p>• <strong>USDT (Stablecoin)</strong> — USD-backed, solving price volatility</p>
+        <p>• <strong>Ethereum</strong> — Smart contracts & custom token creation</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box research">
+    <span class="info-icon">🎓</span>
+    <div>
+      <strong>Francis 教授觀點 Prof. Francis's Insight：</strong><br>
+      區塊鏈在國防與醫療數據防篡改的應用潛力巨大。例如，軍事通訊紀錄、醫療病歷只要上鏈，就能確保資料完整性，防止任何人竄改。<br>
+      <em>Blockchain has huge potential for tamper-proofing military communications and medical records. Once on-chain, data integrity is guaranteed.</em>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 5: 加密貨幣 ==================== -->
+<section class="section" id="sec5">
+  <div class="section-header">
+    <div class="section-number">5</div>
+    <h2 class="section-title">加密貨幣介紹</h2>
+    <p class="section-title-en">Introduction to Cryptocurrencies</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">主要加密貨幣 Major Cryptocurrencies</div>
+    <div class="crypto-grid">
+      <div class="crypto-card">
+        <div class="crypto-icon">₿</div>
+        <div class="crypto-name">Bitcoin 比特幣</div>
+        <div class="crypto-desc">2009年由中本聰創建，市值第一，「數位黃金」。<br><em>Created by Satoshi Nakamoto in 2009. #1 by market cap — "Digital Gold."</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">⟠</div>
+        <div class="crypto-name">Ethereum 以太幣</div>
+        <div class="crypto-desc">2015年上線，支援智能合約的第二代區塊鏈平台，市值第二。<br><em>Launched 2015. 2nd-gen blockchain with smart contracts. #2 by market cap.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">🪙</div>
+        <div class="crypto-name">Litecoin 萊特幣</div>
+        <div class="crypto-desc">比比特幣更快的交易確認速度，被稱為「數位白銀」。<br><em>Faster confirmation than Bitcoin — called "Digital Silver."</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">💧</div>
+        <div class="crypto-name">Ripple (XRP) 瑞波幣</div>
+        <div class="crypto-desc">專注於國際銀行間轉帳，大幅降低跨境匯款成本。<br><em>Focused on international bank transfers, dramatically reducing costs.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">💵</div>
+        <div class="crypto-name">USDT 泰達幣（穩定幣）</div>
+        <div class="crypto-desc">1:1 錨定美元，解決加密貨幣波動性問題。<br><em>1:1 pegged to USD, solving crypto volatility.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">🐕</div>
+        <div class="crypto-name">Dogecoin 狗狗幣</div>
+        <div class="crypto-desc">起初作為迷因幣（Meme Coin），後來成為熱門社群貨幣。<br><em>Started as a meme coin, became a popular community currency.</em></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">如何取得虛擬貨幣？</div>
+    <div class="card-title-en">How to Obtain Cryptocurrency?</div>
+    <div class="accordion">
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">💸 經由交易所交換取得 Through Exchanges <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>最常見的方式。註冊幣安（Binance）、Coinbase 等交易所，用法幣（新台幣、美元等）直接購買加密貨幣。</p>
+          <p><em>The most common way. Register on exchanges like Binance, Coinbase, etc., and buy cryptocurrency with fiat currency (TWD, USD, etc.).</em></p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">⛏️ 自行透過礦機挖礦取得 Through Mining <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>購買專業礦機或使用高效能顯卡，參與區塊鏈網絡的 PoW 計算。挖到礦可獲得區塊獎勵。但成本高（電費、設備），且難度持續增加。</p>
+          <p><em>Buy mining rigs or use high-performance GPUs to participate in PoW. Successful mining earns block rewards. However, costs (electricity, equipment) are high and difficulty keeps increasing.</em></p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">🏪 透過代買所 Through OTC Brokers <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>代買所幫你在交易所購買，通常手續費較高但操作簡單，適合新手。台灣常見的有 MaiCoin、BitoEX 等。</p>
+          <p><em>OTC brokers buy on exchanges for you. Higher fees but simpler operations, suitable for beginners. Popular in Taiwan: MaiCoin, BitoEX, etc.</em></p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">🤝 經由轉贈或私下交易 Through P2P Transfers <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>直接由他人錢包轉入你的錢包。只要有對方的錢包地址，就能進行點對點轉帳。但要注意安全與詐騙風險。</p>
+          <p><em>Direct wallet-to-wallet transfer. With the recipient's wallet address, peer-to-peer transfers are possible. Be cautious of security and scam risks.</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">比特幣分叉幣知識 Bitcoin Forks</div>
+    <div class="card-title-en">Understanding Bitcoin Forks</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p>自從 Bitcoin Cash（BCH）在2017年誕生以來，比特幣分叉幣數量已超過 74 個。分叉（Fork）是指區塊鏈網絡的協議規則發生變更，導致產生新的分支鏈。</p>
+        <p>知名的分叉幣包括：Bitcoin Cash (BCH)、Bitcoin SV (BSV)、Bitcoin Gold (BTG) 等。許多分叉幣最終沒有獲得足夠的社群支持而逐漸消失。</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p>Since Bitcoin Cash (BCH) was born in 2017, there have been over 74 Bitcoin forks. A fork occurs when a blockchain's protocol rules change, creating a new branch chain.</p>
+        <p>Notable forks include: Bitcoin Cash (BCH), Bitcoin SV (BSV), Bitcoin Gold (BTG), etc. Many forks eventually fade without sufficient community support.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 6: 以太坊 ==================== -->
+<section class="section" id="sec6">
+  <div class="section-header">
+    <div class="section-number">6</div>
+    <h2 class="section-title">以太坊 Ethereum</h2>
+    <p class="section-title-en">The World Computer</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">以太坊簡介</div>
+    <div class="card-title-en">Introduction to Ethereum</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p><strong>以太坊（Ethereum）</strong>是一個開源、有「智能合約」功能的公共區塊鏈平台。通過其專用加密貨幣<span class="key-term">以太幣（Ether, ETH）</span>，提供去中心化的虛擬機器（稱為「以太虛擬機」Ethereum Virtual Machine, EVM）來處理對等合約。</p>
+        <p>以太坊的概念首次在 2013 至 2014 年間由程式設計師 <strong>Vitalik Buterin</strong>（維塔利克·布特林）受比特幣啟發後提出。他當時年僅 19 歲！大意為「下一代加密貨幣與去中心化應用平台」，在 2014 年透過 ICO 眾籌得以開始發展。</p>
+        <p>簡單說，以太坊 = 打造區塊鏈應用的工廠。它最主要的價值就是提供 <span class="key-term">DApp（Decentralized App, 去中心化應用程式）</span>開發者必要的材料、工具和基礎設施，降低 DApp 的開發門檻。</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p><strong>Ethereum</strong> is an open-source public blockchain platform with "smart contract" functionality. Through its cryptocurrency <strong>Ether (ETH)</strong>, it provides a decentralized virtual machine (EVM) to process contracts.</p>
+        <p>Ethereum was first proposed in 2013–2014 by programmer <strong>Vitalik Buterin</strong>, inspired by Bitcoin. He was only 19! It was described as "the next-generation cryptocurrency and decentralized application platform," and was funded through an ICO in 2014.</p>
+        <p>Simply put, Ethereum = a factory for building blockchain applications. Its primary value is providing DApp developers with essential materials, tools, and infrastructure.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">以太坊 vs 比特幣 Ethereum vs Bitcoin</div>
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>比較項目 Feature</th>
+          <th>₿ Bitcoin 比特幣</th>
+          <th>⟠ Ethereum 以太坊</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>創始者 Founder</strong></td><td>Satoshi Nakamoto（匿名）</td><td>Vitalik Buterin（公開身份）</td></tr>
+        <tr><td><strong>發行年份 Year</strong></td><td>2009</td><td>2015</td></tr>
+        <tr><td><strong>主要功能 Main Function</strong></td><td>數位貨幣 / 價值儲存 Digital currency</td><td>智能合約 + DApp 平台 Smart contract platform</td></tr>
+        <tr><td><strong>共識機制 Consensus</strong></td><td>PoW（工作量證明）</td><td>PoS（權益證明，2022年 The Merge 後）</td></tr>
+        <tr><td><strong>出塊時間 Block Time</strong></td><td>~10 分鐘</td><td>~12 秒</td></tr>
+        <tr><td><strong>發行上限 Supply Cap</strong></td><td>2100 萬枚</td><td>無上限（但有銷毀機制）</td></tr>
+        <tr><td><strong>定位 Positioning</strong></td><td>「數位黃金」Digital Gold</td><td>「世界電腦」World Computer</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== SECTION 7: 智能合約 ==================== -->
+<section class="section" id="sec7">
+  <div class="section-header">
+    <div class="section-number">7</div>
+    <h2 class="section-title">智能合約 Smart Contracts</h2>
+    <p class="section-title-en">Code is Law</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">什麼是智能合約？</div>
+    <div class="card-title-en">What is a Smart Contract?</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">中文</div>
+        <p>智能合約（Smart Contract）是一段<mark>寫在區塊鏈上、可自動執行的程式碼</mark>。當預設的條件被滿足時，合約會自動執行對應的操作，不需要任何中介機構。</p>
+        <p>由於智能合約可在每個以太坊的節點上執行並進行驗證，所以計算結果被認為是可信任的。以太坊還開發出了 <span class="key-term">Web3.js</span> 讓開發者可以使用網頁技術撰寫智能合約的操作介面，這樣的網頁操作介面又稱為 <span class="key-term">DApp（分散式應用程式）</span>。</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">English</div>
+        <p>A Smart Contract is <strong>self-executing code written on the blockchain</strong>. When preset conditions are met, the contract automatically executes the corresponding operations without any intermediary.</p>
+        <p>Since smart contracts run and are verified on every Ethereum node, their results are trusted. Ethereum also created <strong>Web3.js</strong> for building web-based interfaces for smart contracts — these are called <strong>DApps (Decentralized Applications)</strong>.</p>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">💡 生活比喻 Life Analogy</div>
+      <p>智能合約就像<strong>自動販賣機</strong>：你投入硬幣（滿足條件），機器就自動給你飲料（執行合約）。整個過程不需要店員（中介機構），而且規則透明、不可更改。</p>
+      <p style="color:#64748B; font-size:0.9rem; margin-top:0.5rem;"><em>A smart contract is like a vending machine: insert coins (meet conditions), and the machine automatically gives you a drink (executes contract). No shopkeeper (intermediary) needed, and the rules are transparent and unchangeable.</em></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">智能合約開發工具 Development Tools</div>
+    <div class="card-title-en">Smart Contract Tech Stack</div>
+    <div class="accordion">
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">📝 Solidity — 智能合約程式語言 <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>Solidity 是以太坊智能合約的主要程式語言，語法類似 JavaScript。開發者用 Solidity 編寫合約邏輯，編譯成 Bytecode 後部署到以太坊網路。</p>
+          <p><em>Solidity is the main programming language for Ethereum smart contracts. Its syntax is similar to JavaScript. Developers write contract logic in Solidity, compile it to bytecode, then deploy to the Ethereum network.</em></p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">🛠️ Remix IDE — 線上開發環境 <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>Remix 是一個免費的線上 IDE（remix.ethereum.org），可以直接在瀏覽器中編寫、編譯、部署和測試 Solidity 智能合約，非常適合初學者。</p>
+          <p><em>Remix is a free online IDE where you can write, compile, deploy, and test Solidity smart contracts directly in your browser — perfect for beginners.</em></p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">🦊 MetaMask — 以太幣錢包 <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>MetaMask 是最熱門的以太坊瀏覽器錢包。可以用來產生網址或接收、發送交易，也可以直接與瀏覽器 DApp 進行連結並執行相關的交易。它讓使用者可以很容易跟以太坊的智能合約互動。</p>
+          <p><em>MetaMask is the most popular Ethereum browser wallet. It generates addresses, receives/sends transactions, and connects directly to browser DApps. It makes interacting with smart contracts easy.</em></p>
+        </div>
+      </div>
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">🔧 Truffle & Web3.js — 開發框架 <span class="acc-arrow">▼</span></div>
+        <div class="acc-body">
+          <p>Truffle 是基於 Node.js 的以太坊開發框架，提供合約編譯、部署、測試的完整工具鏈。Web3.js 則是連接前端網頁與以太坊區塊鏈的 JavaScript 函式庫。</p>
+          <p><em>Truffle is a Node.js-based Ethereum development framework providing compilation, deployment, and testing tools. Web3.js is the JavaScript library connecting front-end web pages to the Ethereum blockchain.</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 8: 應用場景 ==================== -->
+<section class="section" id="sec8">
+  <div class="section-header">
+    <div class="section-number">8</div>
+    <h2 class="section-title">區塊鏈應用場景</h2>
+    <p class="section-title-en">Blockchain Application Scenarios</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">以太坊經典應用場景 Ethereum Use Cases</div>
+    <div class="crypto-grid">
+      <div class="crypto-card">
+        <div class="crypto-icon">💳</div>
+        <div class="crypto-name">支付系統 Payments</div>
+        <div class="crypto-desc">跨境支付、即時結算，省去銀行中介費用。<br><em>Cross-border payments, instant settlements, no bank intermediary fees.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">🎮</div>
+        <div class="crypto-name">遊戲 Gaming</div>
+        <div class="crypto-desc">CryptoKitties（謎戀貓）— 2018年現象級 NFT 遊戲，每隻貓 = 獨特的 ERC-721 Token。<br><em>CryptoKitties — the 2018 viral NFT game. Each cat = a unique ERC-721 token.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">🎯</div>
+        <div class="crypto-name">預測市場 Prediction</div>
+        <div class="crypto-desc">去中心化的預測與博弈平台，如 Augur、Fomo 3D。<br><em>Decentralized prediction & gaming platforms like Augur, Fomo 3D.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">💰</div>
+        <div class="crypto-name">眾籌 Crowdfunding</div>
+        <div class="crypto-desc">ICO（Initial Coin Offering）讓專案直接向全球募資。<br><em>ICOs let projects raise funds globally without traditional VCs.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">🏥</div>
+        <div class="crypto-name">醫療紀錄 Medical Records</div>
+        <div class="crypto-desc">病歷上鏈，防篡改且患者可控制誰能存取。<br><em>On-chain medical records — tamper-proof with patient-controlled access.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">📜</div>
+        <div class="crypto-name">數位證書 Digital Certificates</div>
+        
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">🏦</div>
+        <div class="crypto-name">DeFi 去中心化金融</div>
+        <div class="crypto-desc">借貸、交換、保險等金融服務全部在區塊鏈上運行。<br><em>Lending, swapping, insurance — all financial services on blockchain.</em></div>
+      </div>
+      <div class="crypto-card">
+        <div class="crypto-icon">🌐</div>
+        <div class="crypto-name">物聯網 IoT</div>
+        <div class="crypto-desc">設備間的安全通信與自動化結算。<br><em>Secure device communication and automated settlements.</em></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box note">
+    <span class="info-icon">🏫</span>
+    <div>
+      
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 9: 實例演練 ==================== -->
+<section class="section" id="sec9">
+  <div class="section-header">
+    <div class="section-number">9</div>
+    <h2 class="section-title">實例演練指南</h2>
+    <p class="section-title-en">Hands-on Practice Guide</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">演練 A：anders.com/blockchain 視覺化操作</div>
+    <div class="card-title-en">Practice A: Blockchain Visual Demo</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">操作步驟</div>
+        <p>➊ 前往 <strong>anders.com/blockchain</strong> 網站</p>
+        <p>➋ 依序體驗以下六個頁面：</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Hash</strong> — 輸入任意文字，觀察 SHA-256 Hash 變化</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Block</strong> — 觀察一個區塊的結構（Nonce、Data、Hash）</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Blockchain</strong> — 嘗試修改某個區塊，觀察後續區塊全部變紅（無效）</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Distributed</strong> — 看多個節點（Peer A, B, C）如何各自保有一份帳本</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Tokens</strong> — 看代幣轉帳如何運作</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Coinbase</strong> — 看挖礦獎勵如何產生新幣</p>
+        <p>➌ 截圖每個頁面的操作結果</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">Steps</div>
+        <p>➊ Go to <strong>anders.com/blockchain</strong></p>
+        <p>➋ Experience all six pages in order:</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Hash</strong> — Enter any text, observe SHA-256 changes</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Block</strong> — Observe block structure (Nonce, Data, Hash)</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Blockchain</strong> — Modify a block, see subsequent blocks turn red (invalid)</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Distributed</strong> — See how multiple peers each keep a copy of the ledger</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Tokens</strong> — See how token transfers work</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Coinbase</strong> — See how mining rewards create new coins</p>
+        <p>➌ Take screenshots of each page's results</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">演練 B：產生你的比特幣地址</div>
+    <div class="card-title-en">Practice B: Generate Your Bitcoin Address</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">操作步驟</div>
+        <p>➊ 前往 <strong>bitaddress.org</strong></p>
+        <p>➋ 在頁面上隨意移動滑鼠，直到進度條達到 100%（用於生成隨機種子）</p>
+        <p>➌ 系統會自動生成一組：</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>比特幣地址</strong>（Public Address）— 可以給別人，像是「銀行帳號」</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>私鑰</strong>（Private Key）— 絕對不能給別人！像是「提款密碼」</p>
+        <p>➍ 截圖保存（注意：這是教學用，不要存入真實的比特幣）</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">Steps</div>
+        <p>➊ Go to <strong>bitaddress.org</strong></p>
+        <p>➋ Move your mouse randomly until the progress bar reaches 100% (generates random seed)</p>
+        <p>➌ The system will generate:</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Bitcoin Address</strong> — safe to share (like a bank account number)</p>
+        <p>&nbsp;&nbsp;&nbsp;• <strong>Private Key</strong> — NEVER share this! (like your ATM PIN)</p>
+        <p>➍ Take a screenshot (Note: This is for learning only — don't store real Bitcoin here)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">演練 C：認識 MetaMask 錢包</div>
+    <div class="card-title-en">Practice C: Exploring MetaMask Wallet</div>
+    <div class="bilingual">
+      <div class="bi-zh">
+        <div class="bi-label">操作步驟</div>
+        <p>➊ 前往 <strong>metamask.io</strong>，安裝 Chrome 或 Firefox 瀏覽器擴充套件</p>
+        <p>➋ 建立新錢包，設定密碼</p>
+        <p>➌ <strong>妥善記錄 12 個助記詞（Seed Phrase）</strong>— 這是恢復錢包的唯一方式！</p>
+        <p>➍ 切換到測試網路（如 Sepolia Testnet），不需花真錢就能體驗</p>
+        <p>➎ 從測試網路水龍頭（Faucet）獲取免費的測試用 ETH</p>
+        <p>➏ 嘗試在測試網路上進行轉帳操作</p>
+      </div>
+      <div class="bi-en">
+        <div class="bi-label">Steps</div>
+        <p>➊ Go to <strong>metamask.io</strong>, install the Chrome/Firefox extension</p>
+        <p>➋ Create a new wallet, set your password</p>
+        <p>➌ <strong>Safely record your 12-word Seed Phrase</strong> — it's the ONLY way to recover your wallet!</p>
+        <p>➍ Switch to a test network (e.g., Sepolia Testnet) — no real money needed</p>
+        <p>➎ Get free test ETH from a testnet faucet</p>
+        <p>➏ Try making a test transfer on the testnet</p>
+      </div>
+    </div>
+    <div class="info-box warn">
+      <span class="info-icon">⚠️</span>
+      <div>
+        <strong>安全提醒 Security Warning：</strong>千萬不要把助記詞（Seed Phrase）告訴任何人或截圖傳給別人！任何人拿到你的助記詞就等於拿到你錢包裡所有的錢。<br>
+        <em>NEVER share your Seed Phrase with anyone or screenshot it to others! Anyone with your seed phrase has access to ALL your funds.</em>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== SECTION 10: 課堂測驗 ==================== -->
+<section class="section" id="sec10">
+  <div class="section-header">
+    <div class="section-number">🧠</div>
+    <h2 class="section-title">課堂即時測驗</h2>
+    <p class="section-title-en">In-Class Quiz</p>
+  </div>
+
+  <div class="quiz-container">
+    <h3>📝 測驗時間！Quiz Time!（答對得分 Score points for correct answers）</h3>
+
+    <div class="quiz-q" data-correct="2">
+      <p>Q1. 區塊鏈的核心特性「不可篡改」主要依靠什麼技術實現？</p>
+      <p class="quiz-q-en">What technology primarily enables blockchain's "immutability"?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 人工智慧 Artificial Intelligence</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">B. 密碼學雜湊函數 Cryptographic Hash Functions</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">C. 雲端運算 Cloud Computing</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 5G 通訊技術 5G Communication</div>
+      </div>
+      <div class="quiz-feedback" id="fb1">✅ 正確！區塊鏈用 Hash 函數串聯區塊，改一個字元整個 Hash 都會變——這就是防篡改的關鍵。<br><em>Correct! Hash functions link blocks together. Changing one character changes the entire hash — the key to tamper-proofing.</em></div>
+    </div>
+
+    <div class="quiz-q">
+      <p>Q2.「挖礦」在比特幣區塊鏈中是指什麼？</p>
+      <p class="quiz-q-en">What does "mining" mean in the Bitcoin blockchain?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 在地下挖掘實體比特幣 Digging physical bitcoins underground</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">B. 下載比特幣軟體 Downloading Bitcoin software</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">C. 透過計算找到符合難度的 Nonce 值以取得記帳權 Finding a valid Nonce through computation to earn recording rights</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 購買加密貨幣 Buying cryptocurrency</div>
+      </div>
+      <div class="quiz-feedback">✅ 正確！挖礦就是不斷嘗試 Nonce 值，找到使 Hash 開頭有足夠多零的那個值。<br><em>Mining means trying Nonce values repeatedly to find one that produces a hash with enough leading zeros.</em></div>
+    </div>
+
+    <div class="quiz-q">
+      <p>Q3. 以太坊（Ethereum）相比比特幣最大的創新是什麼？</p>
+      <p class="quiz-q-en">What is Ethereum's biggest innovation compared to Bitcoin?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 交易速度更快 Faster transactions</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">B. 價格更高 Higher price</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">C. 支援智能合約（Smart Contract）Supports Smart Contracts</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 更安全 More secure</div>
+      </div>
+      <div class="quiz-feedback">✅ 正確！以太坊引入了智能合約——可在區塊鏈上自動執行的程式碼，開創了區塊鏈 2.0 時代。<br><em>Correct! Ethereum introduced smart contracts — self-executing code on blockchain, ushering in Blockchain 2.0.</em></div>
+    </div>
+
+    <div class="quiz-q">
+      <p>Q4. 下列哪一項<strong>不是</strong> Hash 函數的特性？</p>
+      <p class="quiz-q-en">Which of the following is NOT a property of hash functions?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 固定長度輸出 Fixed-length output</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">B. 可以從輸出反推輸入 Can reverse output to input</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">C. 抗碰撞性 Collision-resistant</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 雪崩效應 Avalanche effect</div>
+      </div>
+      <div class="quiz-feedback">✅ 正確！Hash 函數是<strong>單向不可逆</strong>的，無法從輸出反推回輸入。<br><em>Correct! Hash functions are one-way — you CANNOT reverse the output to find the input.</em></div>
+    </div>
+
+    <div class="quiz-q">
+      <p>Q5. 區塊鏈的三大類型中，「聯盟鏈」的特點是？</p>
+      <p class="quiz-q-en">What characterizes a "Federated/Consortium Blockchain"?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 完全開放，任何人都能加入 Fully open, anyone can join</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">B. 只有一家公司控制 Controlled by one company only</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">C. 由多個預選機構共同維護，部分去中心化 Maintained by pre-selected organizations, partially decentralized</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 不使用共識機制 No consensus mechanism</div>
+      </div>
+      <div class="quiz-feedback">✅ 正確！聯盟鏈由多個預選節點控制，介於公有鏈（完全去中心化）與私有鏈（完全中心化）之間。<br><em>Correct! Federated chains are controlled by pre-selected nodes, sitting between public (fully decentralized) and private (centralized) chains.</em></div>
+    </div>
+
+    <div class="quiz-q">
+      <p>Q6. MetaMask 是什麼？</p>
+      <p class="quiz-q-en">What is MetaMask?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 一種加密貨幣 A cryptocurrency</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">B. 以太坊瀏覽器錢包擴充套件 An Ethereum browser wallet extension</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">C. 一種程式語言 A programming language</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 比特幣交易所 A Bitcoin exchange</div>
+      </div>
+      <div class="quiz-feedback">✅ 正確！MetaMask 是最熱門的以太坊瀏覽器錢包，讓使用者可以輕鬆與 DApp 及智能合約互動。<br><em>Correct! MetaMask is the most popular Ethereum browser wallet for interacting with DApps and smart contracts.</em></div>
+    </div>
+
+    <div class="quiz-q">
+      <p>Q7. Solidity 是用來做什麼的？</p>
+      <p class="quiz-q-en">What is Solidity used for?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 設計網頁 Designing websites</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">B. 挖掘比特幣 Mining Bitcoin</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">C. 編寫以太坊智能合約 Writing Ethereum smart contracts</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 管理資料庫 Managing databases</div>
+      </div>
+      <div class="quiz-feedback">✅ 正確！Solidity 是以太坊智能合約的主要程式語言，語法類似 JavaScript。<br><em>Correct! Solidity is the main programming language for Ethereum smart contracts, with syntax similar to JavaScript.</em></div>
+    </div>
+
+    <div class="quiz-q">
+      <p>Q8. 在比特幣系統中，私鑰（Private Key）的正確描述是？</p>
+      <p class="quiz-q-en">Which is the correct description of a Private Key in Bitcoin?</p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">A. 可以公開分享的收款地址 A publicly shareable receiving address</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, true)">B. 必須保密的密鑰，用於簽署交易證明擁有權 A secret key for signing transactions to prove ownership</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">C. 交易所的登入密碼 An exchange login password</div>
+        <div class="quiz-opt" onclick="checkAnswer(this, false)">D. 可以從公鑰反推得到 Can be derived from the public key</div>
+      </div>
+      <div class="quiz-feedback">✅ 正確！私鑰必須保密，用於數位簽章以證明你擁有該比特幣。而且私鑰→公鑰是單向的，無法反推。<br><em>Correct! The private key must be kept secret — it's used for digital signatures to prove ownership. And the process is one-way: private key → public key (irreversible).</em></div>
+    </div>
+
+    <div class="score-display">
+      你的得分 Your Score
+      <span class="score-num" id="quizScore">0</span>
+      / 8
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer">
+  <p><strong>智慧科技密碼 Secret Codes in Intelligent Technologies</strong></p>
+  <p>Prof. Francis Chen（陳建宏）</p>
+  <p style="margin-top:1rem; font-size:0.85rem;">區塊鏈技術 Blockchain Technology</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem;">© 2026 Prof. Francis Chen</p>
+</footer>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+// ===== Simple SHA-256 Implementation =====
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
+// ===== Hash Demo =====
+async function computeHash() {
+  const input = document.getElementById('hashInput').value;
+  const hash = await sha256(input);
+  document.getElementById('hashOutput').textContent = hash;
+  document.getElementById('hashOutput').style.color = '#A6E3A1';
+}
+
+document.getElementById('hashInput').addEventListener('input', computeHash);
+
+// ===== Mining Simulation =====
+let miningInterval = null;
+async function startMining() {
+  const btn = document.getElementById('mineBtn');
+  const log = document.getElementById('miningLog');
+
+  if (miningInterval) {
+    clearInterval(miningInterval);
+    miningInterval = null;
+    btn.textContent = '⛏️ 開始挖礦 Start Mining';
+    btn.disabled = false;
+    return;
+  }
+
+  btn.textContent = '⏳ 挖礦中... Mining...';
+  log.innerHTML = '';
+
+  const data = 'Blockchain Demo ' + Math.random().toString(36).substring(7);
+  const difficulty = 4;
+  const target = '0'.repeat(difficulty);
+  let nonce = 0;
+
+  async function tryNonce() {
+    const batchSize = 50;
+    for (let i = 0; i < batchSize; i++) {
+      nonce++;
+      const hash = await sha256(data + nonce);
+      document.getElementById('nonceVal').textContent = nonce;
+      document.getElementById('currentHash').textContent = 'Hash: ' + hash;
+
+      if (nonce % 200 === 0) {
+        log.innerHTML += `Nonce ${nonce}: ${hash.substring(0, 20)}...\n`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      if (hash.startsWith(target)) {
+        clearInterval(miningInterval);
+        miningInterval = null;
+        btn.textContent = '⛏️ 重新挖礦 Mine Again';
+        btn.disabled = false;
+        document.getElementById('currentHash').textContent = 'Hash: ' + hash;
+        document.getElementById('currentHash').style.color = '#00ff88';
+        log.innerHTML += `<span class="found">🎉 找到了 FOUND! Nonce=${nonce}, Hash=${hash}</span>\n`;
+        log.scrollTop = log.scrollHeight;
+        return;
+      }
+    }
+  }
+
+  miningInterval = setInterval(tryNonce, 10);
+}
+
+// ===== Blockchain Builder =====
+let blockchain = [];
+
+async function simpleHash(data) {
+  const hash = await sha256(data);
+  return hash.substring(0, 16);
+}
+
+async function renderChain() {
+  const container = document.getElementById('chainContainer');
+  container.innerHTML = '';
+
+  for (let i = 0; i < blockchain.length; i++) {
+    const block = blockchain[i];
+    const expectedPrevHash = i === 0 ? '0000000000000000' : blockchain[i - 1].hash;
+    const isValid = block.prevHash === expectedPrevHash;
+
+    if (i > 0) {
+      const link = document.createElement('div');
+      link.className = 'chain-link';
+      link.textContent = '→';
+      container.appendChild(link);
+    }
+
+    const card = document.createElement('div');
+    card.className = `block-card ${i === 0 ? 'genesis' : (isValid ? 'valid' : 'invalid')}`;
+    card.innerHTML = `
+      <div class="block-header">
+        <span>Block #${block.index}</span>
+        <div class="block-status ${isValid ? '' : 'invalid'}"></div>
+      </div>
+      <div class="block-field">
+        <label>Prev Hash:</label>
+        <div class="block-field-val">${block.prevHash}</div>
+      </div>
+      <div class="block-field">
+        <label>Data:</label>
+        <input class="block-data-input" value="${block.data}" oninput="updateBlockData(${i}, this.value)">
+      </div>
+      <div class="block-field">
+        <label>Hash:</label>
+        <div class="block-field-val" id="blockHash${i}">${block.hash}</div>
+      </div>
+      ${!isValid ? '<div style="color:#EF4444; font-size:0.75rem; margin-top:0.3rem;">⚠ 無效區塊 Invalid!</div>' : ''}
+    `;
+    container.appendChild(card);
+  }
+}
+
+async function recalcHashes(fromIndex) {
+  for (let i = fromIndex; i < blockchain.length; i++) {
+    const block = blockchain[i];
+    block.hash = await simpleHash(block.prevHash + block.data + block.index);
+    if (i + 1 < blockchain.length) {
+      blockchain[i + 1].prevHash = block.hash;
+    }
+  }
+}
+
+async function updateBlockData(index, newData) {
+  blockchain[index].data = newData;
+  blockchain[index].hash = await simpleHash(blockchain[index].prevHash + newData + blockchain[index].index);
+  // Don't update subsequent blocks' prevHash — this shows tampering!
+  await renderChain();
+}
+
+async function addBlock() {
+  const prevHash = blockchain.length === 0 ? '0000000000000000' : blockchain[blockchain.length - 1].hash;
+  const index = blockchain.length;
+  const data = '交易資料 #' + (index + 1);
+  const hash = await simpleHash(prevHash + data + index);
+  blockchain.push({ index, prevHash, data, hash });
+  await renderChain();
+}
+
+async function resetChain() {
+  blockchain = [];
+  await addBlock();
+  await addBlock();
+  await addBlock();
+  await renderChain();
+}
+
+// Initialize blockchain
+resetChain();
+
+// ===== Quiz =====
+let score = 0;
+function checkAnswer(el, isCorrect) {
+  const q = el.closest('.quiz-q');
+  if (q.classList.contains('answered')) return;
+  q.classList.add('answered');
+
+  if (isCorrect) {
+    el.classList.add('correct');
+    score++;
+    document.getElementById('quizScore').textContent = score;
+  } else {
+    el.classList.add('wrong');
+    // highlight correct
+    const opts = q.querySelectorAll('.quiz-opt');
+    opts.forEach(o => {
+      if (o.getAttribute('onclick')?.includes('true')) o.classList.add('correct');
+    });
+  }
+
+  const fb = q.querySelector('.quiz-feedback');
+  if (fb) { fb.classList.add('show'); }
+}
+
+// ===== Accordion =====
+function toggleAcc(header) {
+  const item = header.parentElement;
+  item.classList.toggle('open');
+}
+
+// ===== Scroll / Nav =====
+function scrollToSection(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('progressBar').style.width = progress + '%';
+
+  // Update active nav
+  const sections = ['sec1','sec2','sec3','sec4','sec5','sec6','sec7','sec8','sec9','sec10'];
+  const navItems = document.querySelectorAll('.nav-item');
+  let current = '';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 200) current = id;
+  });
+  navItems.forEach((item, i) => {
+    item.classList.toggle('active', sections[i] === current);
+  });
+});
+
+// Compute initial hash
+computeHash();
+</script>
+
+</body>
+</html>
