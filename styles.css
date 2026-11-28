@@ -410,6 +410,46 @@ html[data-lang="zh"] .bio p {
   color: #666;
 }
 
+.school-logo {
+  display: block;
+  height: 1.7rem;
+  width: auto;
+  max-width: 2.35rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.edu li.has-school-logo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-left: 0;
+}
+
+.edu li.has-school-logo::before {
+  content: none;
+}
+
+.school-logo-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.record.has-school-logo {
+  align-items: start;
+}
+
+.record.has-school-logo > p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.record.has-school-logo .school-logo {
+  margin-top: 0.12rem;
+}
+
 .page {
   padding: 2.15rem 0 0.5rem;
 }
