@@ -116,6 +116,16 @@
             <a href="#work-experience" data-nav="work-experience"><span class="only-en">Work Experience</span><span class="only-zh" lang="zh-Hant">經歷</span></a>
             <a href="#honor" data-nav="honor"><span class="only-en">Honor</span><span class="only-zh" lang="zh-Hant">榮譽與證照</span></a>
             <a href="#research-topics" data-nav="research-topics"><span class="only-en">Research Topics &amp; Projects</span><span class="only-zh" lang="zh-Hant">研究領域與計畫</span></a>
+            <div class="menu" data-nav="people">
+              <button class="menu-btn" type="button" aria-expanded="false" aria-controls="people-menu">
+                <span class="only-en">People</span><span class="only-zh" lang="zh-Hant">指導學生</span><span aria-hidden="true"> ▾</span>
+              </button>
+              <div class="menu-panel" id="people-menu">
+                <a href="#people-alumni" data-nav="people" data-panel="alumni"><span class="only-en">Alumni</span><span class="only-zh" lang="zh-Hant">畢業生</span></a>
+                <a href="#people-members" data-nav="people" data-panel="members"><span class="only-en">Lab Members</span><span class="only-zh" lang="zh-Hant">實驗室成員</span></a>
+                <a href="#people-competitions" data-nav="people" data-panel="competitions"><span class="only-en">Student competitions</span><span class="only-zh" lang="zh-Hant">學生競賽指導</span></a>
+              </div>
+            </div>
             <div class="menu" data-nav="publications">
               <button class="menu-btn" type="button" aria-expanded="false" aria-controls="pub-menu">
                 <span class="only-en">Publication</span><span class="only-zh" lang="zh-Hant">著作</span><span aria-hidden="true"> ▾</span>
@@ -127,7 +137,6 @@
                 <a href="#publications-patents" data-nav="publications" data-panel="patents"><span class="only-en">Patents</span><span class="only-zh" lang="zh-Hant">專利</span></a>
               </div>
             </div>
-            <a href="#people" data-nav="people"><span class="only-en">People</span><span class="only-zh" lang="zh-Hant">指導學生</span></a>
           </nav>
           <div class="lang-switch" role="group" aria-label="Language">
             <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
@@ -193,17 +202,26 @@
           <section class="edu" aria-labelledby="edu-title">
             <h2 id="edu-title"><span class="only-en">Education</span><span class="only-zh" lang="zh-Hant">學歷</span></h2>
             <ul>
-              <li>
+              <li class="has-school-logo">
+                <img class="school-logo" src="images/logo-nkust.png" width="40" height="36" alt="" decoding="async">
+                <span class="school-logo-text">
                 <span class="only-en">Ph.D. in Electrical Engineering, National Kaohsiung University of Science and Technology (2012)</span>
                 <span class="only-zh" lang="zh-Hant">國立高雄科技大學 電機工程學系 博士（2012）</span>
+                </span>
               </li>
-              <li>
+              <li class="has-school-logo">
+                <img class="school-logo" src="images/logo-nkust.png" width="40" height="36" alt="" decoding="async">
+                <span class="school-logo-text">
                 <span class="only-en">M.S., Graduate Institute of Photonics and Communication Engineering, National Kaohsiung University of Science and Technology (2007)</span>
                 <span class="only-zh" lang="zh-Hant">國立高雄科技大學 光電與通訊工程研究所 碩士（2007）</span>
+                </span>
               </li>
-              <li>
+              <li class="has-school-logo">
+                <img class="school-logo" src="images/logo-afa.png" width="40" height="24" alt="" decoding="async">
+                <span class="school-logo-text">
                 <span class="only-en">B.S., Department of Avionics Engineering, ROC Air Force Academy (2004)</span>
                 <span class="only-zh" lang="zh-Hant">空軍軍官學校 航空電子工程學系 學士（2004）</span>
+                </span>
               </li>
             </ul>
           </section>
@@ -214,8 +232,8 @@
         <div class="wrap page">
           <h2><span class="only-en">Teaching</span><span class="only-zh" lang="zh-Hant">授課課程</span></h2>
           <p class="lede">
-            <span class="only-en">Prof. Chen uses animations and simulation software in his courses to help students understand abstract concepts, for example electromagnetic fields and waves.</span>
-            <span class="only-zh" lang="zh-Hant">陳建宏教授在課堂上運用動畫與模擬軟體，協助學生理解抽象的概念，例如電磁場與電磁波。</span>
+            <span class="only-en">In class, animations and simulation software help students see abstract ideas such as electromagnetic fields and waves more clearly.</span>
+            <span class="only-zh" lang="zh-Hant">課堂上會用動畫和模擬軟體，幫學生把電磁場、電磁波這些抽象概念看得更清楚。</span>
           </p>
           <h3 class="subhead" id="teaching-isu"><span class="only-en">Department of Electronic Engineering, I-Shou University</span><span class="only-zh" lang="zh-Hant">義守大學電子工程學系</span></h3>
           <div class="record">
@@ -512,10 +530,10 @@
       <section class="view" id="work-experience" hidden>
         <div class="wrap page">
           <h2><span class="only-en">Work Experience</span><span class="only-zh" lang="zh-Hant">經歷</span></h2>
-          <div class="record"><span class="when">2026/02–<span class="only-en">present</span><span class="only-zh" lang="zh-Hant">迄今</span></span><p><span class="only-en">Professor, Department of Electronic Engineering, and Joint Professor, Department of Computer Science and Information Engineering, I-Shou University</span><span class="only-zh" lang="zh-Hant">義守大學電子工程學系教授、資訊工程學系合聘教授</span></p></div>
-          <div class="record"><span class="when">2019/07–2025/06</span><p><span class="only-en">Department Chair, Department of Avionics Engineering, ROC Air Force Academy</span><span class="only-zh" lang="zh-Hant">空軍軍官學校 航空電子工程學系 系主任</span></p></div>
-          <div class="record"><span class="when">2014/05–2014/09</span><p><span class="only-en">Visiting Scholar, Department of Electrical and Computer Engineering, University of Florida</span><span class="only-zh" lang="zh-Hant">美國佛羅里達大學 電機電腦系 訪問學者</span></p></div>
-          <div class="record"><span class="when">2010/02–2026/02</span><p><span class="only-en">Lecturer, Assistant Professor, Associate Professor, and Professor, Department of Avionics Engineering, ROC Air Force Academy</span><span class="only-zh" lang="zh-Hant">空軍軍官學校 航空電子工程學系 講師／助理教授／副教授／教授</span></p></div>
+          <div class="record has-school-logo"><span class="when">2026/02–<span class="only-en">present</span><span class="only-zh" lang="zh-Hant">迄今</span></span><p><img class="school-logo" src="images/logo-isu.png" width="32" height="32" alt="" decoding="async"><span class="school-logo-text"><span class="only-en">Professor, Department of Electronic Engineering, and Joint Professor, Department of Computer Science and Information Engineering, I-Shou University</span><span class="only-zh" lang="zh-Hant">義守大學電子工程學系教授、資訊工程學系合聘教授</span></span></p></div>
+          <div class="record has-school-logo"><span class="when">2019/07–2025/06</span><p><img class="school-logo" src="images/logo-afa.png" width="40" height="24" alt="" decoding="async"><span class="school-logo-text"><span class="only-en">Department Chair, Department of Avionics Engineering, ROC Air Force Academy</span><span class="only-zh" lang="zh-Hant">空軍軍官學校 航空電子工程學系 系主任</span></span></p></div>
+          <div class="record has-school-logo"><span class="when">2014/05–2014/09</span><p><img class="school-logo" src="images/logo-uf.png" width="32" height="32" alt="" decoding="async"><span class="school-logo-text"><span class="only-en">Visiting Scholar, Department of Electrical and Computer Engineering, University of Florida</span><span class="only-zh" lang="zh-Hant">美國佛羅里達大學 電機電腦系 訪問學者</span></span></p></div>
+          <div class="record has-school-logo"><span class="when">2010/02–2026/02</span><p><img class="school-logo" src="images/logo-afa.png" width="40" height="24" alt="" decoding="async"><span class="school-logo-text"><span class="only-en">Lecturer, Assistant Professor, Associate Professor, and Professor, Department of Avionics Engineering, ROC Air Force Academy</span><span class="only-zh" lang="zh-Hant">空軍軍官學校 航空電子工程學系 講師／助理教授／副教授／教授</span></span></p></div>
           <div class="record"><span class="when">2008/09–2010/02</span><p><span class="only-en">Lecturer, Department of Communications and Electronics, Air Force Institute of Technology</span><span class="only-zh" lang="zh-Hant">空軍航空技術學院 通信電子系 講師</span></p></div>
           <h3 class="subhead" id="service"><span class="only-en">Academic service</span><span class="only-zh" lang="zh-Hant">學術服務</span></h3>
           <div class="record"><span class="when">2024</span><p><span class="only-en">IEEE Senior Member</span><span class="only-zh" lang="zh-Hant">IEEE 資深會員</span></p></div>
@@ -707,6 +725,56 @@
           <div class="record"><span class="when">2026.07–2026.12</span><p><span class="kind"><span class="only-en">Co-PI · Active</span><span class="only-zh" lang="zh-Hant">共同主持人 · 執行中</span></span><span class="only-en">2026 Cybersecurity Practice, Talent Training, and Internship Guidance Program</span><span class="only-zh" lang="zh-Hant">115年網路安全實務與社會人才培訓及實習輔導計畫</span><span class="note"><span class="only-en">National Institute of Cyber Security (funded by the Administration for Cyber Security, Ministry of Digital Affairs)</span><span class="only-zh" lang="zh-Hant">國家資通安全研究院（補助機關：數位發展部資通安全署）</span></span><span class="note"><span class="only-en">Responsible for international collaboration and liaison with the Consortium of Cybersecurity Clinics (CCC); worked online with the UC Berkeley and MIT cybersecurity clinics and took part in the consortium’s Round 1 and Round 2 research-agenda surveys on the societal impact of cybersecurity.</span><span class="only-zh" lang="zh-Hant">負責國際交流及網路安全診所聯盟（Consortium of Cybersecurity Clinics, CCC）對接，與加州大學柏克萊分校及麻省理工學院資安診所線上交流，參與聯盟研究議程第一、二輪問卷，探討網路安全對社會與中小企業的影響。</span></span></p></div>
           <h3 class="subhead" id="projects-industry"><span class="only-en">Industry–Academia Collaboration Projects</span><span class="only-zh" lang="zh-Hant">產學合作計畫</span></h3>
           <div class="record"><span class="when">2026.04–2026.12</span><p><span class="kind"><span class="only-en">Industry–academia · Active</span><span class="only-zh" lang="zh-Hant">產學 · 執行中</span></span><span class="only-en">UAV Antenna Design</span><span class="only-zh" lang="zh-Hant">無人機天線設計</span><span class="note"><span class="only-en">Paramtek Inc.</span><span class="only-zh" lang="zh-Hant">拚願科技股份有限公司（Paramtek Inc.）</span></span></p></div>
+        </div>
+      </section>
+
+      <section class="view" id="people" hidden>
+        <div class="wrap page">
+          <h2><span class="only-en">People</span><span class="only-zh" lang="zh-Hant">指導學生</span></h2>
+          <p class="lede">
+            <span class="only-en">I welcome inquiries from students who want to build, measure, and explain how their systems work. Faculty adviser for seven National Science and Technology Council (NSTC) undergraduate research projects, 2018–2027, and for student teams in competitions.</span>
+            <span class="only-zh" lang="zh-Hant">歡迎想親手做出系統、量測它，並且把原理說清楚的同學與合作者來信。指導國科會（NSTC）大專生研究計畫 7 件（2018–2027），並指導學生隊伍參加競賽。</span>
+          </p>
+          <nav class="subnav" aria-label="People">
+            <a href="#people-alumni" data-panel-link="alumni"><span class="only-en">Alumni</span><span class="only-zh" lang="zh-Hant">畢業生</span></a>
+            <a href="#people-members" data-panel-link="members"><span class="only-en">Lab Members</span><span class="only-zh" lang="zh-Hant">實驗室成員</span></a>
+            <a href="#people-competitions" data-panel-link="competitions"><span class="only-en">Student competitions</span><span class="only-zh" lang="zh-Hant">學生競賽指導</span></a>
+          </nav>
+
+          <div data-panel="alumni" hidden>
+            <h3 class="subhead"><span class="only-en">Undergraduate research projects</span><span class="only-zh" lang="zh-Hant">大專生研究計畫</span></h3>
+          <div class="record"><span class="when">2024.07–2025.02</span><p><span class="only-en">Prototype pilot physiological-signal monitoring for simulated flight</span><span class="only-zh" lang="zh-Hant">應用於模擬飛行之飛行員生理訊號監測系統雛形研究</span><span class="note" lang="zh-Hant">張禕宸</span></p></div>
+          <div class="record"><span class="when">2024.07–2025.02</span><p><span class="only-en">Aircraft detection combining active-array radar and automatic dependent surveillance-broadcast</span><span class="only-zh" lang="zh-Hant">結合主動陣列雷達與自動飛航廣播系統於航空載具偵測之研究</span><span class="note" lang="zh-Hant">柯家恩</span></p></div>
+          <div class="record"><span class="when">2023.07–2024.02</span><p><span class="only-en">Detecting small unmanned vehicles with an air-surveillance active-array scanning radar</span><span class="only-zh" lang="zh-Hant">利用對空主動陣列掃描雷達偵測小型無人載具</span><span class="note" lang="zh-Hant">莊皓筑</span></p></div>
+          <div class="record"><span class="when">2019.07–2020.02</span><p><span class="only-en">Software-defined radio for automatic dependent surveillance-broadcast</span><span class="only-zh" lang="zh-Hant">設計軟體定義無線電應用於自動飛航廣播系統</span><span class="note" lang="zh-Hant">顏浤名</span></p></div>
+          <div class="record"><span class="when">2018.07–2019.02</span><p><span class="only-en">A UAT 978 MHz automatic dependent surveillance-broadcast receiver</span><span class="only-zh" lang="zh-Hant">利用 UAT 978 MHz 研製自動飛航廣播接收器</span><span class="note" lang="zh-Hant">紀凱文</span></p></div>
+          <div class="record"><span class="when">2018.07–2019.02</span><p><span class="only-en">Computer-simulation optimization for defense-security problems</span><span class="only-zh" lang="zh-Hant">使用電腦模擬最佳化研究國防安全議題</span><span class="note" lang="zh-Hant">蔡姿婷</span></p></div>
+          </div>
+
+          <div data-panel="members">
+            <h3 class="subhead"><span class="only-en">Undergraduate research projects</span><span class="only-zh" lang="zh-Hant">大專生研究計畫</span></h3>
+          <div class="record"><span class="when">2026.07–2027.02</span><p><span class="only-en">Verification of UAV communications-link security vulnerabilities and study of an airborne attack platform</span><span class="only-zh" lang="zh-Hant">無人機通訊鏈路安全漏洞驗證與機載式攻擊平台研究</span><span class="note" lang="zh-Hant">李子安</span></p></div>
+          </div>
+
+          <div data-panel="competitions" hidden>
+          <h3 class="subhead" id="people-competitions"><span class="only-en">Student competitions</span><span class="only-zh" lang="zh-Hant">學生競賽指導</span></h3>
+          <p class="lede">
+            <span class="only-en">Faculty adviser for the student teams in the competitions below, listed by year, newest first.</span>
+            <span class="only-zh" lang="zh-Hant">擔任下列競賽學生隊伍的指導老師，依年度由新到舊排列。</span>
+          </p>
+          <h4 class="subhead">2026</h4>
+          <div class="record"><span class="when">2026</span><p><span class="only-en">2026 National Intelligent Computing and Quantum Information Innovative Applications Competition (Chung Yuan Christian University)</span><span class="only-zh" lang="zh-Hant">2026全國智慧運算與量子資訊創新應用競賽（中原大學）</span><span class="note"><span class="only-en">Two teams advanced to the finals (as of 2026/11/25). The finals are scheduled for 2026/12/04.</span><span class="only-zh" lang="zh-Hant">兩隊入圍決賽（截至 2026/11/25）。決賽預定於 2026/12/04 舉行。</span></span></p></div>
+          <div class="record"><span class="when">2026/11/25</span><p><span class="only-en">I-Shou University Creative &amp; Entrepreneurship Competition (Chuang-Yi Cup), Academic Year 115</span><span class="only-zh" lang="zh-Hant">115學年度創義盃創新創業競賽</span><span class="note"><span class="only-en">Sustainable Operation of Innovative Products category, third place</span><span class="only-zh" lang="zh-Hant">創新商品永續營運組，第三名</span></span></p></div>
+          <div class="record"><span class="when">2026/11/07–08</span><p><span class="only-en"><a href="https://www.defense-ai.tw/">2026 Aegis Cup International Invitational &amp; Defense AI Competition</a>, National Cheng Kung University</span><span class="only-zh" lang="zh-Hant"><a href="https://www.defense-ai.tw/">2026 神盾盃國際邀請賽暨國防 AI 競賽</a>，國立成功大學</span><span class="note"><span class="only-en">Best Paper Award (AI Symposium — Team Kun-Dao Shi-Zhou) and Creativity Award (Defense AI Competition &amp; Exhibition — Team Falcon Wing). <a href="https://www.ydn.com.tw/tw/news/ugC_News_Detail.aspx?ID=649813">Public award coverage</a></span><span class="only-zh" lang="zh-Hant">AI 研討會最佳論文獎（鯤島識舟）與國防 AI 競賽與陳展創意獎（Falcon Wing）。<a href="https://www.ydn.com.tw/tw/news/ugC_News_Detail.aspx?ID=649813">公開報導</a></span></span></p></div>
+          <h4 class="subhead">2025</h4>
+          <div class="record"><span class="when">2025/11/23</span><p><span class="only-en">Aerospace Science Outreach Creative Design Exhibition Competition (<span lang="zh-Hant">航太科普創意設計科學展設計競賽</span>)</span><span class="only-zh" lang="zh-Hant">航太科普創意設計科學展設計競賽</span><span class="note"><span class="only-en">Third place, undergraduate division. Co-advised with Prof. Shang-Te Wang.</span><span class="only-zh" lang="zh-Hant">大專組第三名。與王尚德教授共同指導。</span></span></p></div>
+          <h4 class="subhead">2024</h4>
+          <div class="record"><span class="when">2024/05/07</span><p><span class="only-en">8th Military Academy Cyber Security Competition, Ministry of National Defense (supervised by the MND Communications and Information Division; hosted by National Defense University)</span><span class="only-zh" lang="zh-Hant">第8屆國防部「軍校盃網路安全競賽」（國防部通次室指導、國防大學主辦；亦稱全國軍校盃網路安全競賽）</span><span class="note"><span class="only-en">Champion (co-advised team). <a href="https://www.rocafa.edu.tw/news/index-1.asp?Parser=9,3,19,15,,,12582,,,,5">ROC Air Force Academy news</a>, <a href="https://www.ydn.com.tw/tw/News/ugC_News_Detail.aspx?ID=497192">Youth Daily News coverage</a></span><span class="only-zh" lang="zh-Hant">冠軍（共同指導）。<a href="https://www.rocafa.edu.tw/news/index-1.asp?Parser=9,3,19,15,,,12582,,,,5">空軍軍官學校新聞</a>、<a href="https://www.ydn.com.tw/tw/News/ugC_News_Detail.aspx?ID=497192">青年日報報導</a></span></span><span class="note"><span class="only-en">Advised ROC Air Force Academy teams in this competition from 2017 through 2024.</span><span class="only-zh" lang="zh-Hant">2017 至 2024 年指導空軍軍官學校隊伍參加本競賽。</span></span></p></div>
+          <h4 class="subhead">2017</h4>
+          <div class="record"><span class="when">2017/11/07</span><p><span class="only-en">2017 National Collegiate Smart Electronics and ICT Applications Innovation Competition</span><span class="only-zh" lang="zh-Hant">2017 全國大專院校智慧電子與資通應用創新創意競賽</span><span class="note"><span class="only-en">Honorable Mention (<span lang="zh-Hant">佳作</span>)</span><span class="only-zh" lang="zh-Hant">佳作</span></span></p></div>
+          <h4 class="subhead">2016</h4>
+          <div class="record"><span class="when">2016/11/14</span><p><span class="only-en">2016 National Collegiate Industry–Academia Innovative Implementation Competition, Information and Electronics Division</span><span class="only-zh" lang="zh-Hant">2016 全國大專院校產學創新實作競賽，資訊與電子組</span><span class="note"><span class="only-en">Advanced to the finals</span><span class="only-zh" lang="zh-Hant">入圍決賽</span></span></p></div>
+          </div>
         </div>
       </section>
 
@@ -910,41 +978,6 @@
             <p><span class="only-en">Inventors: </span><span class="only-zh" lang="zh-Hant">發明人：</span><span lang="zh-Hant">王洋凱、陳建宏、葉樹安、賴佑昌</span></p>
           </article>
           </div>
-        </div>
-      </section>
-
-      <section class="view" id="people" hidden>
-        <div class="wrap page">
-          <h2><span class="only-en">People</span><span class="only-zh" lang="zh-Hant">指導學生</span></h2>
-          <p class="lede">
-            <span class="only-en">I welcome inquiries from students who want to build, measure, and explain how their systems work. Faculty adviser for seven National Science and Technology Council (NSTC) undergraduate research projects, 2018–2027, and for student teams in competitions.</span>
-            <span class="only-zh" lang="zh-Hant">歡迎想親手做出系統、量測它，並且把原理說清楚的同學與合作者來信。指導國科會（NSTC）大專生研究計畫 7 件（2018–2027），並指導學生隊伍參加競賽。</span>
-          </p>
-          <h3 class="subhead"><span class="only-en">Undergraduate research projects</span><span class="only-zh" lang="zh-Hant">大專生研究計畫</span></h3>
-          <div class="record"><span class="when">2026.07–2027.02</span><p><span class="only-en">Verification of UAV communications-link security vulnerabilities and study of an airborne attack platform</span><span class="only-zh" lang="zh-Hant">無人機通訊鏈路安全漏洞驗證與機載式攻擊平台研究</span><span class="note" lang="zh-Hant">李子安</span></p></div>
-          <div class="record"><span class="when">2024.07–2025.02</span><p><span class="only-en">Prototype pilot physiological-signal monitoring for simulated flight</span><span class="only-zh" lang="zh-Hant">應用於模擬飛行之飛行員生理訊號監測系統雛形研究</span><span class="note" lang="zh-Hant">張禕宸</span></p></div>
-          <div class="record"><span class="when">2024.07–2025.02</span><p><span class="only-en">Aircraft detection combining active-array radar and automatic dependent surveillance-broadcast</span><span class="only-zh" lang="zh-Hant">結合主動陣列雷達與自動飛航廣播系統於航空載具偵測之研究</span><span class="note" lang="zh-Hant">柯家恩</span></p></div>
-          <div class="record"><span class="when">2023.07–2024.02</span><p><span class="only-en">Detecting small unmanned vehicles with an air-surveillance active-array scanning radar</span><span class="only-zh" lang="zh-Hant">利用對空主動陣列掃描雷達偵測小型無人載具</span><span class="note" lang="zh-Hant">莊皓筑</span></p></div>
-          <div class="record"><span class="when">2019.07–2020.02</span><p><span class="only-en">Software-defined radio for automatic dependent surveillance-broadcast</span><span class="only-zh" lang="zh-Hant">設計軟體定義無線電應用於自動飛航廣播系統</span><span class="note" lang="zh-Hant">顏浤名</span></p></div>
-          <div class="record"><span class="when">2018.07–2019.02</span><p><span class="only-en">A UAT 978 MHz automatic dependent surveillance-broadcast receiver</span><span class="only-zh" lang="zh-Hant">利用 UAT 978 MHz 研製自動飛航廣播接收器</span><span class="note" lang="zh-Hant">紀凱文</span></p></div>
-          <div class="record"><span class="when">2018.07–2019.02</span><p><span class="only-en">Computer-simulation optimization for defense-security problems</span><span class="only-zh" lang="zh-Hant">使用電腦模擬最佳化研究國防安全議題</span><span class="note" lang="zh-Hant">蔡姿婷</span></p></div>
-          <h3 class="subhead" id="people-competitions"><span class="only-en">Student competitions</span><span class="only-zh" lang="zh-Hant">學生競賽指導</span></h3>
-          <p class="lede">
-            <span class="only-en">Faculty adviser for the student teams in the competitions below, listed by year, newest first.</span>
-            <span class="only-zh" lang="zh-Hant">擔任下列競賽學生隊伍的指導老師，依年度由新到舊排列。</span>
-          </p>
-          <h4 class="subhead">2026</h4>
-          <div class="record"><span class="when">2026</span><p><span class="only-en">2026 National Intelligent Computing and Quantum Information Innovative Applications Competition (Chung Yuan Christian University)</span><span class="only-zh" lang="zh-Hant">2026全國智慧運算與量子資訊創新應用競賽（中原大學）</span><span class="note"><span class="only-en">Two teams advanced to the finals (as of 2026/11/25). The finals are scheduled for 2026/12/04.</span><span class="only-zh" lang="zh-Hant">兩隊入圍決賽（截至 2026/11/25）。決賽預定於 2026/12/04 舉行。</span></span></p></div>
-          <div class="record"><span class="when">2026/11/25</span><p><span class="only-en">I-Shou University Creative &amp; Entrepreneurship Competition (Chuang-Yi Cup), Academic Year 115</span><span class="only-zh" lang="zh-Hant">115學年度創義盃創新創業競賽</span><span class="note"><span class="only-en">Sustainable Operation of Innovative Products category, third place</span><span class="only-zh" lang="zh-Hant">創新商品永續營運組，第三名</span></span></p></div>
-          <div class="record"><span class="when">2026/11/07–08</span><p><span class="only-en"><a href="https://www.defense-ai.tw/">2026 Aegis Cup International Invitational &amp; Defense AI Competition</a>, National Cheng Kung University</span><span class="only-zh" lang="zh-Hant"><a href="https://www.defense-ai.tw/">2026 神盾盃國際邀請賽暨國防 AI 競賽</a>，國立成功大學</span><span class="note"><span class="only-en">Best Paper Award (AI Symposium — Team Kun-Dao Shi-Zhou) and Creativity Award (Defense AI Competition &amp; Exhibition — Team Falcon Wing). <a href="https://www.ydn.com.tw/tw/news/ugC_News_Detail.aspx?ID=649813">Public award coverage</a></span><span class="only-zh" lang="zh-Hant">AI 研討會最佳論文獎（鯤島識舟）與國防 AI 競賽與陳展創意獎（Falcon Wing）。<a href="https://www.ydn.com.tw/tw/news/ugC_News_Detail.aspx?ID=649813">公開報導</a></span></span></p></div>
-          <h4 class="subhead">2025</h4>
-          <div class="record"><span class="when">2025/11/23</span><p><span class="only-en">Aerospace Science Outreach Creative Design Exhibition Competition (<span lang="zh-Hant">航太科普創意設計科學展設計競賽</span>)</span><span class="only-zh" lang="zh-Hant">航太科普創意設計科學展設計競賽</span><span class="note"><span class="only-en">Third place, undergraduate division. Co-advised with Prof. Shang-Te Wang.</span><span class="only-zh" lang="zh-Hant">大專組第三名。與王尚德教授共同指導。</span></span></p></div>
-          <h4 class="subhead">2024</h4>
-          <div class="record"><span class="when">2024/05/07</span><p><span class="only-en">8th Military Academy Cyber Security Competition, Ministry of National Defense (supervised by the MND Communications and Information Division; hosted by National Defense University)</span><span class="only-zh" lang="zh-Hant">第8屆國防部「軍校盃網路安全競賽」（國防部通次室指導、國防大學主辦；亦稱全國軍校盃網路安全競賽）</span><span class="note"><span class="only-en">Champion (co-advised team). <a href="https://www.rocafa.edu.tw/news/index-1.asp?Parser=9,3,19,15,,,12582,,,,5">ROC Air Force Academy news</a>, <a href="https://www.ydn.com.tw/tw/News/ugC_News_Detail.aspx?ID=497192">Youth Daily News coverage</a></span><span class="only-zh" lang="zh-Hant">冠軍（共同指導）。<a href="https://www.rocafa.edu.tw/news/index-1.asp?Parser=9,3,19,15,,,12582,,,,5">空軍軍官學校新聞</a>、<a href="https://www.ydn.com.tw/tw/News/ugC_News_Detail.aspx?ID=497192">青年日報報導</a></span></span><span class="note"><span class="only-en">Advised ROC Air Force Academy teams in this competition from 2017 through 2024.</span><span class="only-zh" lang="zh-Hant">2017 至 2024 年指導空軍軍官學校隊伍參加本競賽。</span></span></p></div>
-          <h4 class="subhead">2017</h4>
-          <div class="record"><span class="when">2017/11/07</span><p><span class="only-en">2017 National Collegiate Smart Electronics and ICT Applications Innovation Competition</span><span class="only-zh" lang="zh-Hant">2017 全國大專院校智慧電子與資通應用創新創意競賽</span><span class="note"><span class="only-en">Honorable Mention (<span lang="zh-Hant">佳作</span>)</span><span class="only-zh" lang="zh-Hant">佳作</span></span></p></div>
-          <h4 class="subhead">2016</h4>
-          <div class="record"><span class="when">2016/11/14</span><p><span class="only-en">2016 National Collegiate Industry–Academia Innovative Implementation Competition, Information and Electronics Division</span><span class="only-zh" lang="zh-Hant">2016 全國大專院校產學創新實作競賽，資訊與電子組</span><span class="note"><span class="only-en">Advanced to the finals</span><span class="only-zh" lang="zh-Hant">入圍決賽</span></span></p></div>
         </div>
       </section>
 
@@ -1710,9 +1743,11 @@
           patent: { view: "publications", panel: "patents", anchor: "patent" },
           "patents-invention": { view: "publications", panel: "patents", anchor: "patents-invention" },
           "patents-utility": { view: "publications", panel: "patents", anchor: "patents-utility" },
-          people: { view: "people" },
-          students: { view: "people" },
-          "people-competitions": { view: "people", anchor: "people-competitions" },
+          people: { view: "people", panel: "members" },
+          students: { view: "people", panel: "members" },
+          "people-alumni": { view: "people", panel: "alumni" },
+          "people-members": { view: "people", panel: "members" },
+          "people-competitions": { view: "people", panel: "competitions", anchor: "people-competitions" },
           news: { view: "news" },
           activities: { view: "news" },
           highlights: { view: "news" },
@@ -1828,16 +1863,19 @@
           return { view: "home" };
         }
 
+        var PANEL_DEFAULTS = { publications: "featured", people: "members" };
+
         function show(route, scroll) {
           var viewId = route.view || "home";
           document.querySelectorAll(".view").forEach(function (section) {
             if (section.id === viewId) section.removeAttribute("hidden");
             else section.setAttribute("hidden", "");
           });
+          var hasPanels = Object.prototype.hasOwnProperty.call(PANEL_DEFAULTS, viewId);
           var panelName = route.panel;
-          if (viewId === "publications") {
-            if (!panelName) panelName = "featured";
-            document.querySelectorAll("#publications [data-panel]").forEach(function (panel) {
+          if (hasPanels) {
+            if (!panelName) panelName = PANEL_DEFAULTS[viewId];
+            document.querySelectorAll("#" + viewId + " [data-panel]").forEach(function (panel) {
               if (panel.getAttribute("data-panel") === panelName) panel.removeAttribute("hidden");
               else panel.setAttribute("hidden", "");
             });
@@ -1845,11 +1883,10 @@
           document.querySelectorAll("[data-nav]").forEach(function (el) {
             var on = el.getAttribute("data-nav") === viewId;
             if (el.tagName === "A") {
-              if (on && (!route.panel || el.getAttribute("data-panel") === route.panel || (!el.getAttribute("data-panel") && viewId !== "publications"))) {
-                el.setAttribute("aria-current", "page");
-              } else if (on && el.getAttribute("data-panel") && el.getAttribute("data-panel") === panelName) {
-                el.setAttribute("aria-current", "page");
-              } else if (on && !el.hasAttribute("data-panel") && viewId !== "publications") {
+              if (on && el.getAttribute("data-panel")) {
+                if (el.getAttribute("data-panel") === panelName) el.setAttribute("aria-current", "page");
+                else el.removeAttribute("aria-current");
+              } else if (on && !el.getAttribute("data-panel") && !hasPanels) {
                 el.setAttribute("aria-current", "page");
               } else {
                 el.removeAttribute("aria-current");
@@ -1858,7 +1895,7 @@
             if (el.classList.contains("menu")) el.classList.toggle("is-current", on);
           });
           document.querySelectorAll("[data-panel-link]").forEach(function (link) {
-            if (viewId === "publications" && link.getAttribute("data-panel-link") === panelName) link.setAttribute("aria-current", "page");
+            if (hasPanels && link.closest("#" + viewId) && link.getAttribute("data-panel-link") === panelName) link.setAttribute("aria-current", "page");
             else link.removeAttribute("aria-current");
           });
           if (!scroll) return;
