@@ -841,6 +841,90 @@ html[data-lang="zh"] .bio p {
   margin-top: 0.12rem;
 }
 
+/* Multi-photo strips: JS wraps the ul in .photo-carousel and adds .is-carousel. One-photo strips stay a grid. */
+.photo-carousel {
+  position: relative;
+  margin-top: 0.75rem;
+}
+
+.photo-strip.is-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 0;
+  margin-top: 0;
+  max-width: none;
+  grid-template-columns: none;
+  scrollbar-width: none;
+}
+
+.photo-strip.is-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.photo-strip.is-carousel > li {
+  flex: 0 0 100%;
+  min-width: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.photo-carousel-btn {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.55);
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.photo-carousel-btn:hover,
+.photo-carousel-btn:focus-visible {
+  background: rgba(17, 17, 17, 0.75);
+}
+
+.photo-carousel-prev { left: 0.4rem; }
+.photo-carousel-next { right: 0.4rem; }
+
+.photo-carousel-dots {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.photo-carousel-dots button {
+  width: 0.55rem;
+  height: 0.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #cfcfcf;
+  cursor: pointer;
+}
+
+.photo-carousel-dots button.is-active {
+  background: #333;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-strip.is-carousel {
+    scroll-behavior: auto;
+  }
+}
+
 .photo-dialog {
   width: min(92vw, 920px);
   border: 0;
