@@ -682,6 +682,12 @@ html[data-lang="zh"] .bio p {
   grid-template-columns: minmax(0, 9fr) minmax(0, 16fr) minmax(0, 16fr);
 }
 
+/* A portrait photo beside a landscape photo: one row, equal heights, nothing cropped. */
+.photo-strip-portrait-pair {
+  grid-template-columns: minmax(0, 9fr) minmax(0, 16fr);
+  max-width: 49rem;
+}
+
 .photo-open.is-portrait {
   aspect-ratio: 3 / 4;
 }
@@ -1090,6 +1096,7 @@ html[data-lang="zh"] .bio p {
   .photo-strip,
   .photo-strip-pair,
   .photo-strip-portrait-lead,
+  .photo-strip-portrait-pair,
   .photo-strip-wide-lead,
   .cert-grid,
   .cards {
