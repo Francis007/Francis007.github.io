@@ -137,6 +137,14 @@ html[data-lang="zh"] .only-en {
   letter-spacing: -0.015em;
   color: #1c1c1c;
   line-height: 1.25;
+  /* The two-lab brand line wraps on narrow screens: keep the lines even, and never break inside a Chinese lab name. */
+  text-wrap: balance;
+  word-break: keep-all;
+}
+
+/* Keeps “I-Shou University” on one line, so the brand never breaks at the hyphen. */
+.brand-title .nowrap {
+  white-space: nowrap;
 }
 
 .brand-sub {
@@ -676,6 +684,16 @@ html[data-lang="zh"] .bio p {
   aspect-ratio: 3 / 4;
 }
 
+/* A 16:9 photo leading a 4:3 photo: one row, equal heights, nothing cropped. */
+.photo-strip-wide-lead {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 3fr);
+  max-width: 49rem;
+}
+
+.photo-open.is-wide {
+  aspect-ratio: 16 / 9;
+}
+
 .photo-open img.pos-award { object-position: center 18%; }
 .photo-open img.pos-pitch { object-position: center 62%; }
 .photo-open img.pos-poster { object-position: center 16%; }
@@ -698,7 +716,6 @@ html[data-lang="zh"] .bio p {
 .photo-wide img.pos-nursing-talk { object-position: center 58%; }
 .photo-open img.pos-iwem-rcs { object-position: center 28%; }
 .photo-open img.pos-iwem-mimo { object-position: center 8%; }
-.photo-open img.pos-iwem-banquet { object-position: center 42%; }
 .photo-open img.pos-iwem-hall { object-position: center 36%; }
 .photo-open img.pos-tasa-booth { object-position: center 42%; }
 .photo-open img.pos-tasa-demo { object-position: center 46%; }
@@ -955,6 +972,7 @@ html[data-lang="zh"] .bio p {
   .photo-strip,
   .photo-strip-pair,
   .photo-strip-portrait-lead,
+  .photo-strip-wide-lead,
   .cert-grid,
   .cards {
     grid-template-columns: 1fr;
