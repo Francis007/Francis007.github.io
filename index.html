@@ -434,7 +434,12 @@
             <li><span class="only-en">Radar Systems &amp; Target Detection</span><span class="only-zh" lang="zh-Hant">雷達系統與目標偵測</span></li>
             <li><span class="only-en">Cyber-EM Integration</span><span class="only-zh" lang="zh-Hant">資安與防護整合</span></li>
           </ul>
-          <ul class="photo-strip">
+          <ul class="photo-strip photo-strip-portrait-pair photo-strip-static">
+            <li>
+              <button type="button" class="photo-open is-portrait" data-cap-en="UAV outdoor field experiment" data-cap-zh="無人機戶外實驗">
+                <img src="images/uav-outdoor-field-experiment.jpg" width="683" height="911" loading="lazy" alt="UAV outdoor field experiment" data-alt-en="UAV outdoor field experiment" data-alt-zh="無人機戶外實驗">
+              </button>
+            </li>
             <li>
               <button type="button" class="photo-open" data-cap-en="Outdoor antenna measurement" data-cap-zh="戶外天線量測">
                 <img src="images/outdoor-experiment-field.jpg" width="1215" height="911" loading="lazy" alt="Outdoor antenna measurement" data-alt-en="Outdoor antenna measurement" data-alt-zh="戶外天線量測">
@@ -1731,7 +1736,7 @@
             var items = Array.prototype.slice.call(strip.children).filter(function (el) {
               return el.tagName === "LI";
             });
-            if (items.length < 2 || strip.classList.contains("is-carousel")) return;
+            if (items.length < 2 || strip.classList.contains("is-carousel") || strip.classList.contains("photo-strip-static")) return;
             var wrap = document.createElement("div");
             wrap.className = "photo-carousel";
             strip.parentNode.insertBefore(wrap, strip);
