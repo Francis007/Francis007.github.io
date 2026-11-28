@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="author" content="Prof. Chien-Hung Chen">
+<title>Ch07 Maxwell 方程式 3D 互動模擬</title>
+<link rel="stylesheet" href="tailwind-frozen.css">
+<script>
+MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]},svg:{fontCache:'global'}};
+</script>
+<script src="../vendor/mathjax/es5/tex-mml-chtml.js"></script>
+<script src="../vendor/three/three.min.js"></script>
+<style>
+body{margin:0;background:#020617;color:#e2e8f0;font-family:'Noto Sans TC',sans-serif;overflow-x:hidden;}
+#canvas-wrap{position:relative;width:100%;height:70vh;background:#000;}
+canvas{display:block;}
+.overlay-top{position:absolute;top:10px;left:10px;background:rgba(15,23,42,0.85);padding:8px 12px;border-radius:8px;border:1px solid #334155;font-size:0.85rem;max-width:320px;}
+.overlay-legend{position:absolute;bottom:10px;left:10px;background:rgba(15,23,42,0.85);padding:8px 12px;border-radius:8px;border:1px solid #334155;font-size:0.8rem;}
+.btn{transition:all 0.2s;}
+.btn:hover{transform:translateY(-1px);}
+.btn.active{background:#6366f1 !important;box-shadow:0 0 0 2px #a5b4fc;}
+input[type=range]{accent-color:#6366f1;}
+.legend-row{display:flex;align-items:center;gap:6px;margin:2px 0;}
+.color-box{width:14px;height:4px;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<header class="bg-gradient-to-r from-indigo-900 to-purple-900 p-4">
+  <h1 class="text-2xl md:text-3xl font-bold text-center">Ch07 Maxwell 方程式 3D 互動模擬</h1>
+  <p class="text-center text-xs text-indigo-200 mt-1">Prof. Chien-Hung Chen</p>
+</header>
+
+<div class="max-w-7xl mx-auto p-3">
+  <!-- 模擬切換 -->
+  <div class="flex flex-wrap gap-2 mb-2 justify-center">
+    <button class="btn sim-btn active bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded" data-sim="0">模擬 1：Faraday 感應</button>
+    <button class="btn sim-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded" data-sim="1">模擬 2：位移電流</button>
+    <button class="btn sim-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded" data-sim="2">模擬 3：電磁波傳播</button>
+    <button class="btn sim-btn bg-slate-700 hover:bg-indigo-600 px-4 py-2 rounded" data-sim="3">模擬 4：螺線管感應</button>
+  </div>
+
+  <div id="canvas-wrap">
+    <div id="overlay" class="overlay-top"></div>
+    <div class="overlay-legend">
+      <div class="legend-row"><span class="color-box" style="background:#f87171"></span>E 場 (紅)</div>
+      <div class="legend-row"><span class="color-box" style="background:#60a5fa"></span>B 場 (藍)</div>
+      <div class="legend-row"><span class="color-box" style="background:#fbbf24"></span>k 傳播方向 (黃)</div>
+      <div class="legend-row"><span class="color-box" style="background:#34d399"></span>電流 / 感應 (綠)</div>
+    </div>
+  </div>
+
+  <!-- 參數面板 -->
+  <div class="bg-slate-800 rounded-b-lg p-4 grid md:grid-cols-3 gap-4" id="panel"></div>
+
+  <!-- 說明 -->
+  <div class="bg-slate-900/70 rounded-lg p-4 mt-4 text-sm" id="desc"></div>
+</div>
+
+<footer class="text-center p-3 text-xs text-slate-500">© 2026 Prof. Chien-Hung Chen</footer>
+
+<script>
+// ============================================================
+// SimpleOrbitControls (極簡版)
+// ============================================================
+class SimpleOrbitControls {
+  constructor(camera, domElement){
+    this.camera = camera;
+    this.dom = domElement;
+    this.target = new THREE.Vector3(0,0,0);
+    this.radius = camera.position.distanceTo(this.target);
+    this.theta = Math.atan2(camera.position.x, camera.position.z);
+    this.phi = Math.acos(camera.position.y / this.radius);
+    this.dragging = false;
+    this.lastX=0; this.lastY=0;
+    this._bindEvents();
+    this.update();
+  }
+  _bindEvents(){
+    const d = this.dom;
+    d.addEventListener('mousedown', e=>{ this.dragging=true; this.lastX=e.clientX; this.lastY=e.clientY; });
+    window.addEventListener('mouseup', ()=>this.dragging=false);
+    window.addEventListener('mousemove', e=>{
+      if(!this.dragging) return;
+      const dx=e.clientX-this.lastX, dy=e.clientY-this.lastY;
+      this.theta -= dx*0.008;
+      this.phi -= dy*0.008;
+      this.phi = Math.max(0.1, Math.min(Math.PI-0.1, this.phi));
+      this.lastX=e.clientX; this.lastY=e.clientY;
+      this.update();
+    });
+    d.addEventListener('wheel', e=>{
+      e.preventDefault();
+      this.radius *= (1 + e.deltaY*0.001);
+      this.radius = Math.max(2, Math.min(50, this.radius));
+      this.update();
+    }, {passive:false});
+    // touch
+    d.addEventListener('touchstart', e=>{
+      if(e.touches.length===1){ this.dragging=true; this.lastX=e.touches[0].clientX; this.lastY=e.touches[0].clientY; }
+    });
+    d.addEventListener('touchmove', e=>{
+      if(!this.dragging||e.touches.length!==1) return;
+      const dx=e.touches[0].clientX-this.lastX, dy=e.touches[0].clientY-this.lastY;
+      this.theta -= dx*0.008; this.phi -= dy*0.008;
+      this.phi = Math.max(0.1, Math.min(Math.PI-0.1, this.phi));
+      this.lastX=e.touches[0].clientX; this.lastY=e.touches[0].clientY;
+      this.update();
+    });
+    d.addEventListener('touchend', ()=>this.dragging=false);
+  }
+  update(){
+    const x = this.radius*Math.sin(this.phi)*Math.sin(this.theta);
+    const y = this.radius*Math.cos(this.phi);
+    const z = this.radius*Math.sin(this.phi)*Math.cos(this.theta);
+    this.camera.position.set(x,y,z).add(this.target);
+    this.camera.lookAt(this.target);
+  }
+}
+
+// ============================================================
+// 工具：箭頭（不用 CapsuleGeometry）
+// ============================================================
+function makeArrow(color=0xffffff, len=1, thick=0.035){
+  const group = new THREE.Group();
+  const shaftLen = Math.max(0.001, len*0.82);
+  const shaft = new THREE.Mesh(
+    new THREE.CylinderGeometry(thick, thick, shaftLen, 12),
+    new THREE.MeshBasicMaterial({color})
+  );
+  shaft.position.y = shaftLen/2;
+  const head = new THREE.Mesh(
+    new THREE.ConeGeometry(thick*2.6, Math.max(0.001,len*0.18), 14),
+    new THREE.MeshBasicMaterial({color})
+  );
+  head.position.y = shaftLen + len*0.09;
+  group.add(shaft); group.add(head);
+  group.userData.setLength = (L)=>{
+    const sl = Math.max(0.001, L*0.82);
+    shaft.scale.y = sl/shaftLen || 0.001;
+    shaft.position.y = sl/2;
+    head.position.y = sl + L*0.09;
+    head.scale.set(L>=0?1:1, L>=0?1:1, L>=0?1:1);
+  };
+  return group;
+}
+
+// 設定箭頭方向：from -> to
+function orientArrow(arrow, from, to){
+  const dir = new THREE.Vector3().subVectors(to, from);
+  const len = dir.length();
+  arrow.position.copy(from);
+  if(len<1e-6){ arrow.visible=false; return; }
+  arrow.visible=true;
+  const up = new THREE.Vector3(0,1,0);
+  const q = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
+  arrow.quaternion.copy(q);
+  arrow.userData.setLength(len);
+}
+
+// ============================================================
+// 場景設定
+// ============================================================
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+function resize(){
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  renderer.setSize(w,h);
+  if(camera){ camera.aspect=w/h; camera.updateProjectionMatrix(); }
+}
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020617);
+scene.add(new THREE.AmbientLight(0xffffff,0.7));
+const dl = new THREE.DirectionalLight(0xffffff,0.8); dl.position.set(5,10,7); scene.add(dl);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(6,5,10);
+resize();
+const controls = new SimpleOrbitControls(camera, renderer.domElement);
+
+// 網格與座標軸
+const grid = new THREE.GridHelper(20, 20, 0x334155, 0x1e293b); scene.add(grid);
+const axes = new THREE.AxesHelper(3); scene.add(axes);
+
+// ============================================================
+// 模擬物件容器
+// ============================================================
+const simGroups = [new THREE.Group(), new THREE.Group(), new THREE.Group(), new THREE.Group()];
+simGroups.forEach(g=>{ g.visible=false; scene.add(g); });
+
+let currentSim = 0;
+let simState = {};
+
+// --- 模擬 1：Faraday 感應（線圈 + 時變 B 場 + 感應電流） ---
+function buildSim1(){
+  const g = simGroups[0];
+  // 線圈（用 Torus）
+  const coil = new THREE.Mesh(
+    new THREE.TorusGeometry(2, 0.08, 16, 60),
+    new THREE.MeshStandardMaterial({color:0xcd7f32, metalness:0.8, roughness:0.3})
+  );
+  coil.rotation.x = Math.PI/2;
+  g.add(coil);
+
+  // 外部磁場箭頭陣列（垂直穿過線圈 = z 軸）
+  const bArrows = [];
+  for(let i=-1;i<=1;i++) for(let j=-1;j<=1;j++){
+    const a = makeArrow(0x60a5fa, 1.5, 0.04);
+    a.position.set(i*0.8, -1.2, j*0.8);
+    a.rotation.x = 0; // 朝 +y
+    g.add(a);
+    bArrows.push(a);
+  }
+
+  // 感應電流箭頭（沿線圈環繞）
+  const iArrows = [];
+  const N=12;
+  for(let k=0;k<N;k++){
+    const a = makeArrow(0x34d399, 0.6, 0.035);
+    g.add(a); iArrows.push(a);
+  }
+
+  // 感應 EMF 文字 (用 sprite)
+  simState.sim1 = { coil, bArrows, iArrows, N };
+}
+
+function updateSim1(t){
+  const s = simState.sim1; if(!s) return;
+  // 正弦 B(t)
+  const B = Math.sin(t*1.5);
+  const dBdt = 1.5*Math.cos(t*1.5);
+  s.bArrows.forEach(a=>{
+    const L = 0.2 + Math.abs(B)*2.0;
+    a.userData.setLength(L);
+    a.rotation.z = B>=0 ? 0 : Math.PI;
+    a.children.forEach(c=>c.material.color.setHex(B>=0 ? 0x60a5fa : 0x93c5fd));
+  });
+  // Lenz：感應電流方向 = -dB/dt 方向（右手定則）
+  const cur = -dBdt;
+  const dir = cur>=0 ? 1 : -1;
+  const mag = Math.min(1, Math.abs(cur)*0.6);
+  for(let k=0;k<s.N;k++){
+    const ang = (k/s.N)*Math.PI*2 + (dir>0?0:Math.PI);
+    const nextAng = ang + dir*(Math.PI*2/s.N);
+    const r=2;
+    const p1 = new THREE.Vector3(r*Math.cos(ang), 0, r*Math.sin(ang));
+    const p2 = new THREE.Vector3(r*Math.cos(nextAng), 0, r*Math.sin(nextAng));
+    orientArrow(s.iArrows[k], p1, p2);
+    // 依電流強度縮短
+    s.iArrows[k].userData.setLength(0.2 + mag*0.8);
+    // 透明度 via color
+    s.iArrows[k].children.forEach(c=>c.material.opacity=0.5+mag*0.5);
+  }
+  // 更新 overlay
+  document.getElementById('overlay').innerHTML =
+    `<b>模擬 1：Faraday 感應</b><br>` +
+    `B(t) = ${B.toFixed(2)} T（藍箭頭）<br>` +
+    `dB/dt = ${dBdt.toFixed(2)} T/s<br>` +
+    `感應電流方向：<span style="color:#34d399">${cur>=0?'順時針 (俯視)':'逆時針 (俯視)'}</span>（Lenz 阻止磁通改變）`;
+}
+
+// --- 模擬 2：位移電流（電容器充電，極板間 ∂D/∂t 產生 B） ---
+function buildSim2(){
+  const g = simGroups[1];
+  // 兩片圓盤極板
+  const pGeo = new THREE.CylinderGeometry(1.8, 1.8, 0.08, 40);
+  const pTop = new THREE.Mesh(pGeo, new THREE.MeshStandardMaterial({color:0xef4444}));
+  pTop.position.y = 1.2;
+  const pBot = new THREE.Mesh(pGeo, new THREE.MeshStandardMaterial({color:0x60a5fa}));
+  pBot.position.y = -1.2;
+  g.add(pTop); g.add(pBot);
+
+  // 連接線 + 電流箭頭
+  const wireMat = new THREE.MeshBasicMaterial({color:0x94a3b8});
+  const wireR = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,3,8), wireMat);
+  wireR.position.set(2.5, 0, 0); g.add(wireR);
+  const wireTop = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1.4,8), wireMat);
+  wireTop.rotation.z = Math.PI/2; wireTop.position.set(1.8, 1.2, 0); g.add(wireTop);
+  const wireBot = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1.4,8), wireMat);
+  wireBot.rotation.z = Math.PI/2; wireBot.position.set(1.8, -1.2, 0); g.add(wireBot);
+
+  // 極板之間 E 場箭頭 (向上 = D 向上)
+  const eArrows = [];
+  for(let i=-1;i<=1;i++) for(let j=-1;j<=1;j++){
+    const a = makeArrow(0xf87171, 1.5, 0.035);
+    a.position.set(i*0.7, -0.9, j*0.7);
+    g.add(a); eArrows.push(a);
+  }
+
+  // 位移電流產生的 B 場 (繞 z 軸環繞 = 在 xy 圓圈上)
+  const bCircle = [];
+  const N=16;
+  for(let k=0;k<N;k++){
+    const a = makeArrow(0x60a5fa, 0.4, 0.03);
+    g.add(a); bCircle.push(a);
+  }
+
+  simState.sim2 = { eArrows, bCircle, N };
+}
+function updateSim2(t){
+  const s = simState.sim2; if(!s) return;
+  // D = D0 * (1 - e^(-t)) 充電過程，簡化為 sin
+  const D = 0.6 + 0.4*Math.sin(t*1.2);
+  const dDdt = 0.4*1.2*Math.cos(t*1.2);
+  s.eArrows.forEach(a=>{
+    const L = 0.4 + Math.abs(D)*1.8;
+    a.userData.setLength(L);
+    a.rotation.z = D>=0 ? 0 : Math.PI;
+  });
+  // B 環繞方向依 dD/dt
+  const dir = dDdt>=0?1:-1;
+  const mag = Math.min(1, Math.abs(dDdt)*1.5);
+  for(let k=0;k<s.N;k++){
+    const ang = (k/s.N)*Math.PI*2;
+    const nextAng = ang + dir*(Math.PI*2/s.N);
+    const r=1.4;
+    const p1 = new THREE.Vector3(r*Math.cos(ang), 0, r*Math.sin(ang));
+    const p2 = new THREE.Vector3(r*Math.cos(nextAng), 0, r*Math.sin(nextAng));
+    orientArrow(s.bCircle[k], p1, p2);
+    s.bCircle[k].userData.setLength(0.15 + mag*0.7);
+  }
+  document.getElementById('overlay').innerHTML =
+    `<b>模擬 2：位移電流</b><br>` +
+    `電容器極板間：J=0，但 ∂D/∂t ≠ 0<br>` +
+    `D(t) = ${D.toFixed(2)}（紅箭頭）<br>` +
+    `∂D/∂t = ${dDdt.toFixed(2)}（產生藍色環繞 B）<br>` +
+    `∇×H = ∂D/∂t`;
+}
+
+// --- 模擬 3：電磁波傳播（平面波 E,B,k 正交） ---
+function buildSim3(){
+  const g = simGroups[2];
+  // k 方向（+x，黃色箭頭）
+  const kArrow = makeArrow(0xfbbf24, 6, 0.06);
+  kArrow.rotation.z = -Math.PI/2; // 指向 +x
+  kArrow.position.set(-4,0,0);
+  g.add(kArrow);
+
+  // E (沿 +y 振盪) 與 B (沿 +z 振盪) 在多個 x 點取樣
+  const M = 40;
+  const eArrows = [], bArrows = [];
+  for(let i=0;i<M;i++){
+    const ea = makeArrow(0xf87171, 1, 0.04);
+    const ba = makeArrow(0x60a5fa, 1, 0.04);
+    g.add(ea); g.add(ba);
+    eArrows.push(ea); bArrows.push(ba);
+  }
+  // 連接 E、B 尖端的線
+  const eLineGeo = new THREE.BufferGeometry();
+  eLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(M*3), 3));
+  const eLine = new THREE.Line(eLineGeo, new THREE.LineBasicMaterial({color:0xf87171}));
+  g.add(eLine);
+  const bLineGeo = new THREE.BufferGeometry();
+  bLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(M*3), 3));
+  const bLine = new THREE.Line(bLineGeo, new THREE.LineBasicMaterial({color:0x60a5fa}));
+  g.add(bLine);
+
+  // 座標標籤：自製文字 sprite
+  function label(text, color){
+    const cvs = document.createElement('canvas'); cvs.width=128; cvs.height=64;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = color; ctx.font='bold 40px sans-serif'; ctx.fillText(text,16,44);
+    const tx = new THREE.CanvasTexture(cvs);
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tx, transparent:true}));
+    spr.scale.set(0.8,0.4,1);
+    return spr;
+  }
+  const lE = label('E','#f87171'); lE.position.set(-4,2.5,0); g.add(lE);
+  const lB = label('B','#60a5fa'); lB.position.set(-4,0,2.5); g.add(lB);
+  const lK = label('k','#fbbf24'); lK.position.set(3,0.3,0); g.add(lK);
+
+  simState.sim3 = { eArrows, bArrows, M, eLine, bLine };
+}
+function updateSim3(t, freq=1.0, amp=1.5){
+  const s = simState.sim3; if(!s) return;
+  const M = s.M;
+  const k = freq; // 空間頻率
+  const omega = freq*2.0; // 時間角頻率
+  const ePos = s.eLine.geometry.attributes.position.array;
+  const bPos = s.bLine.geometry.attributes.position.array;
+  for(let i=0;i<M;i++){
+    const x = -4 + (i/(M-1))*8;
+    const phase = k*x - omega*t;
+    const E = amp*Math.sin(phase); // y 分量
+    const B = amp*Math.sin(phase); // z 分量 (同相，真空平面波 B = E/c，這裡只是示意波形)
+    // E 箭頭：從 (x,0,0) -> (x, E, 0)
+    orientArrow(s.eArrows[i], new THREE.Vector3(x,0,0), new THREE.Vector3(x, E, 0));
+    // B 箭頭：從 (x,0,0) -> (x, 0, B)
+    orientArrow(s.bArrows[i], new THREE.Vector3(x,0,0), new THREE.Vector3(x, 0, B));
+    ePos[i*3]=x; ePos[i*3+1]=E; ePos[i*3+2]=0;
+    bPos[i*3]=x; bPos[i*3+1]=0; bPos[i*3+2]=B;
+  }
+  s.eLine.geometry.attributes.position.needsUpdate = true;
+  s.bLine.geometry.attributes.position.needsUpdate = true;
+  const c = 2.998e8;
+  const fHz = freq*1e8; // 示意對應
+  document.getElementById('overlay').innerHTML =
+    `<b>模擬 3：電磁波傳播</b><br>`+
+    `<span style="color:#f87171">E</span> ⊥ <span style="color:#60a5fa">B</span> ⊥ <span style="color:#fbbf24">k</span>（三向量正交）<br>`+
+    `頻率 f ≈ ${(freq).toFixed(2)} (相對)<br>`+
+    `光速 c = 1/√(μ₀ε₀) ≈ ${c.toExponential(3)} m/s<br>`+
+    `$\\nabla^2\\mathbf{E}=\\mu\\varepsilon\\partial_t^2\\mathbf{E}$`;
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([document.getElementById('overlay')]);
+}
+
+// --- 模擬 4：螺線管 dB/dt 感應 E 場旋度 ---
+function buildSim4(){
+  const g = simGroups[3];
+  // 螺線管（多圈 torus）
+  const N=8;
+  for(let i=0;i<N;i++){
+    const t = new THREE.Mesh(
+      new THREE.TorusGeometry(1.2, 0.05, 10, 40),
+      new THREE.MeshStandardMaterial({color:0xcd7f32, metalness:0.8})
+    );
+    t.rotation.x = Math.PI/2;
+    t.position.y = -1.5 + i*0.4;
+    g.add(t);
+  }
+  // 內部 B 場（沿 +y）
+  const bArr = [];
+  for(let i=-1;i<=1;i++){
+    for(let j=-1;j<=1;j++){
+      const a = makeArrow(0x60a5fa, 3, 0.04);
+      a.position.set(i*0.5, -1.5, j*0.5);
+      g.add(a); bArr.push(a);
+    }
+  }
+  // 外部感應 E 場（環繞）
+  const eArr = [];
+  const M=16;
+  for(let k=0;k<M;k++){
+    const a = makeArrow(0xf87171, 0.5, 0.035);
+    g.add(a); eArr.push(a);
+  }
+  simState.sim4 = {bArr, eArr, M};
+}
+function updateSim4(t){
+  const s = simState.sim4; if(!s) return;
+  const B = Math.sin(t*1.5);
+  const dBdt = 1.5*Math.cos(t*1.5);
+  s.bArr.forEach(a=>{
+    const L = 0.3 + Math.abs(B)*2.5;
+    a.userData.setLength(L);
+    a.rotation.z = B>=0 ? 0 : Math.PI;
+  });
+  // 感應 E 環繞方向 = -dB/dt (右手定則反向)
+  const dir = -dBdt>=0?1:-1;
+  const mag = Math.min(1, Math.abs(dBdt)*0.8);
+  for(let k=0;k<s.M;k++){
+    const ang = (k/s.M)*Math.PI*2;
+    const next = ang + dir*(Math.PI*2/s.M);
+    const r=2;
+    const p1 = new THREE.Vector3(r*Math.cos(ang), 0, r*Math.sin(ang));
+    const p2 = new THREE.Vector3(r*Math.cos(next), 0, r*Math.sin(next));
+    orientArrow(s.eArr[k], p1, p2);
+    s.eArr[k].userData.setLength(0.2+mag*0.8);
+  }
+  document.getElementById('overlay').innerHTML =
+    `<b>模擬 4：螺線管 dB/dt → 感應 E 旋度</b><br>`+
+    `內部 B(t) = ${B.toFixed(2)}（藍）<br>`+
+    `dB/dt = ${dBdt.toFixed(2)}<br>`+
+    `外部環繞 E 場（紅）：∇×E = -∂B/∂t`;
+}
+
+buildSim1(); buildSim2(); buildSim3(); buildSim4();
+
+// ============================================================
+// UI：切換 + 參數面板
+// ============================================================
+const panels = [
+  `<div><label>時變頻率 ω：<input id="p1_w" type="range" min="0.2" max="3" step="0.1" value="1.5"> <span id="p1_w_v">1.5</span></label></div>
+   <div><label>動畫速度：<input id="p1_sp" type="range" min="0.2" max="3" step="0.1" value="1"> <span id="p1_sp_v">1</span></label></div>
+   <div><label><input id="p1_pause" type="checkbox"> 暫停</label></div>`,
+  `<div><label>電壓變化頻率：<input id="p2_w" type="range" min="0.3" max="3" step="0.1" value="1.2"> <span id="p2_w_v">1.2</span></label></div>
+   <div><label>動畫速度：<input id="p2_sp" type="range" min="0.2" max="3" step="0.1" value="1"> <span id="p2_sp_v">1</span></label></div>
+   <div><label><input id="p2_pause" type="checkbox"> 暫停</label></div>`,
+  `<div><label>頻率 f：<input id="p3_f" type="range" min="0.3" max="3" step="0.1" value="1"> <span id="p3_f_v">1.0</span></label></div>
+   <div><label>振幅：<input id="p3_a" type="range" min="0.3" max="2.5" step="0.1" value="1.5"> <span id="p3_a_v">1.5</span></label></div>
+   <div><label>動畫速度：<input id="p3_sp" type="range" min="0.1" max="3" step="0.1" value="1"> <span id="p3_sp_v">1</span></label></div>`,
+  `<div><label>時變頻率：<input id="p4_w" type="range" min="0.3" max="3" step="0.1" value="1.5"> <span id="p4_w_v">1.5</span></label></div>
+   <div><label>動畫速度：<input id="p4_sp" type="range" min="0.2" max="3" step="0.1" value="1"> <span id="p4_sp_v">1</span></label></div>
+   <div><label><input id="p4_pause" type="checkbox"> 暫停</label></div>`
+];
+
+const descs = [
+  `<b>Faraday 感應定律</b>：$\\oint\\mathbf{E}\\cdot d\\mathbf{\\ell}=-\\dfrac{d\\Phi_B}{dt}$。當外部磁場 B(t) 正弦變化，線圈內感應電流方向由 Lenz 定律決定——永遠阻止磁通改變。`,
+  `<b>位移電流</b>：Maxwell 在 Ampère 定律補上 $\\partial\\mathbf{D}/\\partial t$。電容器兩板間雖然 J=0，但 D 變化時仍會產生環繞的 B 場，證明電磁波在無源空間也能傳播。`,
+  `<b>電磁波</b>：真空平面波滿足 $\\mathbf{E}\\perp\\mathbf{B}\\perp\\mathbf{k}$。紅色 E 沿 y 振盪、藍色 B 沿 z 振盪、黃色 k 沿 x 傳播，三者構成右手系。真空光速 $c=1/\\sqrt{\\mu_0\\varepsilon_0}\\approx 3\\times10^8$ m/s。`,
+  `<b>螺線管感應</b>：螺線管內通以時變電流產生時變 B，外部環繞 E 場由 $\\nabla\\times\\mathbf{E}=-\\partial\\mathbf{B}/\\partial t$ 決定。`
+];
+
+function switchSim(i){
+  currentSim = i;
+  simGroups.forEach((g,k)=>g.visible = (k===i));
+  document.querySelectorAll('.sim-btn').forEach(b=>b.classList.toggle('active', +b.dataset.sim===i));
+  document.getElementById('panel').innerHTML = panels[i];
+  document.getElementById('desc').innerHTML = descs[i];
+  bindPanel(i);
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([document.getElementById('desc'), document.getElementById('overlay')]);
+}
+
+function bindPanel(i){
+  // 顯示 range 數值
+  document.querySelectorAll('#panel input[type=range]').forEach(r=>{
+    const v = document.getElementById(r.id+'_v');
+    r.addEventListener('input', ()=>{ if(v) v.textContent = r.value; });
+  });
+}
+
+document.querySelectorAll('.sim-btn').forEach(b=>{
+  b.addEventListener('click', ()=>switchSim(+b.dataset.sim));
+});
+switchSim(0);
+
+// ============================================================
+// 動畫循環
+// ============================================================
+let tAcc = 0;
+let last = performance.now();
+function animate(){
+  try {
+    const now = performance.now();
+    const dt = (now-last)/1000; last = now;
+    let sp=1, paused=false;
+    if(currentSim===0){
+      sp = parseFloat(document.getElementById('p1_sp')?.value||1);
+      paused = document.getElementById('p1_pause')?.checked;
+    } else if(currentSim===1){
+      sp = parseFloat(document.getElementById('p2_sp')?.value||1);
+      paused = document.getElementById('p2_pause')?.checked;
+    } else if(currentSim===2){
+      sp = parseFloat(document.getElementById('p3_sp')?.value||1);
+    } else if(currentSim===3){
+      sp = parseFloat(document.getElementById('p4_sp')?.value||1);
+      paused = document.getElementById('p4_pause')?.checked;
+    }
+    if(!paused) tAcc += dt*sp;
+
+    if(currentSim===0){
+      const w = parseFloat(document.getElementById('p1_w')?.value||1.5);
+      updateSim1(tAcc*w/1.5);
+    } else if(currentSim===1){
+      const w = parseFloat(document.getElementById('p2_w')?.value||1.2);
+      updateSim2(tAcc*w/1.2);
+    } else if(currentSim===2){
+      const f = parseFloat(document.getElementById('p3_f')?.value||1);
+      const a = parseFloat(document.getElementById('p3_a')?.value||1.5);
+      updateSim3(tAcc, f, a);
+    } else if(currentSim===3){
+      const w = parseFloat(document.getElementById('p4_w')?.value||1.5);
+      updateSim4(tAcc*w/1.5);
+    }
+
+    renderer.render(scene, camera);
+  } catch(err){
+    console.error('animate error:', err);
+  }
+  requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener('resize', resize);
+setTimeout(resize, 100);
+
+</script>
+</body>
+</html>

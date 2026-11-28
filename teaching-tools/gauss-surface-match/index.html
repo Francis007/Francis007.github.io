@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch4 高斯面配對遊戲 | Gaussian Surface Matching</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #1a1a3e, #24243e);
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px;
+  }
+  h1 {
+    font-size: 1.6rem; color: #00e5ff; margin-bottom: 6px;
+    text-shadow: 0 0 12px rgba(0,229,255,.4);
+  }
+  .subtitle { font-size: 0.95rem; color: #aaa; margin-bottom: 18px; }
+
+  .game-area {
+    display: flex; gap: 40px; justify-content: center;
+    flex-wrap: wrap; width: 100%; max-width: 900px;
+  }
+  .column { flex: 1; min-width: 280px; max-width: 400px; }
+  .col-title {
+    font-size: 1.15rem; font-weight: bold; margin-bottom: 12px;
+    padding-bottom: 6px; border-bottom: 2px solid rgba(255,255,255,.15);
+  }
+  .col-title.left { color: #ff4081; }
+  .col-title.right { color: #00e5ff; }
+
+  /* 左側：電荷分佈卡片（放置區） */
+  .charge-card {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 14px; transition: all .3s;
+  }
+  .charge-card .zh { font-size: 1.05rem; font-weight: bold; color: #fff; }
+  .charge-card .en { font-size: 0.82rem; color: #999; margin-top: 2px; }
+  .drop-zone {
+    min-height: 42px; margin-top: 10px;
+    border: 2px dashed rgba(0,229,255,.3);
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; transition: all .3s;
+    padding: 4px;
+  }
+  .drop-zone.hover { border-color: #00e5ff; background: rgba(0,229,255,.1); }
+  .drop-zone.filled { border-style: solid; border-color: rgba(0,229,255,.5); }
+  .drop-hint {
+    font-size: 0.8rem; color: #666; pointer-events: none;
+  }
+
+  /* 右側：高斯面標籤（可拖曳） */
+  .surface-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #00b4d8, #0077b6);
+    color: #fff; font-weight: 600; font-size: 0.95rem;
+    padding: 10px 18px; border-radius: 8px;
+    cursor: grab; user-select: none;
+    margin-bottom: 10px; transition: all .25s;
+    box-shadow: 0 2px 8px rgba(0,180,216,.3);
+  }
+  .surface-tag:active { cursor: grabbing; opacity: .8; transform: scale(.96); }
+  .surface-tag.placed { opacity: .5; pointer-events: none; }
+  .surface-tag.in-drop {
+    font-size: 0.88rem; padding: 8px 14px; margin: 0;
+    cursor: pointer;
+  }
+
+  /* 按鈕 */
+  .btn-row { margin-top: 24px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  button {
+    padding: 12px 28px; border: none; border-radius: 8px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: all .25s;
+  }
+  #checkBtn {
+    background: linear-gradient(135deg, #00e676, #00c853);
+    color: #0a0a0a;
+  }
+  #checkBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,230,118,.4); }
+  #resetBtn {
+    background: rgba(255,255,255,.12); color: #ccc;
+  }
+  #resetBtn:hover { background: rgba(255,255,255,.2); }
+
+  /* 結果 */
+  .result-box {
+    margin-top: 20px; padding: 18px 24px; border-radius: 12px;
+    max-width: 900px; width: 100%; text-align: center;
+    font-size: 1rem; line-height: 1.8;
+    display: none;
+  }
+  .result-box.correct {
+    background: rgba(0,230,118,.12); border: 2px solid #00e676;
+  }
+  .result-box.wrong {
+    background: rgba(255,64,129,.1); border: 2px solid #ff4081;
+  }
+  .result-box .score {
+    font-size: 1.3rem; font-weight: bold; margin-bottom: 8px;
+  }
+  .result-box .score.perfect { color: #00e676; }
+  .result-box .score.partial { color: #ffc107; }
+  .result-box .score.fail { color: #ff4081; }
+  .result-box .detail { font-size: 0.9rem; color: #bbb; text-align: left; }
+  .detail-item { margin: 4px 0; }
+  .detail-item.ok::before { content: '✅ '; }
+  .detail-item.ng::before { content: '❌ '; }
+
+  .tag-pool { display: flex; flex-direction: column; align-items: flex-start; }
+
+  /* 提示 */
+  .hint-box {
+    margin-top: 16px; padding: 14px 20px; border-radius: 10px;
+    background: rgba(255,193,7,.08); border: 1px solid rgba(255,193,7,.3);
+    max-width: 900px; width: 100%; font-size: 0.88rem; color: #ccc;
+    display: none;
+  }
+  .hint-box strong { color: #ffc107; }
+
+  /* 動畫 */
+  @keyframes pop { 0%{transform:scale(.8);opacity:0} 100%{transform:scale(1);opacity:1} }
+  .pop-in { animation: pop .3s ease-out; }
+</style>
+</head>
+<body>
+
+<h1>⚡ Ch4 高斯面配對 Gaussian Surface Matching</h1>
+<p class="subtitle">把右邉的高斯面名稱拖到左邊對應的電荷分佈上</p>
+
+<div class="game-area">
+  <!-- 左欄：電荷分佈 -->
+  <div class="column" id="chargeCol">
+    <div class="col-title left">電荷分佈</div>
+  </div>
+  <!-- 右欄：高斯面標籤池 -->
+  <div class="column" id="surfaceCol">
+    <div class="col-title right">高斯面</div>
+    <div class="tag-pool" id="tagPool"></div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button id="checkBtn">✔ 檢查答案 Check</button>
+  <button id="resetBtn">🔄 重新開始 Reset</button>
+</div>
+
+<div class="result-box" id="resultBox">
+  <div class="score" id="scoreText"></div>
+  <div class="detail" id="detailText"></div>
+</div>
+
+<div class="hint-box" id="hintBox">
+  <strong>💡 提示 Hint：</strong>選擇高斯面的關鍵是讓 <strong>E</strong> 在面上為常數且與面垂直（或平行），利用<strong>對稱性</strong>簡化 ∮<b>E</b>·d<b>A</b> 的計算。
+</div>
+
+<script>
+// ===== 題目資料 =====
+// 每題：charge（電荷分佈）、surface（正確高斯面）、surfaceId（唯一識別）
+const problems = [
+  {
+    id: 'q1',
+    zhCharge: '點電荷',
+    enCharge: 'Point Charge Q',
+    correctSurface: 'sphere_point',
+    explain: '球對稱 → 同心球面，E 在球面上均勻'
+  },
+  {
+    id: 'q2',
+    zhCharge: '無限長線電荷',
+    enCharge: 'Infinite Line Charge ρ_L',
+    correctSurface: 'cylinder',
+    explain: '柱對稱 → 同軸圓柱面，E 在側面均勻且垂直'
+  },
+  {
+    id: 'q3',
+    zhCharge: '無限大面電荷',
+    enCharge: 'Infinite Sheet ρ_S',
+    correctSurface: 'pillbox',
+    explain: '平面對稱 → Pillbox（藥丹盒），通量只過上下端面'
+  },
+  {
+    id: 'q4',
+    zhCharge: '均勻帶電球體',
+    enCharge: 'Uniform Sphere ρ_v',
+    correctSurface: 'sphere_vol',
+    explain: '球對稱 → 同心球面（可取 r > a 或 r < a）'
+  }
+];
+
+// 高斯面標籤（每個有唯一 id，允許多個 Sphere）
+const surfaceTags = [
+  { id: 'sphere_point', label: '同心球面 Sphere', sub: '（點電荷用）' },
+  { id: 'cylinder',     label: '同軸圓柱面 Cylinder', sub: '' },
+  { id: 'pillbox',      label: 'Pillbox 盒', sub: '（藥丸盒）' },
+  { id: 'sphere_vol',   label: '同心球面 Sphere', sub: '（帶電球體用）' }
+];
+
+// ===== 建立 DOM =====
+const chargeCol = document.getElementById('chargeCol');
+const tagPool = document.getElementById('tagPool');
+let draggedTag = null;
+
+function buildGame() {
+  // 清空
+  chargeCol.innerHTML = '<div class="col-title left">電荷分佈</div>';
+  tagPool.innerHTML = '';
+  document.getElementById('resultBox').style.display = 'none';
+  document.getElementById('hintBox').style.display = 'none';
+
+  // 建立左側卡片
+  problems.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'charge-card';
+    card.innerHTML = `
+      <div class="zh">${p.zhCharge}</div>
+      <div class="en">${p.enCharge}</div>
+      <div class="drop-zone" data-question="${p.id}">
+        <span class="drop-hint">← 拖曳高斯面到此</span>
+      </div>
+    `;
+    chargeCol.appendChild(card);
+  });
+
+  // 建立右側標籤（隨機排序）
+  const shuffled = [...surfaceTags].sort(() => Math.random() - 0.5);
+  shuffled.forEach(s => {
+    const tag = document.createElement('div');
+    tag.className = 'surface-tag';
+    tag.draggable = true;
+    tag.dataset.surfaceId = s.id;
+    tag.textContent = s.label;
+    if (s.sub) {
+      const small = document.createElement('span');
+      small.style.fontSize = '0.78rem';
+      small.style.opacity = '0.7';
+      small.textContent = ' ' + s.sub;
+      tag.appendChild(small);
+    }
+    tag.addEventListener('dragstart', onDragStart);
+    tag.addEventListener('dragend', onDragEnd);
+    // 觸控支援
+    tag.addEventListener('touchstart', onTouchStart, { passive: false });
+    tag.addEventListener('touchmove', onTouchMove, { passive: false });
+    tag.addEventListener('touchend', onTouchEnd);
+    tagPool.appendChild(tag);
+  });
+
+  // drop zone 事件
+  document.querySelectorAll('.drop-zone').forEach(dz => {
+    dz.addEventListener('dragover', onDragOver);
+    dz.addEventListener('dragenter', onDragEnter);
+    dz.addEventListener('dragleave', onDragLeave);
+    dz.addEventListener('drop', onDrop);
+  });
+}
+
+// ===== 拖曳事件 =====
+function onDragStart(e) {
+  draggedTag = e.target.closest('.surface-tag');
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => { if(draggedTag) draggedTag.style.opacity = '0.4'; }, 0);
+}
+function onDragEnd(e) {
+  if(draggedTag) draggedTag.style.opacity = '';
+  draggedTag = null;
+  document.querySelectorAll('.drop-zone').forEach(d => d.classList.remove('hover'));
+}
+function onDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function onDragEnter(e) { e.preventDefault(); e.currentTarget.classList.add('hover'); }
+function onDragLeave(e) { e.currentTarget.classList.remove('hover'); }
+
+function onDrop(e) {
+  e.preventDefault();
+  const dz = e.currentTarget;
+  dz.classList.remove('hover');
+  if (!draggedTag) return;
+
+  // 如果 drop zone 已有標籤，先退回
+  const existing = dz.querySelector('.surface-tag');
+  if (existing) {
+    returnTagToPool(existing);
+  }
+
+  // 放入 drop zone
+  placeTag(draggedTag, dz);
+  draggedTag = null;
+}
+
+function placeTag(tag, dz) {
+  // 從原位置移除
+  if (tag.parentNode) tag.parentNode.removeChild(tag);
+  // 清除 hint
+  const hint = dz.querySelector('.drop-hint');
+  if (hint) hint.style.display = 'none';
+  // 放入
+  tag.classList.add('in-drop', 'pop-in');
+  tag.classList.remove('placed');
+  tag.draggable = false;
+  dz.appendChild(tag);
+  dz.classList.add('filled');
+
+  // 點擊已放置的標籤 → 退回
+  tag.onclick = () => {
+    returnTagToPool(tag);
+  };
+}
+
+function returnTagToPool(tag) {
+  const dz = tag.closest('.drop-zone');
+  if (dz) {
+    dz.classList.remove('filled');
+    const hint = dz.querySelector('.drop-hint');
+    if (hint) hint.style.display = '';
+  }
+  tag.classList.remove('in-drop', 'pop-in');
+  tag.draggable = true;
+  tag.onclick = null;
+  tagPool.appendChild(tag);
+  // 重新綁定拖曳
+  tag.addEventListener('dragstart', onDragStart);
+  tag.addEventListener('dragend', onDragEnd);
+}
+
+// ===== 觸控支援 =====
+let touchClone = null;
+let touchSource = null;
+
+function onTouchStart(e) {
+  e.preventDefault();
+  touchSource = e.target.closest('.surface-tag');
+  if (!touchSource) return;
+  const rect = touchSource.getBoundingClientRect();
+  touchClone = touchSource.cloneNode(true);
+  touchClone.style.position = 'fixed';
+  touchClone.style.zIndex = '9999';
+  touchClone.style.width = rect.width + 'px';
+  touchClone.style.opacity = '0.85';
+  GouchClone.style.pointerEvents = 'none';
+  document.body.appendChild(touchClone);
+  moveTouchClone(e.touches[0]);
+  touchSource.style.opacity = '0.3';
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (touchClone) moveTouchClone(e.touches[0]);
+}
+
+function moveTouchClone(touch) {
+  touchClone.style.left = (touch.clientX - 60) + 'px';
+  touchClone.style.top = (touch.clientY - 20) + 'px';
+}
+
+function onTouchEnd(e) {
+  if (!touchClone || !touchSource) return;
+  touchClone.remove();
+  touchClone = null;
+  touchSource.style.opacity = '';
+
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const dz = el ? el.closest('.drop-zone') : null;
+
+  if (dz) {
+    const existing = dz.querySelector('.surface-tag');
+    if (existing) returnTagToPool(existing);
+    placeTag(touchSource, dz);
+  }
+  touchSource = null;
+}
+
+// ===== 檢查答案 =====
+document.getElementById('checkBtn').addEventListener('click', () => {
+  const resultBox = document.getElementById('resultBox');
+  const scoreText = document.getElementById('scoreText');
+  const detailText = document.getElementById('detailText');
+
+  let correct = 0;
+  let details = [];
+
+  problems.forEach(p => {
+    const dz = document.querySelector(`.drop-zone[data-question="${p.id}"]`);
+    const tag = dz ? dz.querySelector('.surface-tag') : null;
+    const userAnswer = tag ? tag.dataset.surfaceId : null;
+    const isCorrect = userAnswer === p.correctSurface;
+    if (isCorrect) correct++;
+
+    const surfaceLabel = tag ? tag.childNodes[0].textContent : '（未作答）';
+    const correctLabel = surfaceTags.find(s => s.id === p.correctSurface);
+
+    details.push({
+      ok: isCorrect,
+      text: `${p.zhCharge} → ${surfaceLabel}` +
+            (isCorrect ? '' : ` （正確：${correctLabel.label} ${correctLabel.sub}）`)
+    });
+  });
+
+  const total = problems.length;
+  scoreText.textContent = correct === total
+    ? `🎉 全對！${correct}/${total} 個正確`
+    : `配對了 ${correct}/${total} 個正確`;
+  scoreText.className = 'score ' +
+    (correct === total ? 'perfect' : correct >= 2 ? 'partial' : 'fail');
+
+  detailText.innerHTML = details.map(d =>
+    `<div class="detail-item ${d.ok ? 'ok' : 'ng'}">${d.text}</div>`
+  ).join('');
+
+  resultBox.className = 'result-box ' + (correct === total ? 'correct' : 'wrong');
+  resultBox.style.display = 'block';
+
+  // 顯示提示
+  if (correct < total) {
+    document.getElementById('hintBox').style.display = 'block';
+  }
+});
+
+// ===== 重置 =====
+document.getElementById('resetBtn').addEventListener('click', buildGame);
+
+// ===== 啟動 =====
+buildGame();
+</script>
+</body>
+</html>

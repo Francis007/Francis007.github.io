@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="以 RCS、單基地雷達方程式、R 的四次方衰減及功率、增益、頻率、距離與各參數靈敏度建立工程判讀能力。">
+  <title>RCS 與雷達方程式｜互動實驗室</title>
+  <style>
+  :root{
+    --ink:#10243b;--muted:#526579;--paper:#f4f7fb;--card:#ffffff;--line:#d7e0ea;
+    --navy:#12365a;--blue:#176b87;--teal:#087f78;--orange:#e16a2b;--gold:#f3b33d;
+    --good:#147a54;--bad:#b43b3b;--soft-blue:#eaf5fb;--soft-teal:#e8f7f3;--soft-orange:#fff2e7;
+    --shadow:0 14px 36px rgba(18,54,90,.10);--radius:20px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.68}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .skip-link{position:fixed;left:1rem;top:-5rem;z-index:99;padding:.7rem 1rem;background:#fff;color:var(--navy);border:2px solid var(--navy);border-radius:10px}
+  .skip-link:focus{top:1rem}
+  :focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(125deg,#0f2e4d 0%,#175b72 58%,#14857b 100%);color:#fff;padding:clamp(2.3rem,6vw,5.5rem) max(1.2rem,calc((100vw - 1180px)/2)) 2.7rem}
+  .hero:after{content:"";position:absolute;width:460px;height:460px;border:76px solid rgba(255,255,255,.07);border-radius:50%;right:-150px;top:-230px}
+  .eyebrow{margin:0 0 .55rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:#bceee5;font-size:.88rem}
+  h1{max-width:900px;margin:.1rem 0 .8rem;font-size:clamp(2rem,5vw,3.65rem);line-height:1.14;letter-spacing:-.035em}
+  .lead{max-width:850px;margin:0;font-size:clamp(1rem,2vw,1.2rem);color:#e9f8fa}
+  .hero-chips{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.3rem}
+  .chip{padding:.35rem .72rem;border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.12);border-radius:999px;font-size:.9rem}
+  .top-nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;box-shadow:0 4px 14px rgba(18,54,90,.06)}
+  .top-nav .inner{width:100%;max-width:1180px;margin:auto;display:flex;gap:.35rem;overflow:auto;padding:.65rem 1rem}
+  .top-nav a{white-space:nowrap;text-decoration:none;color:var(--navy);font-weight:750;padding:.45rem .72rem;border-radius:999px}
+  .top-nav a:hover{background:var(--soft-blue)}
+  main{max-width:1180px;margin:auto;padding:1.3rem 1rem 4rem}
+  section{scroll-margin-top:5rem}
+  .section-head{margin:2.2rem 0 1rem}
+  .kicker{color:var(--teal);font-weight:850;letter-spacing:.08em;text-transform:uppercase;font-size:.82rem}
+  h2{font-size:clamp(1.45rem,3vw,2.15rem);line-height:1.25;margin:.25rem 0 .4rem;color:var(--navy)}
+  h3{line-height:1.35;color:var(--navy);margin:.1rem 0 .55rem}
+  p{margin:.45rem 0 .9rem}
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+  .card,.panel,.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card{padding:1.15rem}
+  .card .icon{display:grid;place-items:center;width:2.6rem;height:2.6rem;border-radius:14px;background:var(--soft-teal);font-size:1.35rem;margin-bottom:.65rem}
+  .lab-grid{display:grid;grid-template-columns:minmax(260px,.82fr) minmax(0,1.55fr);gap:1rem;align-items:start}
+  .lab-grid>*{min-width:0}
+  .controls{padding:1rem;position:sticky;top:4.7rem}
+  .control{padding:.72rem 0;border-bottom:1px dashed var(--line)}
+  .control:last-of-type{border-bottom:0}
+  .control-top{display:flex;justify-content:space-between;gap:.7rem;align-items:baseline}
+  .control label{font-weight:800;color:var(--navy)}
+  output{font-variant-numeric:tabular-nums;color:var(--teal);font-weight:850}
+  input[type="range"]{width:100%;accent-color:var(--teal)}
+  select{width:100%;margin-top:.4rem;padding:.58rem;border:1px solid #aebdca;border-radius:10px;background:#fff;color:var(--ink)}
+  .button-row{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem}
+  .primary,.secondary{border-radius:12px;padding:.62rem .9rem;font-weight:800}
+  .primary{border:0;background:var(--teal);color:#fff}
+  .secondary{border:1px solid var(--navy);background:#fff;color:var(--navy)}
+  .visual-stack{display:grid;gap:1rem;min-width:0}
+  .canvas-card{padding:.8rem}
+  canvas{display:block;width:100%;height:auto;border-radius:15px;background:#071d31;border:1px solid #24455f}
+  .canvas-note{font-size:.9rem;color:var(--muted);margin:.5rem .25rem .1rem}
+  .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
+  .metric{background:#fff;border:1px solid var(--line);border-radius:15px;padding:.8rem;min-height:88px}
+  .metric small{display:block;color:var(--muted);font-weight:700}
+  .metric strong{display:block;color:var(--navy);font-size:1.25rem;font-variant-numeric:tabular-nums;margin-top:.1rem}
+  .live-note{border-left:5px solid var(--orange);background:var(--soft-orange);padding:.85rem 1rem;border-radius:0 14px 14px 0}
+  .formula-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .formula-grid>*{min-width:0}
+  .formula-box{min-width:0;max-width:100%;padding:1rem;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+  .formula-box .why{color:var(--muted);font-size:.94rem}
+  .formula[data-tex]{font-family:inherit;color:inherit}
+  .formula[data-display="true"]{display:block;width:100%;max-width:100%;padding:.25rem 0;overflow-x:auto;overflow-y:hidden;text-align:center;scrollbar-width:thin}
+  .formula[data-display="true"] .katex-display{margin:.35em 0}
+  .formula-box .katex{font-size:1.06em}
+  .compare{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+  .compare th,.compare td{padding:.75rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+  .compare th{background:var(--navy);color:#fff}
+  .compare tr:last-child td{border-bottom:0}
+  .myths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .myth{padding:1rem;border:1px solid #f0c8aa;background:#fff8f2;border-radius:16px}
+  .myth b{color:#a6471f}
+  .software{padding:1.1rem 1.2rem;background:linear-gradient(115deg,#e9f8f4,#edf5fb);border:1px solid #bcded8;border-radius:18px}
+  .quiz-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.8rem}
+  .score{font-weight:850;color:var(--teal);font-variant-numeric:tabular-nums}
+  .quiz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .quiz-card{padding:1rem}
+  .quiz-meta{display:flex;gap:.45rem;flex-wrap:wrap;color:var(--muted);font-size:.84rem;margin-bottom:.35rem}
+  .options{display:grid;gap:.5rem;margin-top:.75rem}
+  .option{text-align:left;padding:.65rem .75rem;border:1px solid #b9c7d4;background:#fff;color:var(--ink);border-radius:12px}
+  .option:hover{border-color:var(--teal);background:#f2fbf8}
+  .option[data-state="correct"]{border-color:var(--good);background:#e9f8f1;color:#0d5e40}
+  .option[data-state="wrong"]{border-color:var(--bad);background:#fff0f0;color:#8b2727}
+  .feedback{min-height:3.5rem;margin-top:.7rem;padding:.7rem;border-radius:12px;background:#f4f7fa;color:var(--muted)}
+  .feedback[data-kind="correct"]{background:#e9f8f1;color:#0d5e40}
+  .feedback[data-kind="wrong"]{background:#fff0f0;color:#842929}
+  .footer-note{margin-top:2.2rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @media(max-width:900px){.cards{grid-template-columns:1fr}.lab-grid{grid-template-columns:1fr}.controls{position:static}.formula-grid,.quiz-grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.hero{padding-top:2rem}.myths,.metrics{grid-template-columns:1fr}.compare{font-size:.9rem}.compare th,.compare td{padding:.55rem}.quiz-top{align-items:flex-start;flex-direction:column}}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+  @media print{.top-nav,.controls,.button-row,.quiz-top button{display:none!important}.hero{background:#fff;color:#000;padding:1rem}.lead,.eyebrow{color:#333}.lab-grid{display:block}.card,.panel,.quiz-card,.formula-box{box-shadow:none;break-inside:avoid}}
+</style>
+  
+<!-- ANTENNA_LATEX_CSS_BEGIN
+KaTeX 0.18.4; The MIT License (MIT)
+
+Copyright (c) 2013-2020 Khan Academy and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ANTENNA_LATEX_CSS_END -->
+<style id="embedded-katex-css">@font-face{font-display:block;font-family:KaTeX_AMS;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_AMS-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Caligraphic;font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Caligraphic;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Fraktur;font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Fraktur;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Main-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:italic;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:italic;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Main-RegularItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Main-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Math;font-style:italic;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Math;font-style:italic;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Math-RegularItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:italic;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_SansSerif-RegularItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Script;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Script-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size1;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size1-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size2;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size2-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size3;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size3-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size4;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size4-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Typewriter;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2) format("woff2")}.katex{font:normal 1.21em KaTeX_Main,Times New Roman,serif;line-height:1.2;position:relative;text-indent:0;text-rendering:auto}.katex *{-ms-high-contrast-adjust:none!important;border-color:currentColor}.katex .katex-version:after{content:"0.18.4"}.katex .katex-mathml{border:0;-webkit-clip-path:inset(50%);clip-path:inset(50%);height:1px;overflow:hidden;padding:0;position:absolute;width:1px}.katex .katex-html>.katex-newline{display:block}.katex .katex-base{position:relative;white-space:nowrap;width:-webkit-min-content;width:-moz-min-content;width:min-content}.katex .katex-base,.katex .katex-strut{display:inline-block}.katex .textbf{font-weight:700}.katex .textit{font-style:italic}.katex .textrm{font-family:KaTeX_Main}.katex .textsf{font-family:KaTeX_SansSerif}.katex .texttt{font-family:KaTeX_Typewriter}.katex .mathnormal{font-family:KaTeX_Math;font-style:italic}.katex .mathit{font-family:KaTeX_Main;font-style:italic}.katex .mathrm{font-style:normal}.katex .mathbf{font-family:KaTeX_Main;font-weight:700}.katex .boldsymbol{font-family:KaTeX_Math;font-style:italic;font-weight:700}.katex .amsrm,.katex .mathbb,.katex .textbb{font-family:KaTeX_AMS}.katex .mathcal{font-family:KaTeX_Caligraphic}.katex .mathfrak,.katex .textfrak{font-family:KaTeX_Fraktur}.katex .mathboldfrak,.katex .textboldfrak{font-family:KaTeX_Fraktur;font-weight:700}.katex .mathtt{font-family:KaTeX_Typewriter}.katex .mathscr,.katex .textscr{font-family:KaTeX_Script}.katex .mathsf,.katex .textsf{font-family:KaTeX_SansSerif}.katex .mathboldsf,.katex .textboldsf{font-family:KaTeX_SansSerif;font-weight:700}.katex .mathitsf,.katex .mathsfit,.katex .textitsf{font-family:KaTeX_SansSerif;font-style:italic}.katex .mainrm{font-family:KaTeX_Main;font-style:normal}.katex .vlist-t{border-collapse:collapse;display:inline-table;table-layout:fixed}.katex .vlist-r{display:table-row}.katex .vlist{display:table-cell;position:relative;vertical-align:bottom}.katex .vlist>span{display:block;height:0;position:relative}.katex .vlist>span>span{display:inline-block}.katex .vlist>span>.pstrut{overflow:hidden;width:0}.katex .vlist-t2{margin-right:-2px}.katex .vlist-s{display:table-cell;font-size:1px;min-width:2px;vertical-align:bottom;width:2px}.katex .katex-vbox{align-items:baseline;display:inline-flex;flex-direction:column}.katex .katex-thinbox{display:inline-flex;flex-direction:row;max-width:0;width:0}.katex .msupsub{text-align:left}.katex .mfrac>span>span{text-align:center}.katex .mfrac .frac-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .katex-hdashline,.katex .katex-hline,.katex .katex-overline .overline-line,.katex .katex-rule,.katex .katex-underline .underline-line,.katex .mfrac .frac-line{min-height:1px}.katex .mspace{display:inline-block}.katex .katex-smash{display:inline;line-height:0}.katex .clap,.katex .llap,.katex .rlap{position:relative;width:0}.katex .clap>.katex-inner,.katex .llap>.katex-inner,.katex .rlap>.katex-inner{position:absolute}.katex .clap>.katex-fix,.katex .llap>.katex-fix,.katex .rlap>.katex-fix{display:inline-block}.katex .llap>.katex-inner{right:0}.katex .clap>.katex-inner,.katex .rlap>.katex-inner{left:0}.katex .clap>.katex-inner>span{margin-left:-50%;margin-right:50%}.katex .katex-rule{border:0 solid;display:inline-block;position:relative}.katex .katex-hline,.katex .katex-overline .overline-line,.katex .katex-underline .underline-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .katex-hdashline{border-bottom-style:dashed;display:inline-block;width:100%}.katex .sqrt>.katex-root{margin-left:.2777777778em;margin-right:-.5555555556em}.katex .fontsize-ensurer.reset-size1.size1,.katex .katex-sizing.reset-size1.size1{font-size:1em}.katex .fontsize-ensurer.reset-size1.size2,.katex .katex-sizing.reset-size1.size2{font-size:1.2em}.katex .fontsize-ensurer.reset-size1.size3,.katex .katex-sizing.reset-size1.size3{font-size:1.4em}.katex .fontsize-ensurer.reset-size1.size4,.katex .katex-sizing.reset-size1.size4{font-size:1.6em}.katex .fontsize-ensurer.reset-size1.size5,.katex .katex-sizing.reset-size1.size5{font-size:1.8em}.katex .fontsize-ensurer.reset-size1.size6,.katex .katex-sizing.reset-size1.size6{font-size:2em}.katex .fontsize-ensurer.reset-size1.size7,.katex .katex-sizing.reset-size1.size7{font-size:2.4em}.katex .fontsize-ensurer.reset-size1.size8,.katex .katex-sizing.reset-size1.size8{font-size:2.88em}.katex .fontsize-ensurer.reset-size1.size9,.katex .katex-sizing.reset-size1.size9{font-size:3.456em}.katex .fontsize-ensurer.reset-size1.size10,.katex .katex-sizing.reset-size1.size10{font-size:4.148em}.katex .fontsize-ensurer.reset-size1.size11,.katex .katex-sizing.reset-size1.size11{font-size:4.976em}.katex .fontsize-ensurer.reset-size2.size1,.katex .katex-sizing.reset-size2.size1{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size2.size2,.katex .katex-sizing.reset-size2.size2{font-size:1em}.katex .fontsize-ensurer.reset-size2.size3,.katex .katex-sizing.reset-size2.size3{font-size:1.1666666667em}.katex .fontsize-ensurer.reset-size2.size4,.katex .katex-sizing.reset-size2.size4{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size2.size5,.katex .katex-sizing.reset-size2.size5{font-size:1.5em}.katex .fontsize-ensurer.reset-size2.size6,.katex .katex-sizing.reset-size2.size6{font-size:1.6666666667em}.katex .fontsize-ensurer.reset-size2.size7,.katex .katex-sizing.reset-size2.size7{font-size:2em}.katex .fontsize-ensurer.reset-size2.size8,.katex .katex-sizing.reset-size2.size8{font-size:2.4em}.katex .fontsize-ensurer.reset-size2.size9,.katex .katex-sizing.reset-size2.size9{font-size:2.88em}.katex .fontsize-ensurer.reset-size2.size10,.katex .katex-sizing.reset-size2.size10{font-size:3.4566666667em}.katex .fontsize-ensurer.reset-size2.size11,.katex .katex-sizing.reset-size2.size11{font-size:4.1466666667em}.katex .fontsize-ensurer.reset-size3.size1,.katex .katex-sizing.reset-size3.size1{font-size:.7142857143em}.katex .fontsize-ensurer.reset-size3.size2,.katex .katex-sizing.reset-size3.size2{font-size:.8571428571em}.katex .fontsize-ensurer.reset-size3.size3,.katex .katex-sizing.reset-size3.size3{font-size:1em}.katex .fontsize-ensurer.reset-size3.size4,.katex .katex-sizing.reset-size3.size4{font-size:1.1428571429em}.katex .fontsize-ensurer.reset-size3.size5,.katex .katex-sizing.reset-size3.size5{font-size:1.2857142857em}.katex .fontsize-ensurer.reset-size3.size6,.katex .katex-sizing.reset-size3.size6{font-size:1.4285714286em}.katex .fontsize-ensurer.reset-size3.size7,.katex .katex-sizing.reset-size3.size7{font-size:1.7142857143em}.katex .fontsize-ensurer.reset-size3.size8,.katex .katex-sizing.reset-size3.size8{font-size:2.0571428571em}.katex .fontsize-ensurer.reset-size3.size9,.katex .katex-sizing.reset-size3.size9{font-size:2.4685714286em}.katex .fontsize-ensurer.reset-size3.size10,.katex .katex-sizing.reset-size3.size10{font-size:2.9628571429em}.katex .fontsize-ensurer.reset-size3.size11,.katex .katex-sizing.reset-size3.size11{font-size:3.5542857143em}.katex .fontsize-ensurer.reset-size4.size1,.katex .katex-sizing.reset-size4.size1{font-size:.625em}.katex .fontsize-ensurer.reset-size4.size2,.katex .katex-sizing.reset-size4.size2{font-size:.75em}.katex .fontsize-ensurer.reset-size4.size3,.katex .katex-sizing.reset-size4.size3{font-size:.875em}.katex .fontsize-ensurer.reset-size4.size4,.katex .katex-sizing.reset-size4.size4{font-size:1em}.katex .fontsize-ensurer.reset-size4.size5,.katex .katex-sizing.reset-size4.size5{font-size:1.125em}.katex .fontsize-ensurer.reset-size4.size6,.katex .katex-sizing.reset-size4.size6{font-size:1.25em}.katex .fontsize-ensurer.reset-size4.size7,.katex .katex-sizing.reset-size4.size7{font-size:1.5em}.katex .fontsize-ensurer.reset-size4.size8,.katex .katex-sizing.reset-size4.size8{font-size:1.8em}.katex .fontsize-ensurer.reset-size4.size9,.katex .katex-sizing.reset-size4.size9{font-size:2.16em}.katex .fontsize-ensurer.reset-size4.size10,.katex .katex-sizing.reset-size4.size10{font-size:2.5925em}.katex .fontsize-ensurer.reset-size4.size11,.katex .katex-sizing.reset-size4.size11{font-size:3.11em}.katex .fontsize-ensurer.reset-size5.size1,.katex .katex-sizing.reset-size5.size1{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size5.size2,.katex .katex-sizing.reset-size5.size2{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size5.size3,.katex .katex-sizing.reset-size5.size3{font-size:.7777777778em}.katex .fontsize-ensurer.reset-size5.size4,.katex .katex-sizing.reset-size5.size4{font-size:.8888888889em}.katex .fontsize-ensurer.reset-size5.size5,.katex .katex-sizing.reset-size5.size5{font-size:1em}.katex .fontsize-ensurer.reset-size5.size6,.katex .katex-sizing.reset-size5.size6{font-size:1.1111111111em}.katex .fontsize-ensurer.reset-size5.size7,.katex .katex-sizing.reset-size5.size7{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size5.size8,.katex .katex-sizing.reset-size5.size8{font-size:1.6em}.katex .fontsize-ensurer.reset-size5.size9,.katex .katex-sizing.reset-size5.size9{font-size:1.92em}.katex .fontsize-ensurer.reset-size5.size10,.katex .katex-sizing.reset-size5.size10{font-size:2.3044444444em}.katex .fontsize-ensurer.reset-size5.size11,.katex .katex-sizing.reset-size5.size11{font-size:2.7644444444em}.katex .fontsize-ensurer.reset-size6.size1,.katex .katex-sizing.reset-size6.size1{font-size:.5em}.katex .fontsize-ensurer.reset-size6.size2,.katex .katex-sizing.reset-size6.size2{font-size:.6em}.katex .fontsize-ensurer.reset-size6.size3,.katex .katex-sizing.reset-size6.size3{font-size:.7em}.katex .fontsize-ensurer.reset-size6.size4,.katex .katex-sizing.reset-size6.size4{font-size:.8em}.katex .fontsize-ensurer.reset-size6.size5,.katex .katex-sizing.reset-size6.size5{font-size:.9em}.katex .fontsize-ensurer.reset-size6.size6,.katex .katex-sizing.reset-size6.size6{font-size:1em}.katex .fontsize-ensurer.reset-size6.size7,.katex .katex-sizing.reset-size6.size7{font-size:1.2em}.katex .fontsize-ensurer.reset-size6.size8,.katex .katex-sizing.reset-size6.size8{font-size:1.44em}.katex .fontsize-ensurer.reset-size6.size9,.katex .katex-sizing.reset-size6.size9{font-size:1.728em}.katex .fontsize-ensurer.reset-size6.size10,.katex .katex-sizing.reset-size6.size10{font-size:2.074em}.katex .fontsize-ensurer.reset-size6.size11,.katex .katex-sizing.reset-size6.size11{font-size:2.488em}.katex .fontsize-ensurer.reset-size7.size1,.katex .katex-sizing.reset-size7.size1{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size7.size2,.katex .katex-sizing.reset-size7.size2{font-size:.5em}.katex .fontsize-ensurer.reset-size7.size3,.katex .katex-sizing.reset-size7.size3{font-size:.5833333333em}.katex .fontsize-ensurer.reset-size7.size4,.katex .katex-sizing.reset-size7.size4{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size7.size5,.katex .katex-sizing.reset-size7.size5{font-size:.75em}.katex .fontsize-ensurer.reset-size7.size6,.katex .katex-sizing.reset-size7.size6{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size7.size7,.katex .katex-sizing.reset-size7.size7{font-size:1em}.katex .fontsize-ensurer.reset-size7.size8,.katex .katex-sizing.reset-size7.size8{font-size:1.2em}.katex .fontsize-ensurer.reset-size7.size9,.katex .katex-sizing.reset-size7.size9{font-size:1.44em}.katex .fontsize-ensurer.reset-size7.size10,.katex .katex-sizing.reset-size7.size10{font-size:1.7283333333em}.katex .fontsize-ensurer.reset-size7.size11,.katex .katex-sizing.reset-size7.size11{font-size:2.0733333333em}.katex .fontsize-ensurer.reset-size8.size1,.katex .katex-sizing.reset-size8.size1{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size8.size2,.katex .katex-sizing.reset-size8.size2{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size8.size3,.katex .katex-sizing.reset-size8.size3{font-size:.4861111111em}.katex .fontsize-ensurer.reset-size8.size4,.katex .katex-sizing.reset-size8.size4{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size8.size5,.katex .katex-sizing.reset-size8.size5{font-size:.625em}.katex .fontsize-ensurer.reset-size8.size6,.katex .katex-sizing.reset-size8.size6{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size8.size7,.katex .katex-sizing.reset-size8.size7{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size8.size8,.katex .katex-sizing.reset-size8.size8{font-size:1em}.katex .fontsize-ensurer.reset-size8.size9,.katex .katex-sizing.reset-size8.size9{font-size:1.2em}.katex .fontsize-ensurer.reset-size8.size10,.katex .katex-sizing.reset-size8.size10{font-size:1.4402777778em}.katex .fontsize-ensurer.reset-size8.size11,.katex .katex-sizing.reset-size8.size11{font-size:1.7277777778em}.katex .fontsize-ensurer.reset-size9.size1,.katex .katex-sizing.reset-size9.size1{font-size:.2893518519em}.katex .fontsize-ensurer.reset-size9.size2,.katex .katex-sizing.reset-size9.size2{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size9.size3,.katex .katex-sizing.reset-size9.size3{font-size:.4050925926em}.katex .fontsize-ensurer.reset-size9.size4,.katex .katex-sizing.reset-size9.size4{font-size:.462962963em}.katex .fontsize-ensurer.reset-size9.size5,.katex .katex-sizing.reset-size9.size5{font-size:.5208333333em}.katex .fontsize-ensurer.reset-size9.size6,.katex .katex-sizing.reset-size9.size6{font-size:.5787037037em}.katex .fontsize-ensurer.reset-size9.size7,.katex .katex-sizing.reset-size9.size7{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size9.size8,.katex .katex-sizing.reset-size9.size8{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size9.size9,.katex .katex-sizing.reset-size9.size9{font-size:1em}.katex .fontsize-ensurer.reset-size9.size10,.katex .katex-sizing.reset-size9.size10{font-size:1.2002314815em}.katex .fontsize-ensurer.reset-size9.size11,.katex .katex-sizing.reset-size9.size11{font-size:1.4398148148em}.katex .fontsize-ensurer.reset-size10.size1,.katex .katex-sizing.reset-size10.size1{font-size:.2410800386em}.katex .fontsize-ensurer.reset-size10.size2,.katex .katex-sizing.reset-size10.size2{font-size:.2892960463em}.katex .fontsize-ensurer.reset-size10.size3,.katex .katex-sizing.reset-size10.size3{font-size:.337512054em}.katex .fontsize-ensurer.reset-size10.size4,.katex .katex-sizing.reset-size10.size4{font-size:.3857280617em}.katex .fontsize-ensurer.reset-size10.size5,.katex .katex-sizing.reset-size10.size5{font-size:.4339440694em}.katex .fontsize-ensurer.reset-size10.size6,.katex .katex-sizing.reset-size10.size6{font-size:.4821600771em}.katex .fontsize-ensurer.reset-size10.size7,.katex .katex-sizing.reset-size10.size7{font-size:.5785920926em}.katex .fontsize-ensurer.reset-size10.size8,.katex .katex-sizing.reset-size10.size8{font-size:.6943105111em}.katex .fontsize-ensurer.reset-size10.size9,.katex .katex-sizing.reset-size10.size9{font-size:.8331726133em}.katex .fontsize-ensurer.reset-size10.size10,.katex .katex-sizing.reset-size10.size10{font-size:1em}.katex .fontsize-ensurer.reset-size10.size11,.katex .katex-sizing.reset-size10.size11{font-size:1.1996142719em}.katex .fontsize-ensurer.reset-size11.size1,.katex .katex-sizing.reset-size11.size1{font-size:.2009646302em}.katex .fontsize-ensurer.reset-size11.size2,.katex .katex-sizing.reset-size11.size2{font-size:.2411575563em}.katex .fontsize-ensurer.reset-size11.size3,.katex .katex-sizing.reset-size11.size3{font-size:.2813504823em}.katex .fontsize-ensurer.reset-size11.size4,.katex .katex-sizing.reset-size11.size4{font-size:.3215434084em}.katex .fontsize-ensurer.reset-size11.size5,.katex .katex-sizing.reset-size11.size5{font-size:.3617363344em}.katex .fontsize-ensurer.reset-size11.size6,.katex .katex-sizing.reset-size11.size6{font-size:.4019292605em}.katex .fontsize-ensurer.reset-size11.size7,.katex .katex-sizing.reset-size11.size7{font-size:.4823151125em}.katex .fontsize-ensurer.reset-size11.size8,.katex .katex-sizing.reset-size11.size8{font-size:.578778135em}.katex .fontsize-ensurer.reset-size11.size9,.katex .katex-sizing.reset-size11.size9{font-size:.6945337621em}.katex .fontsize-ensurer.reset-size11.size10,.katex .katex-sizing.reset-size11.size10{font-size:.8336012862em}.katex .fontsize-ensurer.reset-size11.size11,.katex .katex-sizing.reset-size11.size11{font-size:1em}.katex .delimsizing.size1{font-family:KaTeX_Size1}.katex .delimsizing.size2{font-family:KaTeX_Size2}.katex .delimsizing.size3{font-family:KaTeX_Size3}.katex .delimsizing.size4{font-family:KaTeX_Size4}.katex .delimsizing.mult .delim-size1>span{font-family:KaTeX_Size1}.katex .delimsizing.mult .delim-size4>span{font-family:KaTeX_Size4}.katex .nulldelimiter{display:inline-block;width:.12em}.katex .delimcenter,.katex .op-symbol{position:relative}.katex .op-symbol.small-op{font-family:KaTeX_Size1}.katex .op-symbol.large-op{font-family:KaTeX_Size2}.katex .katex-accent>.vlist-t,.katex .op-limits>.vlist-t{text-align:center}.katex .katex-accent .accent-body{position:relative}.katex .katex-accent .accent-body:not(.accent-full){width:0}.katex .katex-overlay{display:block}.katex .mtable .vertical-separator{display:inline-block;min-width:1px}.katex .mtable .arraycolsep{display:inline-block}.katex .mtable .col-align-c>.vlist-t{text-align:center}.katex .mtable .col-align-l>.vlist-t{text-align:left}.katex .mtable .col-align-r>.vlist-t{text-align:right}.katex .svg-align{text-align:left}.katex svg{fill:currentColor;stroke:currentColor;display:block;height:inherit;position:absolute;width:100%}.katex svg path{stroke:none}.katex svg{fill-rule:nonzero;fill-opacity:1;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1}.katex img{border-style:none;max-height:none;max-width:none;min-height:0;min-width:0}.katex .katex-stretchy{display:block;overflow:hidden;position:relative;width:100%}.katex .katex-stretchy:after,.katex .katex-stretchy:before{content:""}.katex .hide-tail{overflow:hidden;position:relative;width:100%}.katex .halfarrow-left{left:0;overflow:hidden;position:absolute;width:50.2%}.katex .halfarrow-right{overflow:hidden;position:absolute;right:0;width:50.2%}.katex .brace-left{left:0;overflow:hidden;position:absolute;width:25.1%}.katex .brace-center{left:25%;overflow:hidden;position:absolute;width:50%}.katex .brace-right{overflow:hidden;position:absolute;right:0;width:25.1%}.katex .x-arrow-pad{padding:0 .5em}.katex .cd-arrow-pad{padding:0 .55556em 0 .27778em}.katex .mover,.katex .munder,.katex .x-arrow{text-align:center}.katex .boxpad{padding:0 .3em}.katex .fbox,.katex .fcolorbox{border:.04em solid;box-sizing:border-box}.katex .cancel-pad{padding:0 .2em}.katex .cancel-lap{margin-left:-.2em;margin-right:-.2em}.katex .katex-sout{border-bottom-style:solid;border-bottom-width:.08em}.katex .angl{border-right:.049em solid;border-top:.049em solid;box-sizing:border-box;margin-right:.03889em}.katex .anglpad{padding:0 .03889em}.katex .eqn-num:before{content:"(" counter(katexEqnNo) ")";counter-increment:katexEqnNo}.katex .mml-eqn-num:before{content:"(" counter(mmlEqnNo) ")";counter-increment:mmlEqnNo}.katex .mtr-glue{width:50%}.katex .cd-vert-arrow{display:inline-block;position:relative}.katex .cd-label-left{display:inline-block;position:absolute;right:calc(50% + .3em);text-align:left}.katex .cd-label-right{display:inline-block;left:calc(50% + .3em);position:absolute;text-align:right}.katex-display{display:block;margin:1em 0;text-align:center}.katex-display>.katex{display:block;text-align:center;white-space:nowrap}.katex-display>.katex>.katex-html{display:block;position:relative}.katex-display>.katex>.katex-html>.katex-tag{position:absolute;right:0}.katex-display.leqno>.katex>.katex-html>.katex-tag{left:0;right:auto}.katex-display.fleqn>.katex{padding-left:2em;text-align:left}body{counter-reset:katexEqnNo mmlEqnNo}
+
+.formula[data-tex] .katex{font-size:1.06em}
+.formula[data-display="true"] .katex-display>.katex{white-space:nowrap}
+@media(max-width:600px){.formula[data-display="true"] .katex{font-size:.96em}}
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要內容</a>
+  <header class="hero">
+    <p class="eyebrow">互動實驗室</p>
+    <h1>RCS 與雷達方程式：回波到底有多弱？</h1>
+    <p class="lead">把雷達鏈路拆成去程、散射與回程，操作功率、增益、頻率、距離、角度與 RCS，辨認真正支配偵測餘裕的參數。</p>
+    <div class="hero-chips" aria-label="教材特色"><span class="chip">先直覺，再公式</span><span class="chip">即時圖表</span><span class="chip">六題自我檢查</span><span class="chip">單檔離線可用</span></div>
+  </header>
+  
+  <nav class="top-nav" aria-label="頁內導覽"><div class="inner">
+    <a href="#intuition">生活直覺</a><a href="#lab">互動實驗</a><a href="#equations">雷達方程式</a><a href="#sensitivity">靈敏度</a><a href="#quiz">自我檢查</a>
+  </div></nav>
+  <main id="main">
+    <section id="intuition" aria-labelledby="intuitionTitle">
+      <div class="section-head"><span class="kicker">01 · 生活錨點</span><h2 id="intuitionTitle">手電筒照目標一次；雷達要走去又走回</h2><p>雷達波先從天線擴散到目標，目標只把其中一部分散射回來，回波再擴散一次。因此距離的影響不是 R⁻²，而是更快的 R⁻⁴。</p></div>
+      <div class="cards">
+        <article class="card"><div class="icon" aria-hidden="true">🚗</div><h3>同一輛車，角度不同回波不同</h3><p>車頭、側面與斜角的散射中心不一樣。RCS 是電磁散射等效量，不是拿尺量出的外觀面積。</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">📡</div><h3>天線增益在去程與回程都出現</h3><p>單基地雷達使用同一位置收發，方程中有 G²；天線增益每增加 3 dB，理想回波可增加約 6 dB。</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">⏱️</div><h3>距離也藏在往返時間裡</h3><p>量到回波延遲，就能用 2R/c 反推距離。距離愈遠，回波更晚也更弱。</p></article>
+      </div>
+    </section>
+
+    <section id="lab" aria-labelledby="labTitle">
+      <div class="section-head"><span class="kicker">02 · 動手試試看</span><h2 id="labTitle">RCS 與單基地雷達方程式實驗</h2><p>先把距離加倍，再逐一調整功率、增益、頻率與 RCS。不要一次改很多旋鈕，才能看清每個指數的力量。</p></div>
+      <div class="lab-grid">
+        <form class="panel controls" aria-label="雷達與目標參數控制">
+          <div class="control"><label for="target">目標角度模型</label><select id="target"><option value="sphere">球體（角度近似不變）</option><option value="plate">平板（鏡面反射尖峰示意）</option><option value="cylinder">圓柱體（側向較強示意）</option><option value="complex">起伏目標（多散射中心示意）</option></select></div>
+          <div class="control"><div class="control-top"><label for="pt">發射功率 Pₜ</label><output id="ptOut" for="pt">30 dBm</output></div><input id="pt" type="range" min="-10" max="60" step="1" value="30"></div>
+          <div class="control"><div class="control-top"><label for="gain">天線增益 G</label><output id="gainOut" for="gain">25 dBi</output></div><input id="gain" type="range" min="0" max="45" step="0.5" value="25"></div>
+          <div class="control"><div class="control-top"><label for="frequency">頻率 f</label><output id="frequencyOut" for="frequency">10.0 GHz</output></div><input id="frequency" type="range" min="1" max="94" step="0.5" value="10"></div>
+          <div class="control"><div class="control-top"><label for="rangeExp">距離 R（對數刻度）</label><output id="rangeOut" for="rangeExp">1.00 km</output></div><input id="rangeExp" type="range" min="-1" max="2" step="0.01" value="0"></div>
+          <div class="control"><div class="control-top"><label for="sigmaExp">參考 RCS σ₀（對數刻度）</label><output id="sigmaOut" for="sigmaExp">1.000 m²</output></div><input id="sigmaExp" type="range" min="-3" max="3" step="0.02" value="0"></div>
+          <div class="control"><div class="control-top"><label for="aspect">觀察方位角</label><output id="aspectOut" for="aspect">20°</output></div><input id="aspect" type="range" min="0" max="180" step="1" value="20"></div>
+          <div class="control"><div class="control-top"><label for="loss">系統損耗 L</label><output id="lossOut" for="loss">6.0 dB</output></div><input id="loss" type="range" min="0" max="30" step="0.5" value="6"></div>
+          <div class="control"><div class="control-top"><label for="threshold">接收門檻</label><output id="thresholdOut" for="threshold">−100 dBm</output></div><input id="threshold" type="range" min="-140" max="-60" step="1" value="-100"></div>
+          <div class="button-row"><button class="secondary" id="resetLab" type="button">回到建議起點</button></div>
+        </form>
+
+        <div class="visual-stack">
+          <div class="panel canvas-card"><canvas id="rcsCanvas" width="1000" height="470" tabindex="0" aria-label="目標參考 RCS 隨方位角變化的正規化示意圖。" aria-describedby="rcsHelp">RCS 隨觀察角度改變。</canvas><p class="canvas-note" id="rcsHelp">鍵盤提示：聚焦角度圖後，用左右鍵改變觀察方位角。形狀是教學模型，不代表特定真實目標。</p></div>
+          <div class="panel canvas-card"><canvas id="rangeCanvas" width="1000" height="430" tabindex="0" aria-label="接收回波功率隨距離的對數曲線，並顯示接收門檻。" aria-describedby="rangeHelp">接收功率依距離四次方快速下降。</canvas><p class="canvas-note" id="rangeHelp">鍵盤提示：聚焦距離圖後，用左右鍵在對數刻度上調整距離。</p></div>
+          <div class="metrics" aria-label="即時計算結果">
+            <div class="metric"><small>波長 λ</small><strong id="lambdaMetric">—</strong></div>
+            <div class="metric"><small>有效 RCS σ</small><strong id="sigmaMetric">—</strong></div>
+            <div class="metric"><small>回波功率</small><strong id="powerMetric">—</strong></div>
+            <div class="metric"><small>回波功率（瓦）</small><strong id="wattMetric">—</strong></div>
+            <div class="metric"><small>相對門檻餘裕</small><strong id="marginMetric">—</strong></div>
+            <div class="metric"><small>往返時間 2R/c</small><strong id="delayMetric">—</strong></div>
+          </div>
+          <div class="live-note" id="liveInterpretation" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="equations" aria-labelledby="equationTitle">
+      <div class="section-head"><span class="kicker">03 · 數學急救包</span><h2 id="equationTitle">先辨識每個量的單位，再代入</h2><p>本頁採理想單基地雷達方程式：收發天線共置、遠場、自由空間、目標以等效 RCS 表示。所有線性量代入 SI 單位。</p></div>
+      <div class="formula-grid">
+        <article class="formula-box"><h3>① RCS 的遠場定義</h3><span class="formula" data-tex="\sigma=\lim_{R\to\infty}4\pi R^2\frac{|E_s|^2}{|E_i|^2},\qquad [\sigma]=\mathrm{m^2}" data-display="true" tabindex="0">σ=lim 4πR²|Es|²/|Ei|²，單位 m²</span><p class="why">σ 是表徵回波強度的等效雷達截面積；可能大於、等於或小於目標幾何面積。</p></article>
+        <article class="formula-box"><h3>② 單基地雷達方程式</h3><span class="formula" data-tex="P_r=\frac{P_tG^2\lambda^2\sigma}{(4\pi)^3R^4L},\quad [P_t]=[P_r]=\mathrm W,\ [R]=[\lambda]=\mathrm m,\ [\sigma]=\mathrm{m^2}" data-display="true" tabindex="0">Pr=PtG²λ²σ/[(4π)³R⁴L]</span><p class="why">Pₜ、G、σ、L 要用線性值；只有做 dB 鏈路預算時才使用 dBm、dBi 與 dB。</p></article>
+        <article class="formula-box"><h3>③ 距離加倍的代價</h3><span class="formula" data-tex="\frac{P_r(2R)}{P_r(R)}=\left(\frac{R}{2R}\right)^4=\frac1{16},\qquad 10\log_{10}\!\frac1{16}=-12.04\ \mathrm{dB}" data-display="true" tabindex="0">距離加倍，功率剩 1/16，也就是 −12.04 dB</span><p class="why">去程與回程各一次球面擴散，所以總效果是 R⁻⁴。</p></article>
+        <article class="formula-box"><h3>④ dB 靈敏度</h3><span class="formula" data-tex="\Delta P_r=\Delta P_t+2\Delta G+10\log_{10}\!\frac{\sigma_2}{\sigma_1}-40\log_{10}\!\frac{R_2}{R_1}-\Delta L" data-display="true" tabindex="0">ΔPr=ΔPt+2ΔG+RCS項−40log距離比−ΔL</span><p class="why">單基地同一副天線的 G 同時影響發射照射與接收孔徑，因此係數是 2。</p></article>
+        <article class="formula-box"><h3>⑤ 頻率條件要說清楚</h3><span class="formula" data-tex="\lambda=\frac cf,\qquad P_r\propto\lambda^2\quad\text{（固定 }G,\sigma,P_t,R,L\text{）}" data-display="true" tabindex="0">λ=c/f；固定其他量時 Pr∝λ²</span><p class="why">若頻率加倍且 G、σ 都真的固定，方程給出 −6.02 dB；真實天線增益與目標 RCS 常會隨頻率改變。</p></article>
+        <article class="formula-box"><h3>⑥ 往返延遲</h3><span class="formula" data-tex="t_{\mathrm{rt}}=\frac{2R}{c},\qquad [t_{\mathrm{rt}}]=\mathrm s,\ [R]=\mathrm m" data-display="true" tabindex="0">往返時間 trt=2R/c，單位 s</span><p class="why">1 km 目標的理想往返時間約 6.67 μs；距離估測就是把時間乘回光速再除以 2。</p></article>
+      </div>
+    </section>
+
+    <section id="sensitivity" aria-labelledby="sensitivityTitle">
+      <div class="section-head"><span class="kicker">04 · 工程判讀</span><h2 id="sensitivityTitle">哪個旋鈕最敏感？</h2></div>
+      <table class="compare"><thead><tr><th>只改一個量</th><th>理想回波變化</th><th>判讀提醒</th></tr></thead><tbody>
+        <tr><td>Pₜ 增加 3 dB</td><td>Pᵣ 增加 3 dB</td><td>功率一比一進入鏈路，但要考慮硬體、法規與熱設計。</td></tr>
+        <tr><td>單基地 G 增加 3 dB</td><td>Pᵣ 增加約 6 dB</td><td>同一增益在照射與接收各作用一次。</td></tr>
+        <tr><td>σ 增加 10 倍</td><td>Pᵣ 增加 10 dB</td><td>RCS 常隨角度、頻率、材料與極化改變。</td></tr>
+        <tr><td>R 增加 2 倍</td><td>Pᵣ 降低約 12.04 dB</td><td>R⁻⁴ 是雷達偵測距離的關鍵限制。</td></tr>
+        <tr><td>f 增加 2 倍</td><td>固定 G、σ 時降低約 6.02 dB</td><td>真實系統不能忽略 G 與 σ 的頻率相依性。</td></tr>
+      </tbody></table>
+
+      <div class="section-head"><span class="kicker">常見迷思</span><h2>你是不是這樣想的？</h2></div>
+      <div class="myths">
+        <article class="myth"><h3><b>迷思：</b>RCS 就是目標正面面積</h3><p>RCS 是散射等效量。平板在鏡面反射方向可能有很大回波，換個角度又可能急遽下降。</p></article>
+        <article class="myth"><h3><b>迷思：</b>回波只走一次距離</h3><p>雷達要從天線到目標，再從目標回天線；兩次擴散形成 R⁻⁴。</p></article>
+        <article class="myth"><h3><b>迷思：</b>提高頻率一定讓回波更強</h3><p>固定 G、σ 時，λ² 項反而降低；若固定實體孔徑，增益又可能上升。條件必須說完整。</p></article>
+        <article class="myth"><h3><b>迷思：</b>一個 σ 可以代表所有姿態</h3><p>真實目標的散射中心會隨方位、俯仰、頻率與極化改變，通常需要角度與頻率掃描。</p></article>
+      </div>
+      <div class="software"><h3>延伸實作：從等效 σ 走向電磁散射</h3><p>鼓勵使用 Ansys HFSS、HFSS SBR+、CST 或其他可信模擬工具建立 PEC 球、平板與實際結構，設定平面波激發並掃描角度、頻率與極化；再把模擬 σ 代回雷達方程式，形成完整的工程驗證流程。</p></div>
+    </section>
+
+    <section id="quiz" aria-labelledby="quizTitle">
+      <div class="section-head"><span class="kicker">05 · 即時回饋</span><h2 id="quizTitle">六題自我檢查</h2><p>先判斷「哪個量以幾次方出現」，再做 dB 換算。</p></div>
+      <div class="quiz-top"><div class="score" id="quizScore" role="status" aria-live="polite">已作答 0／6｜答對 0</div><button class="secondary" id="resetQuiz" type="button">重新作答</button></div>
+      <div class="quiz-grid" id="quizGrid"></div>
+    </section>
+    <p class="footer-note">模型邊界：本頁採理想單基地遠場方程與簡化角度模型。實際雷達還要納入雜波、雜訊、處理增益、波形、目標起伏與偵測機率。</p>
+  </main>
+  
+<!-- ANTENNA_LATEX_JS_BEGIN: self-contained KaTeX 0.18.4, no CDN -->
+<script src="../vendor/katex/katex.min.js"></script>
+<script id="antenna-latex-renderer">(function(){
+  'use strict';
+  function pending(root){
+    var nodes=[];
+    if(root&&root.matches&&root.matches('.formula[data-tex]:not([data-katex-rendered="true"])'))nodes.push(root);
+    if(root&&root.querySelectorAll)root.querySelectorAll('.formula[data-tex]:not([data-katex-rendered="true"])').forEach(function(node){nodes.push(node);});
+    return nodes;
+  }
+  window.renderAntennaLatex=function(root){
+    if(!window.katex)return;
+    pending(root||document).forEach(function(node){
+      try{
+        window.katex.render(node.getAttribute('data-tex')||'',node,{displayMode:node.getAttribute('data-display')==='true',throwOnError:true,strict:'error',trust:false,output:'htmlAndMathml'});
+        node.setAttribute('data-katex-rendered','true');
+      }catch(error){node.removeAttribute('data-katex-rendered');node.setAttribute('data-katex-error',error.message);console.error('LaTeX render failed',error);}
+    });
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    window.renderAntennaLatex(document);
+    var queued=false;
+    new MutationObserver(function(){
+      if(queued)return;queued=true;
+      requestAnimationFrame(function(){queued=false;window.renderAntennaLatex(document);});
+    }).observe(document.body,{childList:true,subtree:true});
+  });
+})();</script>
+<!-- ANTENNA_LATEX_JS_END -->
+  <script>(function(){
+    'use strict';
+    var C=299792458,STORE='isu-rp-rcs-radar-lab-v1';
+    var defaults={target:'sphere',pt:30,gain:25,frequency:10,rangeExp:0,sigmaExp:0,aspect:20,loss:6,threshold:-100};
+    var state=Object.assign({},defaults),numeric=['pt','gain','frequency','rangeExp','sigmaExp','aspect','loss','threshold'];
+    function byId(id){return document.getElementById(id)}function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function fmt(v,n){return Number(v).toFixed(n)}
+    function load(){try{var x=JSON.parse(localStorage.getItem(STORE)||'null');if(x&&typeof x==='object')Object.keys(defaults).forEach(function(k){if(typeof x[k]===typeof defaults[k])state[k]=x[k]})}catch(_){}}
+    function save(){try{localStorage.setItem(STORE,JSON.stringify(state))}catch(_){}}
+    function sync(){byId('target').value=state.target;numeric.forEach(function(id){byId(id).value=state[id]})}
+    function aspectFactor(angle,target){var r=angle*Math.PI/180,c=Math.abs(Math.cos(r)),s=Math.abs(Math.sin(r));if(target==='sphere')return 1;if(target==='plate')return .01+.99*Math.pow(c,8);if(target==='cylinder')return .12+.88*s*s;return .06+.50*Math.pow(Math.abs(Math.cos(2*r)),6)+.44*Math.pow(Math.abs(Math.sin(3*r)),4)}
+    function calculate(rangeKm){var f=state.frequency*1e9,lambda=C/f,r=rangeKm*1000,ptW=Math.pow(10,(state.pt-30)/10),g=Math.pow(10,state.gain/10),sigma0=Math.pow(10,state.sigmaExp),sigma=sigma0*aspectFactor(state.aspect,state.target),lossLin=Math.pow(10,state.loss/10);var pr=ptW*g*g*lambda*lambda*sigma/(Math.pow(4*Math.PI,3)*Math.pow(r,4)*lossLin),dbm=10*Math.log10(pr*1000);return{lambda:lambda,rangeKm:rangeKm,sigma0:sigma0,sigma:sigma,pr:pr,dbm:dbm,margin:dbm-state.threshold,delay:2*r/C*1e6}}
+    function sci(v){if(v===0)return'0';var e=Math.floor(Math.log10(Math.abs(v))),m=v/Math.pow(10,e);return fmt(m,3)+' × 10^'+e+' W'}
+    function setOutputs(z){var range=Math.pow(10,state.rangeExp),sigma0=Math.pow(10,state.sigmaExp);byId('ptOut').textContent=fmt(state.pt,0)+' dBm';byId('gainOut').textContent=fmt(state.gain,1)+' dBi';byId('frequencyOut').textContent=fmt(state.frequency,1)+' GHz';byId('rangeOut').textContent=fmt(range,range<1?2:range<10?2:1)+' km';byId('sigmaOut').textContent=(sigma0<.01?sigma0.toExponential(2):fmt(sigma0,sigma0<10?3:1))+' m²';byId('aspectOut').textContent=fmt(state.aspect,0)+'°';byId('lossOut').textContent=fmt(state.loss,1)+' dB';byId('thresholdOut').textContent=fmt(state.threshold,0).replace('-','−')+' dBm';byId('lambdaMetric').textContent=fmt(z.lambda,4)+' m';byId('sigmaMetric').textContent=(z.sigma<.01?z.sigma.toExponential(2):fmt(z.sigma,z.sigma<10?3:1))+' m²';byId('powerMetric').textContent=fmt(z.dbm,2)+' dBm';byId('wattMetric').textContent=sci(z.pr);byId('marginMetric').textContent=(z.margin>=0?'+':'')+fmt(z.margin,2)+' dB';byId('delayMetric').textContent=fmt(z.delay,2)+' μs';var verdict=z.margin>=10?'門檻上方仍有明顯餘裕':z.margin>=0?'剛好高於門檻，對損耗很敏感':'低於目前設定的接收門檻';var targetText={sphere:'球體模型的角度因數固定為 1。',plate:'平板模型在鏡面反射方向形成尖峰，偏離鏡面反射方向後迅速降低。',cylinder:'圓柱體模型以側向回波較強作示意。',complex:'起伏目標用多個角度諧波表示多散射中心。'}[state.target];byId('liveInterpretation').textContent=verdict+'；回波餘裕 '+(z.margin>=0?'+':'')+fmt(z.margin,2)+' dB。'+targetText+' 把距離加倍，觀察約 12 dB 的下降。'}
+    function canvasSpace(canvas,height){var rect=canvas.getBoundingClientRect(),w=Math.max(320,rect.width),h=w<620?height*.9:height,dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);var g=canvas.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g:g,w:w,h:h}}
+    function line(g,x1,y1,x2,y2,color,width,dash){g.save();g.strokeStyle=color;g.lineWidth=width||2;g.setLineDash(dash||[]);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.restore()}
+    function label(g,text,x,y,color){g.save();g.font='700 13px system-ui';var m=g.measureText(text).width;g.fillStyle='rgba(7,29,49,.9)';g.fillRect(x-5,y-17,m+10,22);g.fillStyle=color||'#eaf8ff';g.fillText(text,x,y);g.restore()}
+    function drawRcs(){var c=byId('rcsCanvas'),s=canvasSpace(c,470),g=s.g,w=s.w,h=s.h,cx=w*.5,cy=h*.54,rad=Math.min(w*.38,h*.39);g.fillStyle='#071d31';g.fillRect(0,0,w,h);g.fillStyle='#dcecf8';g.font='800 15px system-ui';g.fillText('正規化角度響應（教學示意）',28,30);for(var q=.25;q<=1;q+=.25){g.strokeStyle='#24445c';g.lineWidth=1;g.beginPath();g.arc(cx,cy,rad*q,0,Math.PI*2);g.stroke()}line(g,cx-rad-18,cy,cx+rad+18,cy,'#24445c',1);line(g,cx,cy-rad-18,cx,cy+rad+18,'#24445c',1);g.fillStyle='#87a5b8';g.font='12px system-ui';g.fillText('0°',cx+rad+8,cy+4);g.fillText('90°',cx-12,cy-rad-8);g.fillText('180°',cx-rad-46,cy+4);g.beginPath();for(var a=0;a<=360;a+=1){var rr=rad*Math.sqrt(aspectFactor(a,state.target)),x=cx+rr*Math.cos(a*Math.PI/180),y=cy-rr*Math.sin(a*Math.PI/180);if(a===0)g.moveTo(x,y);else g.lineTo(x,y)}g.closePath();g.fillStyle='rgba(57,198,187,.2)';g.fill();g.strokeStyle='#39c6bb';g.lineWidth=2.5;g.stroke();var ar=state.aspect*Math.PI/180,rr=rad*Math.sqrt(aspectFactor(state.aspect,state.target)),x=cx+rr*Math.cos(ar),y=cy-rr*Math.sin(ar);line(g,cx,cy,x,y,'#f7b84b',2,[6,4]);g.fillStyle='#f7b84b';g.beginPath();g.arc(x,y,6,0,Math.PI*2);g.fill();label(g,fmt(state.aspect,0)+'°',Math.min(w-58,x+10),Math.max(28,y-8),'#ffd88a')}
+    function drawRange(z){var c=byId('rangeCanvas'),s=canvasSpace(c,430),g=s.g,w=s.w,h=s.h,left=62,right=w-24,top=48,bottom=h-48,yMin=-190,yMax=-20;g.fillStyle='#071d31';g.fillRect(0,0,w,h);g.fillStyle='#dcecf8';g.font='800 15px system-ui';g.fillText('R⁻⁴ 距離曲線（對數距離）',28,27);function px(logR){return left+(logR+1)/3*(right-left)}function py(db){return bottom-(clamp(db,yMin,yMax)-yMin)/(yMax-yMin)*(bottom-top)}for(var db=-180;db<=-20;db+=20){var yy=py(db);line(g,left,yy,right,yy,'#1f4058',1);g.fillStyle='#87a5b8';g.font='12px system-ui';g.fillText(db+' dBm',7,yy+4)}[-1,0,1,2].forEach(function(x){var xx=px(x);line(g,xx,top,xx,bottom,'#15364e',1);g.fillStyle='#87a5b8';g.fillText(Math.pow(10,x)+' km',xx-18,bottom+20)});g.beginPath();for(var x=-1;x<=2;x+=.01){var y=calculate(Math.pow(10,x)).dbm;if(x===-1)g.moveTo(px(x),py(y));else g.lineTo(px(x),py(y))}g.strokeStyle='#39c6bb';g.lineWidth=2.6;g.stroke();var ty=py(state.threshold);line(g,left,ty,right,ty,'#f7b84b',2,[7,5]);label(g,'門檻 '+fmt(state.threshold,0)+' dBm',left+10,Math.max(top+18,ty-7),'#ffd88a');var cx=px(state.rangeExp),cy=py(z.dbm);line(g,cx,top,cx,bottom,'#fff',1,[4,5]);g.fillStyle='#fff';g.beginPath();g.arc(cx,cy,5,0,Math.PI*2);g.fill();label(g,fmt(z.rangeKm,z.rangeKm<10?2:1)+' km｜'+fmt(z.dbm,1)+' dBm',Math.min(cx+8,right-150),Math.max(top+38,cy-8),'#fff')}
+    function update(){var z=calculate(Math.pow(10,state.rangeExp));setOutputs(z);drawRcs();drawRange(z);save()}
+    function bind(){byId('target').addEventListener('change',function(){state.target=this.value;update()});numeric.forEach(function(id){byId(id).addEventListener('input',function(){state[id]=Number(this.value);update()})});byId('resetLab').addEventListener('click',function(){state=Object.assign({},defaults);sync();update()});byId('rcsCanvas').addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowRight'){state.aspect=clamp(state.aspect+(e.key==='ArrowRight'?1:-1),0,180);byId('aspect').value=state.aspect;e.preventDefault();update()}});byId('rangeCanvas').addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowRight'){state.rangeExp=clamp(Math.round((state.rangeExp+(e.key==='ArrowRight' ? 0.02 : -0.02))*100)/100,-1,2);byId('rangeExp').value=state.rangeExp;e.preventDefault();update()}});window.addEventListener('resize',update)}
+    var quiz=[
+      {level:'★ 基礎',bloom:'理解',q:'其他條件不變，單基地雷達距離加倍，回波功率約變成多少？',a:2,o:[['1/2（−3.01 dB）','這是功率減半，沒有反映去、回兩次擴散。'],['1/4（−6.02 dB）','1/R² 只像單程自由空間功率密度；雷達回波還要再走回來。'],['1/16（−12.04 dB）','正確。R⁻⁴ 使距離加倍後剩 2⁻⁴=1/16。'],['完全不變','距離是雷達方程式中四次方的關鍵量。']]},
+      {level:'★ 基礎',bloom:'理解',q:'RCS σ 的單位與物理意義何者正確？',a:1,o:[['瓦，代表目標發射功率','RCS 不代表目標主動發射功率。'],['m²，代表散射強度的等效截面','正確。它是電磁散射等效量，不必等於幾何面積。'],['公尺，代表目標長度','RCS 的因次是面積，不是單一長度。'],['無單位，代表反射係數','反射係數可無因次，但 RCS 具有 m² 單位。']]},
+      {level:'★★ 中等',bloom:'應用',q:'同一副單基地雷達天線的增益提高 3 dB，其他量固定，理想回波約提高多少？',a:3,o:[['0 dB','雷達方程式中明確含有 G²。'],['3 dB','你只算到去程或回程其中一次。'],['9 dB','G² 以 dB 表示時是 2ΔG，不是 3ΔG。'],['6 dB','正確。3 dB 在去程與接收各作用一次，總計約 6 dB。']]},
+      {level:'★ 基礎',bloom:'理解',q:'若目標 RCS 增加 10 倍，其他條件固定，回波功率如何變化？',a:0,o:[['增加 10 dB','正確。Pᵣ 與 σ 一次方成正比，10log₁₀10=10 dB。'],['增加 20 dB','20 dB 會對應振幅比 10；σ 在此直接進入功率比。'],['降低 10 dB','σ 增加會讓理想回波增強，方向相反。'],['完全不變','RCS 位於雷達方程式分子。']]},
+      {level:'★★ 中等',bloom:'分析',q:'頻率加倍時，為何不能只說回波一定增加或一定減少？',a:2,o:[['因為光速會任意改變','在同一傳播介質中，光速不是任意旋鈕。'],['因為距離會自動減半','改頻率不會自動改變目標距離。'],['λ²、天線增益與目標 RCS 都可能隨頻率影響結果','正確。若只固定 G、σ，λ² 給出 −6.02 dB；真實 G 與 σ 卻常隨頻率變。'],['因為 dBm 沒有單位','dBm 是相對 1 mW 的功率單位，仍可做明確比較。']]},
+      {level:'★★★ 挑戰',bloom:'分析',q:'哪個流程最適合做可信的 RCS 工程判讀？',a:1,o:[['把外觀面積直接當作所有角度的 σ','這會忽略角度、頻率、材料、邊緣與多散射中心。'],['先用雷達方程式做靈敏度，再用 HFSS 等工具掃描 σ，最後以量測或基準題驗證','正確。簡化模型、電磁模擬與驗證各自負責不同層次。'],['只調高發射功率，不檢查接收門檻','功率不是唯一限制，法規、雜波、雜訊與動態範圍都重要。'],['只看單一角度、單一頻率就下結論','RCS 常隨角度與頻率劇烈變化，單點不足以代表完整目標。']]}
+    ];
+    var answered=0,correctCount=0;
+    function renderQuiz(){var grid=byId('quizGrid');grid.textContent='';quiz.forEach(function(q,qi){var card=document.createElement('article');card.className='quiz-card';var meta=document.createElement('div');meta.className='quiz-meta';meta.textContent='第 '+(qi+1)+' 題｜'+q.level+'｜Bloom：'+q.bloom;var title=document.createElement('h3');title.textContent=q.q;var opts=document.createElement('div');opts.className='options';opts.setAttribute('role','group');opts.setAttribute('aria-label','第 '+(qi+1)+' 題選項');var fb=document.createElement('div');fb.className='feedback';fb.setAttribute('role','status');fb.setAttribute('aria-live','polite');fb.textContent='選一個答案後，這裡會顯示原因。';q.o.forEach(function(o,oi){var b=document.createElement('button');b.type='button';b.className='option';b.textContent=String.fromCharCode(65+oi)+'　'+o[0];b.addEventListener('click',function(){if(card.dataset.done)return;card.dataset.done='true';answered++;var ok=oi===q.a;if(ok)correctCount++;Array.prototype.forEach.call(opts.children,function(x,j){x.disabled=true;if(j===q.a)x.dataset.state='correct'});if(!ok)b.dataset.state='wrong';fb.dataset.kind=ok?'correct':'wrong';fb.textContent=(ok?'答對了。':'再想一步。')+o[1]+(ok?'':' 正確觀念：'+q.o[q.a][1]);byId('quizScore').textContent='已作答 '+answered+'／6｜答對 '+correctCount;});opts.appendChild(b)});card.appendChild(meta);card.appendChild(title);card.appendChild(opts);card.appendChild(fb);grid.appendChild(card)})}
+    byId('resetQuiz').addEventListener('click',function(){answered=0;correctCount=0;byId('quizScore').textContent='已作答 0／6｜答對 0';renderQuiz();byId('quizGrid').querySelector('button').focus()});
+    load();sync();bind();renderQuiz();update();
+  })();</script>
+</body>
+</html>

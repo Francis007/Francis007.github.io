@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ch07 時變場與 Maxwell 方程式 — 3D 互動模擬</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{color-scheme:light;--pri:#2563eb;--pri-l:#dbeafe;--acc:#f59e0b;--acc-l:#fef3c7;--ok:#16a34a;--ok-l:#dcfce7;--err:#dc2626;--err-l:#fee2e2;--pur:#7c3aed;--pur-l:#ede9fe;--bg:#f8fafc;--card:#fff;--txt:#1e293b;--sub:#64748b;--border:#e2e8f0;--radius:12px;
+--cE:#dc2626;--cH:#2563eb;--cS:#16a34a;--cX:#dc2626;--cY:#0891b2;--cR:#7c3aed}
+body{font-family:'Segoe UI','Noto Sans TC','Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--txt);line-height:1.7;min-height:100vh;-webkit-text-size-adjust:100%}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+
+/* Header */
+.hero{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:36px 30px;border-radius:var(--radius);margin-bottom:20px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(255,255,255,.08);border-radius:50%}
+.hero h1{font-size:1.7em;margin-bottom:8px;position:relative}
+.hero p{opacity:.92;font-size:1em;position:relative}
+
+/* Progress */
+.progress-wrap{background:#fff;padding:14px 20px;border-radius:var(--radius);margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.progress-wrap label{font-weight:600;font-size:.9em;color:var(--sub)}
+.progress-bar{height:10px;background:var(--border);border-radius:5px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--pri),#60a5fa);border-radius:5px;transition:width .5s ease;width:0%}
+.progress-text{font-size:.85em;color:var(--sub);margin-top:4px;text-align:right}
+
+/* Nav */
+.nav-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;background:#fff;padding:8px;border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.nav-tab{padding:11px 15px;border:none;background:transparent;border-radius:8px;cursor:pointer;font-size:.92em;font-weight:500;color:var(--sub);transition:all .2s;font-family:inherit;min-height:44px}
+.nav-tab:hover{background:var(--pri-l);color:var(--pri)}
+.nav-tab.active{background:var(--pri);color:#fff}
+.nav-tab .badge{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;background:#cbd5e1;vertical-align:middle}
+.nav-tab .badge.done{background:var(--ok)}
+
+.section{display:none;animation:fadeIn .3s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.card{background:var(--card);border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--border)}
+.card h2{color:var(--pri);font-size:1.28em;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3{color:var(--txt);font-size:1.05em;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--pri-l)}
+.card p{margin:6px 0}
+
+/* Info boxes */
+.whatnow{background:linear-gradient(135deg,#dbeafe,#eff6ff);border-left:4px solid var(--pri);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.whatnow strong{color:#1e40af}
+.focus{background:var(--acc-l);border-left:4px solid var(--acc);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.focus strong{color:#92400e}
+.warn{background:var(--err-l);border-left:4px solid var(--err);padding:13px 17px;border-radius:0 8px 8px 0;margin:12px 0}
+.warn strong{color:var(--err)}
+.tip{background:var(--ok-l);border-left:4px solid var(--ok);padding:13px 17px;border-radius:0 8px 8px 0;margin:12px 0}
+.tip strong{color:var(--ok)}
+.analogy{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-left:4px solid var(--pur);padding:14px 18px;border-radius:0 8px 8px 0;margin:12px 0}
+.formula-box{background:linear-gradient(135deg,#fef3c7,#fde68a);border-left:4px solid var(--acc);padding:14px 18px;border-radius:0 8px 8px 0;margin:10px 0;font-size:1.02em;font-family:'Cambria Math','Times New Roman',serif}
+.formula-box .label{font-size:.78em;font-weight:700;color:#92400e;letter-spacing:.5px;margin-bottom:4px;font-family:'Segoe UI',sans-serif}
+
+/* Collapsible */
+.collapsible{margin:10px 0}
+.collapsible-toggle{width:100%;padding:13px 18px;background:var(--pri-l);border:none;border-radius:8px;cursor:pointer;text-align:left;font-size:.97em;font-weight:600;color:var(--pri);display:flex;justify-content:space-between;align-items:center;gap:10px;transition:background .2s;font-family:inherit;min-height:46px}
+.collapsible-toggle:hover{background:#bfdbfe}
+.collapsible-toggle::after{content:'▼';font-size:.7em;transition:transform .3s;flex-shrink:0}
+.collapsible-toggle.open::after{transform:rotate(180deg)}
+.collapsible-content{max-height:0;overflow:hidden;transition:max-height .4s ease;padding:0 18px}
+.collapsible-content.open{max-height:1600px;padding:14px 18px}
+
+/* Simulator shell */
+.sim{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:12px;margin:14px 0}
+.canvas-box{width:100%;background:#fdfdfe;border-radius:8px;overflow:hidden;position:relative}
+.canvas-box canvas{display:block;width:100%;touch-action:pan-y;cursor:grab;border-radius:8px}
+.canvas-box canvas:active{cursor:grabbing}
+.hint{font-size:.8em;color:var(--sub);text-align:center;margin-top:6px}
+.dual{display:flex;gap:12px;flex-wrap:wrap}
+.dual>div{flex:1 1 300px;min-width:0}
+.dual h4{font-size:.88em;color:var(--sub);font-weight:600;margin-bottom:5px;text-align:center}
+
+/* Controls */
+.ctrls{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px 16px}
+.ctrl{display:flex;flex-direction:column;gap:3px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;font-size:.86em;color:var(--sub);font-weight:600}
+.ctrl .val{color:var(--pri);font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:26px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:8px;background:var(--border);border-radius:4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:var(--pri);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+input[type=range]::-moz-range-track{height:8px;background:var(--border);border-radius:4px}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--pri);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.btn{padding:10px 15px;border:2px solid var(--pri);border-radius:8px;background:#fff;color:var(--pri);cursor:pointer;font-size:.88em;font-weight:700;font-family:inherit;min-height:44px;transition:all .15s}
+.btn:hover{background:var(--pri-l)}
+.btn.on{background:var(--pri);color:#fff}
+.btn.play{border-color:var(--ok);color:var(--ok)}
+.btn.play.on{background:var(--ok);color:#fff}
+.btn.small{padding:8px 12px;font-size:.82em;min-height:40px;border-color:var(--sub);color:var(--sub)}
+.btn.small:hover{background:#f1f5f9}
+.btn.small.on{background:var(--sub);color:#fff}
+.toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip-toggle{padding:8px 13px;border-radius:20px;border:2px solid var(--border);background:#fff;cursor:pointer;font-size:.83em;font-weight:600;color:var(--sub);font-family:inherit;min-height:40px;display:inline-flex;align-items:center;gap:6px}
+.chip-toggle .dot{width:11px;height:11px;border-radius:50%;background:#cbd5e1;flex-shrink:0}
+.chip-toggle.on{color:var(--txt);border-color:currentColor;background:#f8fafc}
+
+/* Readout */
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px;margin-top:12px}
+.stat{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.stat .k{display:block;font-size:.74em;color:var(--sub);font-weight:600;line-height:1.35}
+.stat .v{display:block;font-size:1.02em;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums;line-height:1.4}
+.stat.hi{background:var(--acc-l);border-color:#fcd34d}
+.stat.hi .v{color:#92400e}
+.flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;min-height:4px}
+.flag{padding:5px 11px;border-radius:6px;font-size:.8em;font-weight:700}
+.flag.g{background:var(--ok-l);color:#166534}
+.flag.r{background:var(--err-l);color:#991b1b}
+.flag.b{background:var(--pri-l);color:#1e40af}
+.flag.y{background:var(--acc-l);color:#92400e}
+.flag.p{background:var(--pur-l);color:#5b21b6}
+
+/* legend */
+.legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:.82em;color:var(--sub)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:16px;height:4px;border-radius:2px;display:inline-block}
+
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.9em}
+th{background:var(--pri);color:#fff;padding:9px 11px;text-align:left}
+td{padding:9px 11px;border-bottom:1px solid var(--border)}
+tr:hover td{background:var(--pri-l)}
+ul.tight{padding-left:22px;margin:8px 0}
+ul.tight li{margin:4px 0}
+code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.92em}
+
+.checklist{list-style:none;padding:0}
+.checklist li{padding:11px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .2s}
+.checklist li:hover{background:var(--pri-l)}
+.checklist li .check{width:24px;height:24px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;font-weight:700}
+.checklist li.checked .check{background:var(--ok);border-color:var(--ok);color:#fff}
+.checklist li.checked{color:var(--sub);text-decoration:line-through}
+
+.foot{text-align:center;color:var(--sub);font-size:.82em;padding:16px 0 30px;line-height:1.8}
+
+@media(max-width:640px){
+  .container{padding:11px}
+  .hero{padding:22px 16px}
+  .hero h1{font-size:1.28em}
+  .hero p{font-size:.9em}
+  .nav-tabs{gap:4px;padding:6px}
+  .nav-tab{padding:9px 10px;font-size:.8em}
+  .card{padding:15px}
+  .sim{padding:9px}
+  .ctrls{grid-template-columns:1fr}
+  .readout{grid-template-columns:repeat(auto-fit,minmax(108px,1fr))}
+  .stat .v{font-size:.94em}
+  table{font-size:.82em}
+  th,td{padding:7px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+  <h1>⚡ 第七章：時變場與 Maxwell 方程式 — 3D 互動模擬</h1>
+  <p>Time-Varying Fields and Maxwell's Equations</p>
+</div>
+
+<div class="progress-wrap">
+  <label>📊 探索進度</label>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 4 個模式已探索</div>
+</div>
+
+<div class="card" style="padding:16px 20px">
+  <p style="font-size:.93em;color:var(--sub);margin:0">
+  <strong style="color:var(--txt)">怎麼用：</strong>選上面的分頁 → 在 3D 圖上<strong>用手指或滑鼠拖曳可以轉動視角</strong> → 拉下面的滑桿看數字和圖形怎麼一起變。
+  每個模式都有「你現在在看什麼」和「該注意哪裡」，最後有引導問題可以自己先想再展開看解答。
+  </p>
+</div>
+
+<div class="nav-tabs" id="navTabs">
+  <button class="nav-tab active" data-action="show" data-idx="0">① 法拉第感應<span class="badge" id="badge0"></span></button>
+  <button class="nav-tab" data-action="show" data-idx="1">② 位移電流<span class="badge" id="badge1"></span></button>
+  <button class="nav-tab" data-action="show" data-idx="2">③ 電磁波的耦合<span class="badge" id="badge2"></span></button>
+  <button class="nav-tab" data-action="show" data-idx="3">④ 螺線管感應 E 場<span class="badge" id="badge3"></span></button>
+</div>
+
+<!-- ==================== MODE 0：Faraday 感應 ==================== -->
+<div class="section active" id="sec0">
+<div class="card">
+  <h2>① 法拉第電磁感應定律：時變磁場中的靜止迴路</h2>
+
+  <div class="whatnow">
+    <strong>👀 你現在在看什麼：</strong>一個<strong>靜止不動</strong>的 N 匝線圈，外部有一個均勻但<strong>隨時間變化</strong>的磁場 B(t)
+    <span style="color:var(--cH);font-weight:700">（藍色箭頭）</span>垂直穿過線圈。B(t) 的變化會在線圈裡感應出電動勢與電流
+    <span style="color:var(--cS);font-weight:700">（綠色箭頭，沿線圈環繞）</span>，方向由<strong>楞次定律（Lenz's law）</strong>決定。
+  </div>
+
+  <div class="sim">
+    <div class="canvas-box"><canvas id="c0"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--cH)"></i>B(t) 外部磁場</span>
+      <span><i style="background:var(--cS)"></i>感應電流方向</span>
+      <span><i style="background:#b45309"></i>線圈（N 匝，示意畫成一圈）</span>
+    </div>
+    <div class="hint">👆 滑鼠拖曳可自由旋轉；<strong>手機請左右滑動轉動視角</strong>（上下滑動＝捲動頁面）</div>
+
+    <div class="btnrow">
+      <button class="btn play on" data-action="play" data-m="0" id="p0">⏸ 暫停</button>
+      <button class="btn small" data-action="reset-view" data-m="0">↺ 視角復位</button>
+      <button class="btn small" data-action="view-preset" data-m="0" data-yaw="0" data-pitch="0.05">正側視</button>
+      <button class="btn small" data-action="view-preset" data-m="0" data-yaw="1.5708" data-pitch="1.45">正上視（看線圈平面）</button>
+    </div>
+
+    <div class="btnrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">預設情境：</span>
+      <button class="btn small" data-action="pf" data-f="0.3" data-b="0.3" data-n="1">弱磁場慢速</button>
+      <button class="btn small" data-action="pf" data-f="1" data-b="1" data-n="3">標準</button>
+      <button class="btn small" data-action="pf" data-f="2.5" data-b="1.8" data-n="5">強磁場快速</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>頻率 f（B 場變化快慢）</span><span class="val" id="v0f">1.00 Hz</span></div>
+        <input type="range" id="s0f" min="0" max="100" value="55" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>振幅 B₀</span><span class="val" id="v0b">1.00 T</span></div>
+        <input type="range" id="s0b" min="0" max="100" value="47" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>線圈匝數 N</span><span class="val" id="v0n">3</span></div>
+        <input type="range" id="s0n" min="1" max="10" value="3" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>線圈半徑 r</span><span class="val" id="v0r">0.12 m</span></div>
+        <input type="range" id="s0r" min="5" max="30" value="12" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>線圈電阻 R（用來算電流）</span><span class="val" id="v0R">10.0 Ω</span></div>
+        <input type="range" id="s0R" min="1" max="50" value="10" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>動畫速度</span><span class="val" id="v0v">1.0×</span></div>
+        <input type="range" id="s0v" min="0" max="100" value="50" step="1">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="stat"><span class="k">磁通量 Φ(t)（單匝）</span><span class="v" id="r0phi">—</span></div>
+      <div class="stat"><span class="k">dΦ/dt</span><span class="v" id="r0dphi">—</span></div>
+      <div class="stat hi"><span class="k">感應電動勢 EMF = −N dΦ/dt</span><span class="v" id="r0emf">—</span></div>
+      <div class="stat"><span class="k">感應電流 I = EMF/R</span><span class="v" id="r0i">—</span></div>
+      <div class="stat"><span class="k">EMF 振幅（峰值）</span><span class="v" id="r0amp">—</span></div>
+    </div>
+    <div class="flags" id="f0"></div>
+  </div>
+
+  <div class="focus">
+    <strong>🎯 該注意哪裡：</strong>
+    <ul class="tight" style="margin-top:6px">
+      <li><strong>B(t) 過零的瞬間，感應電流最大</strong>；<strong>B(t) 在正／負峰值的瞬間，感應電流反而是零</strong>。因為 EMF ∝ dB/dt，而不是 ∝ B 本身——這是初學最容易搞混的地方。</li>
+      <li>綠色電流箭頭的方向會隨 dB/dt 的正負<strong>週期性翻轉</strong>：B 正在增加時，感應電流的方向要讓自己產生的磁場<u>抵抗</u>這個增加（楞次定律）；B 正在減少時，方向整個反過來。</li>
+      <li>把頻率 f 調高：波形疊代變快，EMF 的振幅<strong>跟著變大</strong>（EMF ∝ ω = 2πf），這跟 Ch08 「vₚ 跟頻率無關」是完全不同的結論——這裡頻率直接決定 EMF 大小。</li>
+      <li>N、面積、B₀、f 這四個量都是<strong>線性</strong>疊加在 EMF 振幅裡：EMF_peak = N·A·B₀·ω，缺一不可。</li>
+    </ul>
+  </div>
+
+  <div class="formula-box">
+    <div class="label">本模式使用的式子</div>
+    法拉第電磁感應定律：EMF = −N dΦ/dt　　Φ(t) = B(t)·A　　A = πr²<br>
+    B(t) = B₀ sin(ωt)　　ω = 2πf　　EMF(t) = −N·A·B₀·ω·cos(ωt)　　I(t) = EMF(t)/R
+  </div>
+  <div class="warn"><strong>⚠️ 楞次定律最容易判反的地方</strong>：很多人會直覺地說「B 增加 → 感應電流跟著同方向增加」——這是<strong>錯的</strong>。楞次定律說的是感應電流要<u>抗拒</u> B 的變化：B 正在增加時，感應電流產生的磁場要<u>指向相反方向</u>去抵消這個增加，所以電流方向與「B 增加的方向」是<strong>相反</strong>的環繞方式，不是同向。圖中線圈半徑固定畫出、箭頭長度已依電流大小縮放，不代表真實幾何尺寸。</div>
+
+  <h3>🤔 引導問題（先自己想，再展開）</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　如果外部 B(t) 的變化速度（頻率 f）加倍，感應 EMF 的振幅會怎麼變？</button>
+    <div class="collapsible-content">
+      <p><strong>加倍。</strong>EMF_peak = N·A·B₀·ω，ω = 2πf 跟 EMF 振幅成<strong>正比</strong>，f 加倍 → ω 加倍 → EMF 振幅剛好加倍（B₀、N、A 都沒變）。</p>
+      <p>這跟 Ch08 「波速 vₚ 跟頻率無關」的結論<strong>不衝突</strong>——那裡討論的是波在空間中傳播的速度，這裡討論的是感應電動勢的大小，是兩件不同的事，只是剛好都跟頻率有關，一個是「無關」一個是「正比」，很容易混淆。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　B(t) 剛好通過零、正要變正的瞬間，感應電流的方向該怎麼判斷？此時電流是最大還是最小？</button>
+    <div class="collapsible-content">
+      <p><strong>此時電流最大。</strong>B(t) 過零時斜率最陡（|dB/dt| 最大），而 EMF ∝ dB/dt，所以 EMF、電流都在此刻達到最大值——跟 B 本身的大小完全脫鉤。</p>
+      <p><strong>方向判斷：</strong>B 正要從 0 往正方向增加，代表磁通正在增加，楞次定律要求感應電流的磁場指向<u>反方向</u>（抵消增加），用右手定則反推：拇指指向「抵消方向」，四指彎曲的方向就是電流方向。畫面上可以直接看綠色箭頭在這個瞬間翻轉。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　把線圈匝數 N 加倍，EMF 會怎麼變？如果同時把線圈半徑也加大到使面積 A 也加倍，EMF 會變成幾倍？</button>
+    <div class="collapsible-content">
+      <p><strong>N 加倍 → EMF 加倍</strong>（線性關係：N 匝等於把 N 個單匝線圈的 EMF 疊加起來）。</p>
+      <p><strong>N 加倍且 A 也加倍 → EMF 變成 4 倍。</strong>EMF_peak = N·A·B₀·ω，N 和 A 各自貢獻一個因子 2，相乘是 4。用本模擬的「標準」預設（N=3）切到 N=6、半徑加大到面積兩倍，讀出來的 EMF 振幅應該是原本的 4 倍——可以自己拉滑桿驗證。</p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="0" data-next="1">✅ 我看懂了，前往「② 位移電流」→</button>
+</div>
+</div>
+
+<!-- ==================== MODE 1：位移電流 ==================== -->
+<div class="section" id="sec1">
+<div class="card">
+  <h2>② 位移電流：電容器極板間的 ∂D/∂t</h2>
+
+  <div class="whatnow">
+    <strong>👀 你現在在看什麼：</strong>一個接在交流電源上的平行板電容器。極板之間<strong>沒有電荷在移動</strong>（傳導電流密度 J = 0），
+    但電場 <span style="color:var(--cE);font-weight:700">E／電位移 D（紅色箭頭）</span>隨時間變化，這個 ∂D/∂t 就是<strong>位移電流密度</strong>，
+    它會像真正的電流一樣在四周產生環繞的磁場 <span style="color:var(--cH);font-weight:700">B（藍色箭頭）</span>——這是本章最反直覺的一步。
+  </div>
+
+  <div class="sim">
+    <div class="canvas-box"><canvas id="c1"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--cE)"></i>E／D 場（極板間）</span>
+      <span><i style="background:var(--cH)"></i>位移電流產生的 B</span>
+      <span><i style="background:#94a3b8"></i>導線與傳導電流</span>
+    </div>
+    <div class="hint">👆 拖曳可旋轉視角（手機左右滑；上下滑動＝捲動頁面）</div>
+
+    <div class="btnrow">
+      <button class="btn play on" data-action="play" data-m="1" id="p1">⏸ 暫停</button>
+      <button class="btn small" data-action="reset-view" data-m="1">↺ 視角復位</button>
+      <button class="btn small" data-action="view-preset" data-m="1" data-yaw="0" data-pitch="0.05">正側視</button>
+      <button class="btn small" data-action="view-preset" data-m="1" data-yaw="1.5708" data-pitch="1.45">正上視（看 B 環繞）</button>
+    </div>
+
+    <div class="btnrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">預設情境：</span>
+      <button class="btn small" data-action="pc" data-v="60" data-f="500" data-r="0.05" data-d="0.002" data-e="1">低壓低頻</button>
+      <button class="btn small" data-action="pc" data-v="100" data-f="1000" data-r="0.05" data-d="0.002" data-e="1">標準</button>
+      <button class="btn small" data-action="pc" data-v="500" data-f="100000" data-r="0.05" data-d="0.002" data-e="1">高壓高頻</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>電源電壓振幅 V₀</span><span class="val" id="v1v">100 V</span></div>
+        <input type="range" id="s1v" min="0" max="100" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>電壓頻率 f</span><span class="val" id="v1f">1.00 kHz</span></div>
+        <input type="range" id="s1f" min="0" max="100" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>極板半徑 R</span><span class="val" id="v1r">0.050 m</span></div>
+        <input type="range" id="s1r" min="2" max="15" value="5" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>極板間距 d</span><span class="val" id="v1d">2.00 mm</span></div>
+        <input type="range" id="s1d" min="5" max="100" value="20" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>相對介電常數 εᵣ</span><span class="val" id="v1e">1.0</span></div>
+        <input type="range" id="s1e" min="10" max="100" value="10" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>動畫速度</span><span class="val" id="v1sp">1.0×</span></div>
+        <input type="range" id="s1sp" min="0" max="100" value="45" step="1">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="stat"><span class="k">電場 E(t)</span><span class="v" id="r1E">—</span></div>
+      <div class="stat"><span class="k">電位移 D(t)</span><span class="v" id="r1D">—</span></div>
+      <div class="stat"><span class="k">位移電流密度 ∂D/∂t</span><span class="v" id="r1Jd">—</span></div>
+      <div class="stat hi"><span class="k">總位移電流 I_d = ∫Jd·dA</span><span class="v" id="r1Id">—</span></div>
+      <div class="stat"><span class="k">導線傳導電流 I_c（應與 I_d 相等）</span><span class="v" id="r1Ic">—</span></div>
+      <div class="stat"><span class="k">B(r=R) 極板邊緣磁場峰值</span><span class="v" id="r1BR">—</span></div>
+    </div>
+    <div class="flags" id="f1"></div>
+  </div>
+
+  <div class="focus">
+    <strong>🎯 該注意哪裡：</strong>
+    <ul class="tight" style="margin-top:6px">
+      <li>藍色 B 箭頭的長度<strong>從中心軸往外先變長，超過極板半徑 R 之後又變短</strong>——中心到 R 之間是線性增加（像螺線管內部），R 之外是 1/r 遞減（像一根直導線的磁場）。<strong>r = R 是最大值。</strong></li>
+      <li>「總位移電流 I_d」與「導線傳導電流 I_c」數值上永遠<strong>相等</strong>——這正是 Maxwell 補上 ∂D/∂t 項的用意：讓電流在電容器這個「斷點」上還能保持連續。</li>
+      <li>把頻率 f 調到最高：I_d 隨頻率<strong>線性增加</strong>（∝ ω），這也是為什麼位移電流在高頻電路（微波、天線）裡很重要，但在 60 Hz 家用電路裡幾乎量不到。</li>
+      <li>讀讀看「標準」情境下 B(r=R) 的數值量級——通常在 pT（10⁻¹² T）等級，比地球磁場（≈ 5×10⁻⁵ T）小了約<strong>五到六個數量級</strong>，這說明了為什麼這個效應純粹是理論推導出來的，直到很久以後才被精密儀器直接量到。</li>
+    </ul>
+  </div>
+
+  <div class="formula-box">
+    <div class="label">本模式使用的式子（位移電流密度）</div>
+    E(t) = V(t)/d　　D(t) = ε₀εᵣE(t)　　位移電流密度：J_d = ∂D/∂t　　I_d = J_d·πR²（等於導線中的傳導電流 I_c）<br>
+    安培-馬克斯威爾定律：∮H·dl = I_enc　⇒　B(r≤R) = ½μ₀J_d·r　　B(r&gt;R) = μ₀I_d/(2πr)
+  </div>
+  <div class="warn"><strong>⚠️ 常見誤解</strong>：位移電流<strong>不是「真的電流」</strong>——極板之間是真空或介電質，<u>沒有電荷在流動</u>，J（傳導電流密度）確確實實是 0。∂D/∂t 只是在數學上、在安培定律裡扮演跟 J 一樣的角色，讓 ∇×H = J + ∂D/∂t 這條方程式對任何封閉曲面都成立（包括穿過電容器極板之間、完全沒有導線的曲面）。圖中 B 箭頭長度已放大以利觀察，真實數值請看右側讀數。</div>
+
+  <h3>🤔 引導問題</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　電容器兩極板之間有電流流過嗎？那中間為什麼還會有磁場？</button>
+    <div class="collapsible-content">
+      <p><strong>沒有。</strong>兩片金屬板中間通常是真空或介電質，沒有自由電荷可以穿過，傳導電流密度 J 精確等於 0。</p>
+      <p>但電場 E（進而 D = ε₀εᵣE）隨著電源電壓 V(t) 在變化，∂D/∂t ≠ 0。Maxwell 把 ∂D/∂t 這一項加進安培定律：∇×H = J + ∂D/∂t。即使 J = 0，只要 ∂D/∂t ≠ 0，右邊還是不為零，左邊的 ∇×H 也就不為零——磁場因此存在。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　導線中的傳導電流 I_c 與極板間的位移電流 I_d，兩者數值上是什麼關係？</button>
+    <div class="collapsible-content">
+      <p><strong>兩者永遠相等：I_c(t) = I_d(t) = C·dV/dt</strong>，其中 C = ε₀εᵣπR²/d 是電容器的電容。</p>
+      <p>這不是巧合，而是電荷守恆的必然結果：導線把電荷送到極板上（I_c = dQ/dt），極板上累積的電荷 Q = CV 決定了極板間的 D 場（D = Q/(πR²)），兩者用同一個 Q(t) 串起來，微分之後自然相等。<strong>物理意義：把「傳導電流＋位移電流」加在一起看，電流在整個電路（含電容器這個斷點）裡是連續的，不會憑空消失。</strong></p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　為什麼磁場 B(r) 先隨 r 線性增加、超過極板半徑後又按 1/r 遞減？</button>
+    <div class="collapsible-content">
+      <p>用安培-馬克斯威爾定律取一個半徑 r 的圓形迴路：∮H·dl = H(r)·2πr = 被這個迴路圍住的位移電流 I_enc(r)。</p>
+      <p><strong>r ≤ R（迴路在極板內部）：</strong>位移電流密度 J_d 均勻分布，被圍住的電流正比於面積 πr²，所以 I_enc(r) = J_d·πr² ∝ r²，代入後 H(r) = J_d·r/2 ∝ r——<strong>線性增加</strong>，就像螺線管內部的磁場算法。</p>
+      <p><strong>r &gt; R（迴路已經圍住整片極板）：</strong>不管 r 再怎麼加大，圍住的位移電流都固定是 I_d（總量不會再增加），所以 H(r) = I_d/(2πr) ∝ 1/r——<strong>行為就跟一根載流 I_d 的無限長直導線一模一樣</strong>。這也是為什麼在很遠的地方，一個變化的電容器看起來就像一根通有電流 I_d 的導線。</p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="1" data-next="2">✅ 我看懂了，前往「③ 電磁波的耦合」→</button>
+</div>
+</div>
+
+<!-- ==================== MODE 2：電磁波的耦合 ==================== -->
+<div class="section" id="sec2">
+<div class="card">
+  <h2>③ 均勻平面波：Faraday 與 Ampère-Maxwell 的耦合</h2>
+
+  <div class="whatnow">
+    <strong>👀 你現在在看什麼：</strong>一個沿 <strong>+z 方向</strong>前進的平面波，
+    <span style="color:var(--cE);font-weight:700">紅色</span>是電場 E（沿 x 方向振盪）、
+    <span style="color:var(--cH);font-weight:700">藍色</span>是磁場 B（沿 y 方向振盪）。
+    本模式的重點<strong>不是</strong>完整的波參數分析（那是 Ch08 的事），而是要具體看到：<strong>這兩個場為什麼會綁在一起——是哪兩條 Maxwell 方程式把它們耦合出來的</strong>。
+  </div>
+
+  <div class="sim">
+    <div class="canvas-box"><canvas id="c2"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--cE)"></i>E 電場 (x̂)</span>
+      <span><i style="background:var(--cH)"></i>B 磁場 (ŷ)</span>
+      <span><i style="background:var(--acc)"></i>k 傳播方向 (ẑ)</span>
+    </div>
+    <div class="hint">👆 滑鼠拖曳可自由旋轉；<strong>手機請左右滑動轉動視角</strong>（上下滑動＝捲動頁面）</div>
+
+    <div class="btnrow">
+      <button class="btn play on" data-action="play" data-m="2" id="p2">⏸ 暫停</button>
+      <button class="btn small" data-action="reset-view" data-m="2">↺ 視角復位</button>
+      <button class="btn small" data-action="view-preset" data-m="2" data-yaw="0" data-pitch="0">正側視（看 E）</button>
+      <button class="btn small" data-action="view-preset" data-m="2" data-yaw="1.5708" data-pitch="0">正上視（看 B）</button>
+    </div>
+
+    <div class="btnrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">聚焦哪一條方程式：</span>
+      <button class="btn small on" data-action="focus" data-v="both">兩條都看</button>
+      <button class="btn small" data-action="focus" data-v="faraday">只看 Faraday（∂B/∂t → ∇×E）</button>
+      <button class="btn small" data-action="focus" data-v="ampere">只看 Ampère-Maxwell（∂D/∂t → ∇×H）</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>頻率 f</span><span class="val" id="v2f">1.00 GHz</span></div>
+        <input type="range" id="s2f" min="20" max="65" value="50" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>振幅 E₀</span><span class="val" id="v2a">1.00 V/m</span></div>
+        <input type="range" id="s2a" min="30" max="150" value="100" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>相對介電常數 εᵣ</span><span class="val" id="v2e">1.0</span></div>
+        <input type="range" id="s2e" min="10" max="60" value="10" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>動畫速度（慢動作）</span><span class="val" id="v2sp">1.0×</span></div>
+        <input type="range" id="s2sp" min="0" max="100" value="50" step="1">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="stat"><span class="k">波長 λ</span><span class="v" id="r2lam">—</span></div>
+      <div class="stat"><span class="k">波數 k = 2π/λ</span><span class="v" id="r2k">—</span></div>
+      <div class="stat hi"><span class="k">相速度 vₚ = 1/√(με)</span><span class="v" id="r2vp">—</span></div>
+      <div class="stat"><span class="k">B₀ = E₀/vₚ</span><span class="v" id="r2b0">—</span></div>
+    </div>
+  </div>
+
+  <div class="focus">
+    <strong>🎯 該注意哪裡：</strong>
+    <ul class="tight" style="margin-top:6px">
+      <li>切到「只看 Faraday」：畫面提示你注意<strong>藍色 B 隨時間變化</strong>（∂B/∂t）如何要求旁邊出現一個環繞的 E（∇×E）——這一條方程式單獨看，只能告訴你「有 ∂B/∂t 就會有 ∇×E」，還沒告訴你 E 怎麼變化。</li>
+      <li>切到「只看 Ampère-Maxwell」：換成注意<strong>紅色 E 隨時間變化</strong>（∂D/∂t）如何要求旁邊出現一個環繞的 H（∇×H）。</li>
+      <li><strong>兩條方程式必須同時成立、互相牽制</strong>，才能解出「E 和 B 都以相同的 ω、k 一起振盪、一起向前跑」這個平面波解——單獨拿掉任何一條，波動方程式都推不出來。這就是「耦合」的意思：不是先有 E 才有 B，也不是先有 B 才有 E，是兩者同時被兩條方程式綁定。</li>
+      <li>三個方向永遠互相垂直（E ⊥ B ⊥ k），這是「橫向電磁波 TEM」的意思，跟 Ch08 討論的是同一件事，只是這裡的重點放在「為什麼會這樣耦合出來」。</li>
+    </ul>
+  </div>
+
+  <div class="formula-box">
+    <div class="label">本模式使用的式子（兩條旋度方程式的耦合）</div>
+    Faraday：∇×E = −∂B/∂t　　　Ampère-Maxwell：∇×H = ∂D/∂t（無源、無傳導電流）<br>
+    平面波解：E(z,t) = x̂E₀cos(ωt−kz)　　B(z,t) = ŷ(E₀/vₚ)cos(ωt−kz)　　vₚ = 1/√(με)　　k = ω√(με)
+  </div>
+  <div class="warn"><strong>⚠️ 常見誤解</strong>：「E 生 B，B 又生 E」聽起來像接力賽（先有 E，才生出 B，再生回 E……），但這不是因果關係，而是<strong>耦合關係</strong>——在空間中每一點、每一個時刻，E 和 B <u>同時</u>存在、同時變化，兩條方程式同時對它們施加限制，解出來的結果剛好是「兩者綁在一起、以波的形式共同前進」。沒有誰先誰後，就像一對互相牽制的齒輪同時轉動，不是其中一個先轉動另一個才跟著轉。</div>
+
+  <h3>🤔 引導問題</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　如果只有 Faraday 定律（∇×E=−∂B/∂t），沒有 Ampère-Maxwell 定律裡的 ∂D/∂t 項，電磁波還能在真空中傳播嗎？</button>
+    <div class="collapsible-content">
+      <p><strong>不能。</strong>在馬克斯威爾把 ∂D/∂t 補進安培定律之前，安培定律只有 ∇×H = J（傳導電流）。在真空、無源的空間裡 J = 0，那條方程式會直接告訴你 ∇×H = 0——磁場沒有旋度，變化的 E 場完全沒辦法產生新的 H 場。</p>
+      <p>少了這個回饋機制，Faraday 定律（∇×E = −∂B/∂t）雖然還能讓變化的 B 產生 E，但這個 E 沒有機制再產生新的 B，整個「自我維持」的鏈就斷了，波動方程式 ∇²E = με∂²E/∂t² 也推不出來。<strong>這正是馬克斯威爾當年加上位移電流項的關鍵動機：唯有兩條方程式同時耦合，電磁波才能不靠任何導線、不靠任何介質中的電荷，單靠場本身在真空中自我維持地傳播下去。</strong></p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　E 場和 B 場，到底誰先「引起」誰？</button>
+    <div class="collapsible-content">
+      <p><strong>誰都沒有先引起誰——這是耦合（coupled），不是因果（causal）鏈。</strong>在穩定傳播的平面波裡，E(z,t) 和 B(z,t) 用同一組 (ω,k) 同時振盪、同時存在，兩條旋度方程式在空間中每一點都同時成立，缺一不可。</p>
+      <p>把「E 生 B、B 又生 E」想成接力賽是最常見的誤解。比較貼切的比喻是：兩條方程式像兩個互相咬合的齒輪，同時轉動，彼此的轉動速度互相牽制——不會有「先動的那一個」。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　把介質的 εᵣ 提高，波速 vₚ 和波長 λ 怎麼變？這跟 Ch08 討論的「vₚ 只跟介質有關」是同一件事嗎？</button>
+    <div class="collapsible-content">
+      <p><strong>vₚ 變小（vₚ = 1/√(μ₀εᵣε₀) ∝ 1/√εᵣ），在頻率 f 不變的前提下 λ = vₚ/f 也跟著變小。</strong>拉高 εᵣ 滑桿，畫面上的波形會明顯「縮短、變密」。</p>
+      <p><strong>是同一件事。</strong>Ch08 強調的是 vₚ 這個量本身只由介質的 μ、ε 決定，跟頻率無關；這裡則是從「兩條方程式耦合解出波動方程式」的角度，說明 vₚ 這個常數<u>從何而來</u>——它就是波動方程式 ∇²E = με∂²E/∂t² 裡，係數 με 開根號取倒數的結果。兩章講的是同一個 vₚ，只是切入角度不同。</p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="2" data-next="3">✅ 我看懂了，前往「④ 螺線管感應 E 場」→</button>
+</div>
+</div>
+
+<!-- ==================== MODE 3：螺線管感應 E 場 ==================== -->
+<div class="section" id="sec3">
+<div class="card">
+  <h2>④ 螺線管的感應 E 場：∇×E = −∂B/∂t 的旋度視覺化</h2>
+  <div class="whatnow" style="background:var(--cS-bg,#f0fdf4);border-left:4px solid var(--cS,#16a34a)">
+    💡 <strong>延伸應用</strong>——這裡用的仍是同一條法拉第定律（∮E·dl = −dΦ/dt），只是換一個更直觀的幾何形狀來看「變化的 B 感應出環繞的 E」。
+  </div>
+
+  <div class="whatnow">
+    <strong>👀 你現在在看什麼：</strong>一個長螺線管，內部有均勻但<strong>隨時間變化</strong>的磁場 B(t)
+    <span style="color:var(--cH);font-weight:700">（藍色，只存在於半徑 R 以內）</span>。
+    這個變化的 B 會在<strong>整個空間</strong>（不管裡面還是外面，甚至完全沒有導線的地方）感應出環繞的電場 E
+    <span style="color:var(--cS);font-weight:700">（綠色箭頭）</span>——這是 ∇×E = −∂B/∂t 最直接的畫面。
+  </div>
+
+  <div class="analogy">
+    <strong>💡 跟模式① 對照著看</strong>：模式① 是「外部變化的 B 穿過一個<u>固定的線圈</u>，逼出感應電流」——你看到的是<u>電流</u>，而且只在線圈那一圈才看得到。
+    這裡反過來：B 的變化<strong>本身</strong>在空間中處處感應出一圈一圈的 E，<strong>不需要任何導線</strong>——把一段導線放進任何一圈，量到的 EMF 就是那一圈的 E 場繞一周的線積分。<strong>E 場本身才是「因」，導線只是拿來量測它的工具。</strong>
+  </div>
+
+  <div class="sim">
+    <div class="dual">
+      <div>
+        <h4>3D 立體圖：螺線管與感應 E 場</h4>
+        <div class="canvas-box"><canvas id="c3a"></canvas></div>
+      </div>
+      <div>
+        <h4>E(r) 大小 vs. 半徑 r（r=R 處最大）</h4>
+        <div class="canvas-box"><canvas id="c3b"></canvas></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--cH)"></i>B(t)（只在 r≤R 內部）</span>
+      <span><i style="background:var(--cS)"></i>感應 E 場（各半徑都有）</span>
+      <span><i style="background:#b45309"></i>螺線管線圈</span>
+    </div>
+    <div class="hint">👆 左圖可拖曳旋轉（手機左右滑；上下滑動＝捲動頁面）</div>
+
+    <div class="btnrow">
+      <button class="btn play on" data-action="play" data-m="3" id="p3">⏸ 暫停</button>
+      <button class="btn small" data-action="reset-view" data-m="3">↺ 視角復位</button>
+      <button class="btn small" data-action="view-preset" data-m="3" data-yaw="0" data-pitch="0.05">正側視</button>
+      <button class="btn small" data-action="view-preset" data-m="3" data-yaw="1.5708" data-pitch="1.45">正上視（看 E 環繞）</button>
+    </div>
+
+    <div class="btnrow">
+      <span style="font-size:.85em;color:var(--sub);font-weight:700">預設情境：</span>
+      <button class="btn small" data-action="ps" data-b="0.5" data-f="0.5" data-r="0.10">弱磁場慢速</button>
+      <button class="btn small" data-action="ps" data-b="1" data-f="1" data-r="0.10">標準</button>
+      <button class="btn small" data-action="ps" data-b="1.8" data-f="2.5" data-r="0.08">強磁場快速</button>
+    </div>
+
+    <div class="ctrls">
+      <div class="ctrl">
+        <div class="row"><span>頻率 f</span><span class="val" id="v3f">1.00 Hz</span></div>
+        <input type="range" id="s3f" min="0" max="100" value="55" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>振幅 B₀</span><span class="val" id="v3b">1.00 T</span></div>
+        <input type="range" id="s3b" min="0" max="100" value="47" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>螺線管半徑 R</span><span class="val" id="v3r">0.10 m</span></div>
+        <input type="range" id="s3r" min="5" max="30" value="10" step="1">
+      </div>
+      <div class="ctrl">
+        <div class="row"><span>動畫速度</span><span class="val" id="v3sp">1.0×</span></div>
+        <input type="range" id="s3sp" min="0" max="100" value="50" step="1">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="stat"><span class="k">內部 B(t)</span><span class="v" id="r3B">—</span></div>
+      <div class="stat"><span class="k">dB/dt</span><span class="v" id="r3dbdt">—</span></div>
+      <div class="stat hi"><span class="k">E(r=R) 峰值（最大值處）</span><span class="v" id="r3ER">—</span></div>
+      <div class="stat"><span class="k">E(r=2R)</span><span class="v" id="r3E2R">—</span></div>
+    </div>
+    <div class="flags" id="f3"></div>
+  </div>
+
+  <div class="focus">
+    <strong>🎯 該注意哪裡：</strong>
+    <ul class="tight" style="margin-top:6px">
+      <li><strong>r ≤ R（螺線管內部）：</strong>E(r) 隨半徑<strong>線性增加</strong>，E(r) = (r/2)|dB/dt|。</li>
+      <li><strong>r &gt; R（螺線管外部，那裡明明沒有 B 場！）：</strong>E(r) 仍然存在，並隨半徑<strong>按 1/r 遞減</strong>，E(r) = (R²/2r)|dB/dt|。右邊的 E(r) 曲線圖會清楚看到 r = R 是整個曲線的<strong>最高點</strong>，兩邊分別是線性上升與 1/r 衰減。</li>
+      <li><strong>最違反直覺的一點：</strong>螺線管外面根本沒有磁場（理想化假設下 B 完全侷限在 r≤R 內），但外面照樣有環繞的 E 場。原因是 Faraday 定律看的是<u>整個迴路所圍的磁通量</u>，不是迴路所在位置的局部 B 值——只要迴路整個圈住了正在變化的磁通量（就算迴路本身完全落在沒有 B 場的區域），迴路上的 E 場線積分就不會是零。</li>
+      <li>跟模式① 對照：把頻率調高，這裡的 E(r=R) 峰值跟模式① 的 EMF 峰值一樣，都是<strong>正比於 ω</strong>——兩個模式在數學上是同一條方程式（∇×E=−∂B/∂t 的積分形式），只是模式① 用一根導線把它「量出來」變成電流，這裡直接看 E 場本身。</li>
+    </ul>
+  </div>
+
+  <div class="formula-box">
+    <div class="label">本模式使用的式子（積分形式，套用在任意半徑 r 的迴路上）</div>
+    ∮E·dl = −dΦ_enc/dt　　B(t) = B₀sin(ωt)（僅存在於 r≤R）<br>
+    r ≤ R：Φ_enc = B(t)·πr²　⇒　E(r) = −(r/2)·dB/dt<br>
+    r &gt; R：Φ_enc = B(t)·πR²　⇒　E(r) = −(R²/2r)·dB/dt
+  </div>
+  <div class="tip"><strong>💡 為什麼要在乎這個？</strong>這正是<strong>電子迴旋加速器（betatron）</strong>的工作原理：讓帶電粒子繞著螺線管外的圓形軌道跑，磁場變化在軌道上感應出的 E 場持續加速粒子——完全不需要任何電極或導線直接接觸粒子，靠的就是這裡看到的「螺線管外部也有感應 E 場」這件事。</div>
+
+  <h3>🤔 引導問題</h3>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q1　螺線管外部（r &gt; R）根本沒有磁場，為什麼那裡還會有感應 E 場？</button>
+    <div class="collapsible-content">
+      <p>因為法拉第定律的積分形式看的是<strong>「這個迴路圈住了多少磁通量」</strong>，不是「迴路本身所在位置有沒有 B 場」。半徑 r &gt; R 的迴路雖然本身落在沒有 B 場的區域，但它的<u>內部（整個圓面）</u>還是完整圈住了螺線管裡那個正在變化的磁通量 Φ = B(t)·πR²，所以 ∮E·dl = −dΦ/dt ≠ 0，E 場必須存在。</p>
+      <p><strong>這是初學者最常誤解的地方：</strong>誤以為「沒有 B 場的地方就不會有感應 E 場」。正確的理解是：感應 E 場由<u>磁通量的變化率</u>決定，而磁通量是一個「圈住了多少」的整體量，不是逐點對應的。</p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q2　E(r) 在 r = R 達到最大值，這跟模式①（線圈的 EMF）有什麼異同？</button>
+    <div class="collapsible-content">
+      <p><strong>相同點：</strong>兩者用的是同一條方程式（∮E·dl = −dΦ/dt），數學上完全一樣，都是「磁通變化率決定感應效果」。</p>
+      <p><strong>不同點：</strong>模式① 只有<u>一個特定半徑</u>（線圈本身的半徑）才「看得到」感應效果——因為你需要一根導線才能把 EMF 轉成看得到的電流；這裡因為沒有導線的限制，可以看到<u>每一個半徑</u>都有一個 E 值，畫出完整的 E(r) 曲線，而 r = R 只是剛好是「整條曲線的峰值」，不是唯一有感應效果的位置。<strong>E 場本身在任何半徑都是真實存在的物理量，不需要導線才「產生」它。</strong></p>
+    </div>
+  </div>
+  <div class="collapsible"><button class="collapsible-toggle" data-action="col">Q3　如果把 B(t) 的頻率提高，E(r=R) 的峰值會怎麼變？</button>
+    <div class="collapsible-content">
+      <p><strong>正比增加。</strong>E(r=R)_peak = (R/2)·B₀·ω，ω = 2πf，跟模式① 的 EMF_peak = N·A·B₀·ω 是同一種正比關係——把 f 加倍，E(R) 的峰值也剛好加倍。</p>
+      <p>這再次呼應模式① 的 Q1：時間變化率（dB/dt，正比於 ω）才是決定感應強度的關鍵，跟 B(t) 本身的瞬時大小無關。</p>
+    </div>
+  </div>
+  <button class="btn" style="margin-top:14px;background:var(--ok);color:#fff;border-color:var(--ok)" data-action="done" data-idx="3" data-next="-1">✅ 我看懂了，完成全部四個模式！</button>
+</div>
+</div>
+
+<div class="card" id="finalCard" style="display:none">
+  <h2>🏆 章末自我檢核（第七章 時變場與 Maxwell 方程式）</h2>
+  <p style="color:var(--sub);margin-bottom:12px">點一下打勾，確認自己真的能講出來：</p>
+  <ul class="checklist" id="checklist">
+    <li data-action="check"><span class="check"></span>我能寫出法拉第電磁感應定律 EMF = −N dΦ/dt，並解釋 Φ、N 各自的意義</li>
+    <li data-action="check"><span class="check"></span>我能正確判斷楞次定律的方向，知道感應電流是要「抗拒」磁通變化，不是「跟隨」磁通變化</li>
+    <li data-action="check"><span class="check"></span>我知道感應 EMF 正比於 dΦ/dt（變化率），跟 Φ 本身的瞬時大小無關——B 過零時 EMF 最大，B 在峰值時 EMF 為零</li>
+    <li data-action="check"><span class="check"></span>我能說明位移電流密度 ∂D/∂t 的物理意義，並知道它不是真正有電荷移動的電流</li>
+    <li data-action="check"><span class="check"></span>我知道電容器極板間的位移電流 I_d 與導線中的傳導電流 I_c 數值相等，這保證了電路中電流的連續性</li>
+    <li data-action="check"><span class="check"></span>我能寫出馬克斯威爾方程式的積分與微分形式，知道 ∂D/∂t 補進安培定律的動機</li>
+    <li data-action="check"><span class="check"></span>我能解釋 Faraday（∇×E=−∂B/∂t）與 Ampère-Maxwell（∇×H=∂D/∂t）如何耦合出電磁波的波動方程式，且知道這是耦合不是因果</li>
+    <li data-action="check"><span class="check"></span>我能說出均勻平面波中 E、B、傳播方向 k 三者互相垂直（TEM 波）</li>
+    <li data-action="check"><span class="check"></span>我能解釋為什麼螺線管外部沒有 B 場、卻仍有感應 E 場，並知道關鍵在「圈住的磁通量」而非局部 B 值</li>
+    <li data-action="check"><span class="check"></span>我知道感應 E 場的大小在 r=R（螺線管邊緣）最大，內部線性增加、外部按 1/r 遞減</li>
+  </ul>
+</div>
+
+<div class="foot">
+  第七章 時變場與 Maxwell 方程式<br>
+  單一 HTML 檔・無外部連線・可離線使用 ｜ 3D 場景以原生 Canvas 2D 自行投影繪製
+</div>
+
+</div><!-- /container -->
+
+<script>
+(function(){
+'use strict';
+
+/* ============ 常數與小工具 ============ */
+var EPS0=8.8541878128e-12, MU0=4*Math.PI*1e-7;
+var TAU=Math.PI*2, D2R=Math.PI/180, R2D=180/Math.PI;
+
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function lerpLog(t,a,b){return a*Math.pow(b/a,t);}      // t in [0,1]
+function eng(v,unit,dig){
+  if(!isFinite(v))return '∞';
+  if(v===0)return '0 '+unit;
+  var s=v<0?'−':'', a=Math.abs(v);
+  var P=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p'],[1e-15,'f']];
+  for(var i=0;i<P.length;i++){ if(a>=P[i][0]*0.999){ return s+(a/P[i][0]).toFixed(dig===undefined?2:dig)+' '+P[i][1]+unit; } }
+  return s+a.toExponential(2)+' '+unit;
+}
+function $(id){return document.getElementById(id);}
+function setTxt(id,t){var e=$(id); if(e)e.textContent=t;}
+
+/* ============ 3D 投影（自製，不依賴任何函式庫，沿用 Ch08 同一套手法）============ */
+function rot3(p,yaw,pitch){
+  var X=p.z, Y=p.x, Z=p.y;
+  var cy=Math.cos(yaw), sy=Math.sin(yaw);
+  var X1=X*cy+Z*sy, Z1=-X*sy+Z*cy;
+  var cp=Math.cos(pitch), sp=Math.sin(pitch);
+  return {x:X1, y:Y*cp-Z1*sp, z:Y*sp+Z1*cp};
+}
+function makeCam(view,W,H,bb,pad){
+  var size=Math.max(bb.x[1]-bb.x[0], bb.y[1]-bb.y[0], bb.z[1]-bb.z[0]) || 1;
+  var dist=size*2.9, yaw=view.yaw, pitch=view.pitch;
+  var minx=1e18,maxx=-1e18,miny=1e18,maxy=-1e18;
+  for(var i=0;i<2;i++)for(var j=0;j<2;j++)for(var k=0;k<2;k++){
+    var r=rot3({x:bb.x[i],y:bb.y[j],z:bb.z[k]},yaw,pitch);
+    var zc=r.z+dist; if(zc<0.05*size)zc=0.05*size;
+    var f=dist/zc, X=r.x*f, Y=r.y*f;
+    if(X<minx)minx=X; if(X>maxx)maxx=X; if(Y<miny)miny=Y; if(Y>maxy)maxy=Y;
+  }
+  var s=Math.min((W-2*pad)/Math.max(1e-9,maxx-minx),(H-2*pad)/Math.max(1e-9,maxy-miny));
+  var ox=W/2-s*(minx+maxx)/2, oy=H/2+s*(miny+maxy)/2;
+  var fn=function(p){
+    var r=rot3(p,yaw,pitch);
+    var zc=r.z+dist; if(zc<0.05*size)zc=0.05*size;
+    var f=dist/zc;
+    return {x:ox+s*r.x*f, y:oy-s*r.y*f, d:zc};
+  };
+  fn.scale=s;
+  return fn;
+}
+function arrow3(ctx,P,a,b,color,w,head){
+  var p1=P(a),p2=P(b);
+  var dx=p2.x-p1.x, dy=p2.y-p1.y, L=Math.hypot(dx,dy);
+  ctx.strokeStyle=color; ctx.lineWidth=w||2; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  if(L<2.5)return;
+  var h=Math.min(head||9,L*0.5), ux=dx/L, uy=dy/L;
+  ctx.fillStyle=color; ctx.beginPath();
+  ctx.moveTo(p2.x,p2.y);
+  ctx.lineTo(p2.x-ux*h-uy*h*0.40, p2.y-uy*h+ux*h*0.40);
+  ctx.lineTo(p2.x-ux*h+uy*h*0.40, p2.y-uy*h-ux*h*0.40);
+  ctx.closePath(); ctx.fill();
+}
+function poly3(ctx,P,pts,color,w,dash){
+  if(pts.length<2)return;
+  ctx.save(); if(dash)ctx.setLineDash(dash);
+  ctx.strokeStyle=color; ctx.lineWidth=w||2; ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.beginPath();
+  for(var i=0;i<pts.length;i++){var q=P(pts[i]); if(i===0)ctx.moveTo(q.x,q.y); else ctx.lineTo(q.x,q.y);}
+  ctx.stroke(); ctx.restore();
+}
+function text3(ctx,P,p,txt,color,dx,dy,font){
+  var q=P(p);
+  ctx.fillStyle=color; ctx.font=font||'bold 12px "Segoe UI",sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText(txt,q.x+(dx||0),q.y+(dy||0));
+}
+/* 圓形（供線圈／螺線管畫圈用），回傳 N+1 個世界座標點 */
+function circlePts(cx,cy,cz,r,axis,N){
+  var pts=[]; N=N||48;
+  for(var i=0;i<=N;i++){
+    var a=(i/N)*TAU;
+    if(axis==='y'){ pts.push({x:cx+r*Math.cos(a), y:cy, z:cz+r*Math.sin(a)}); }
+    else { pts.push({x:cx+r*Math.cos(a), y:cy+r*Math.sin(a), z:cz}); }
+  }
+  return pts;
+}
+/* 環繞方向的切線單位向量（loop 位在 x-z 平面，法線 = +y）。
+   由 Green/Stokes 面積向量公式獨立推導：(1/2)∮P×dP = +πr² ŷ 時，
+   切線方向須為 t_pos(θ) = (sinθ, 0, −cosθ)。此函式在模式①③②的環繞計算中共用。 */
+function tangentDir(theta){
+  return {x:Math.sin(theta), y:0, z:-Math.cos(theta)};
+}
+
+/* ============ Canvas 尺寸 ============ */
+function fit(cv,aspect,maxH){
+  var host=cv.parentElement;
+  if(host.clientWidth<40&&cv._w)return cv._ctx;
+  var w=Math.max(240,Math.floor(host.clientWidth));
+  var h=Math.round(w/aspect);
+  if(maxH&&h>maxH)h=maxH;
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.style.height=h+'px';
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  var ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  cv._w=w; cv._h=h; cv._ctx=ctx;
+  return ctx;
+}
+function bg(ctx,W,H){ ctx.clearRect(0,0,W,H); ctx.fillStyle='#fdfdff'; ctx.fillRect(0,0,W,H); }
+
+/* 旋轉互動 */
+function orbit(cv,view,onChange){
+  var drag=false,lx=0,ly=0,pid=null;
+  cv.addEventListener('pointerdown',function(e){drag=true;lx=e.clientX;ly=e.clientY;pid=e.pointerId;
+    try{cv.setPointerCapture(pid);}catch(err){} e.preventDefault();});
+  cv.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    var dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
+    view.yaw+=dx*0.009;
+    if(e.pointerType!=='touch') view.pitch=clamp(view.pitch+dy*0.007,-1.35,1.35);
+    if(onChange)onChange(); e.preventDefault();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(function(t){
+    cv.addEventListener(t,function(){drag=false;});
+  });
+}
+
+/* ============ 動畫排程（單一 RAF，隱藏時暫停）============ */
+var MODES=[], active=0, last=0;
+function tick(ts){
+  requestAnimationFrame(tick);
+  if(document.hidden){last=ts;return;}
+  if(!last)last=ts;
+  var dt=Math.min(0.06,(ts-last)/1000); last=ts;
+  var m=MODES[active];
+  if(!m)return;
+  if(m.playing){ m.t+=dt*m.speed; m.dirty=true; }
+  if(m.dirty){ m.dirty=false; m.draw(); }
+}
+
+/* ==========================================================
+   模式 ①：法拉第感應（時變磁場中的靜止線圈）
+   世界座標：線圈在 x-z 平面，法線（B 場方向）沿 +y
+   ========================================================== */
+var M1={
+  t:0, playing:true, speed:1, dirty:true,
+  view:{yaw:0.75,pitch:0.30}, view0:{yaw:0.75,pitch:0.30},
+  f:1, B0:1, N:3, rloop:0.12, Rcoil:10, cv:null
+};
+M1.calc=function(){
+  this.A=Math.PI*this.rloop*this.rloop;
+  this.w=TAU*this.f;
+  this.Bt=this.B0*Math.sin(this.w*this.t);
+  this.dBdt=this.B0*this.w*Math.cos(this.w*this.t);
+  this.Phi=this.Bt*this.A;
+  this.dPhidt=this.dBdt*this.A;
+  this.emf=-this.N*this.dPhidt;
+  this.Iamp=this.N*this.A*this.B0*this.w;               // EMF 振幅
+  this.I=this.emf/this.Rcoil;
+};
+M1.draw=function(){
+  var cv=this.cv; if(!cv)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H);
+  this.calc();
+  /* 緊貼實際內容的包絡框：xz 方向取「線圈半徑 + 最大電流箭頭外伸量」，
+     y 方向取「座標軸提示箭頭長度」，避免用過大的立方體包絡框讓畫面留白過多。 */
+  var r=this.rloop, ext=r*2.0, bbXZ=r*1.85, bbY=r*1.25;
+  var bb={x:[-bbXZ,bbXZ], y:[-bbY,bbY], z:[-bbXZ,bbXZ]};
+  var P=makeCam(this.view,W,H,bb,28);
+
+  /* 座標軸提示：+y（B 場方向） */
+  var gray='#94a3b8';
+  arrow3(ctx,P,{x:0,y:-r*0.55,z:0},{x:0,y:r*1.15,z:0},gray,1.6,8);
+  text3(ctx,P,{x:0,y:r*1.15,z:0},' y（B 場方向）',gray,5,-3);
+
+  /* 線圈（以粗銅色圓環表示 N 匝，示意畫成一圈） */
+  var coilPts=circlePts(0,0,0,r,'y',56);
+  poly3(ctx,P,coilPts,'#b45309',6);
+
+  /* 外部 B 場箭頭陣列（垂直穿過線圈） */
+  var jobs=[];
+  var bLen=0.55*ext*clamp(Math.abs(this.Bt)/Math.max(0.05,this.B0),0.08,1);
+  var bSign=this.Bt>=0?1:-1;
+  var grid=[-0.55,0,0.55];
+  for(var i=0;i<grid.length;i++)for(var j=0;j<grid.length;j++){
+    var gx=grid[i]*r, gz=grid[j]*r;
+    if(gx*gx+gz*gz>r*r*1.02)continue;
+    (function(gx,gz){
+      var y0=-bLen*0.5*bSign, y1=bLen*0.5*bSign;
+      var dep=P({x:gx,y:0,z:gz}).d;
+      jobs.push({d:dep,f:function(){
+        arrow3(ctx,P,{x:gx,y:y0,z:gz},{x:gx,y:y1,z:gz},'rgba(37,99,235,.82)',2.4,8);
+      }});
+    })(gx,gz);
+  }
+
+  /* 感應電流箭頭：沿線圈環繞，方向由 EMF 正負決定 t_pos 或 -t_pos */
+  var curSign=this.emf>=0?1:-1;
+  var curMag=clamp(Math.abs(this.emf)/Math.max(1e-9,this.Iamp),0,1);
+  var NI=16;
+  for(i=0;i<NI;i++){
+    var th=(i/NI)*TAU;
+    (function(th){
+      var p0={x:r*Math.cos(th),y:0,z:r*Math.sin(th)};
+      var td=tangentDir(th);
+      var step=(0.18+curMag*0.55)*r;
+      var p1={x:p0.x+curSign*td.x*step, y:0, z:p0.z+curSign*td.z*step};
+      var dep=P(p0).d-0.02;
+      jobs.push({d:dep,f:function(){
+        arrow3(ctx,P,p0,p1,'rgba(22,163,74,.92)',3,9);
+      }});
+    })(th);
+  }
+
+  jobs.sort(function(a,b){return b.d-a.d;});
+  for(i=0;i<jobs.length;i++)jobs[i].f();
+
+  setTxt('r0phi',eng(this.Phi,'Wb',4));
+  setTxt('r0dphi',eng(this.dPhidt,'Wb/s',4));
+  setTxt('r0emf',eng(this.emf,'V',4));
+  setTxt('r0i',eng(this.I,'A',4));
+  setTxt('r0amp',eng(this.Iamp,'V',4));
+  var fl=$('f0');
+  if(fl){
+    var s='';
+    if(Math.abs(this.Bt)<this.B0*0.05)s+='<span class="flag g">B(t) 接近過零：|EMF| 接近最大</span>';
+    if(Math.abs(this.dBdt)<this.B0*this.w*0.05)s+='<span class="flag y">B(t) 接近峰值：EMF 接近 0</span>';
+    s+=curSign>=0?'<span class="flag b">電流方向：+t（右手定則、大拇指指向 +y 法線）</span>':'<span class="flag r">電流方向：−t（右手定則、大拇指指向 +y 法線）</span>';
+    fl.innerHTML=s;
+  }
+};
+
+/* ==========================================================
+   模式 ②：位移電流（電容器充放電）
+   世界座標：極板法線沿 +y（上下兩片），環繞 B 場在 x-z 平面
+   ========================================================== */
+var M2={
+  t:0, playing:true, speed:1, dirty:true,
+  view:{yaw:0.75,pitch:0.30}, view0:{yaw:0.75,pitch:0.30},
+  V0:100, f:1000, Rp:0.05, d:0.002, epsr:1, cv:null
+};
+M2.calc=function(){
+  this.w=TAU*this.f;
+  this.Vt=this.V0*Math.sin(this.w*this.t);
+  this.dVdt=this.V0*this.w*Math.cos(this.w*this.t);
+  this.Et=this.Vt/this.d;
+  this.Dt=EPS0*this.epsr*this.Et;
+  this.Jd=EPS0*this.epsr*(this.dVdt/this.d);             // ∂D/∂t
+  this.area=Math.PI*this.Rp*this.Rp;
+  this.Id=this.Jd*this.area;                              // 總位移電流（= 傳導電流 Ic）
+  this.C=EPS0*this.epsr*this.area/this.d;
+  this.Ic=this.C*this.dVdt;
+  this.JdPeak=EPS0*this.epsr*(this.V0*this.w/this.d);
+  this.IdPeak=this.JdPeak*this.area;
+  this.B_at_R=MU0*this.IdPeak/(TAU*this.Rp);              // 峰值時 r=R 處磁場大小
+};
+M2.Bmag=function(r){
+  /* 回傳「當前瞬間」半徑 r 處的 B 大小（未含方向） */
+  var Rp=this.Rp;
+  if(r<=Rp) return 0.5*MU0*Math.abs(this.Jd)*r;
+  return MU0*Math.abs(this.Id)/(TAU*r);
+};
+M2.draw=function(){
+  var cv=this.cv; if(!cv)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H);
+  this.calc();
+  var Rp=this.Rp, gap=this.d*22 /* 視覺放大間距，避免太扁 */ ;
+  gap=clamp(gap,Rp*0.5,Rp*1.3);
+  /* 包絡框緊貼「最外圈 B 場箭頭（半徑約 1.9Rp，箭頭最長可再外伸至約 2.16Rp）＋導線」的實際範圍 */
+  var ext=Rp*2.25;
+  var bb={x:[-ext,ext], y:[-gap*1.15,gap*1.15], z:[-ext,ext]};
+  var P=makeCam(this.view,W,H,bb,26);
+
+  /* 兩片極板 */
+  var topPts=circlePts(0,gap/2,0,Rp,'y',48);
+  var botPts=circlePts(0,-gap/2,0,Rp,'y',48);
+  poly3(ctx,P,topPts,'rgba(220,38,38,.55)',3);
+  poly3(ctx,P,botPts,'rgba(37,99,235,.55)',3);
+  /* 導線與傳導電流方向（示意：側邊一條垂直線代表電路） */
+  var wireX=ext*0.95;
+  var gray='#94a3b8';
+  var Icsign=this.Ic>=0?1:-1;
+  arrow3(ctx,P,{x:wireX,y:-gap/2*Icsign,z:0},{x:wireX,y:gap/2*Icsign,z:0},gray,3,9);
+  poly3(ctx,P,[{x:Rp*0.98,y:gap/2,z:0},{x:wireX,y:gap/2,z:0}],gray,3);
+  poly3(ctx,P,[{x:Rp*0.98,y:-gap/2,z:0},{x:wireX,y:-gap/2,z:0}],gray,3);
+
+  var jobs=[];
+  /* 極板間 E/D 場箭頭（沿 y） */
+  var Emag=clamp(Math.abs(this.Et)/Math.max(1,this.V0/this.d),0.06,1);
+  var Esign=this.Et>=0?1:-1;
+  var grid=[-0.5,0,0.5];
+  for(var i=0;i<grid.length;i++)for(var j=0;j<grid.length;j++){
+    var gx=grid[i]*Rp, gz=grid[j]*Rp;
+    if(gx*gx+gz*gz>Rp*Rp*1.02)continue;
+    (function(gx,gz){
+      var half=gap*0.42*Emag;
+      var y0=-half*Esign, y1=half*Esign;
+      var dep=P({x:gx,y:0,z:gz}).d;
+      jobs.push({d:dep,f:function(){
+        arrow3(ctx,P,{x:gx,y:y0,z:gz},{x:gx,y:y1,z:gz},'rgba(220,38,38,.85)',2.4,7);
+      }});
+    })(gx,gz);
+  }
+
+  /* 位移電流產生的 B 場：多個半徑的環，箭頭沿切線方向，長度依 Bmag(r) 正規化 */
+  var radii=[0.4*Rp,0.75*Rp,Rp,1.4*Rp,1.9*Rp];
+  var maxB=this.Bmag(Rp)||1e-30;
+  var dirSign=this.Jd>=0?1:-1;
+  var NB=14;
+  var self=this;
+  radii.forEach(function(rr){
+    var mag=self.Bmag(rr)/maxB;   // 正規化到 0~1（Bmag(Rp) 為峰值）
+    for(var k=0;k<NB;k++){
+      var th=(k/NB)*TAU;
+      (function(th,rr,mag){
+        var p0={x:rr*Math.cos(th),y:0,z:rr*Math.sin(th)};
+        var td=tangentDir(th);
+        var step=(0.10+mag*0.30)*Rp;
+        var p1={x:p0.x+dirSign*td.x*step,y:0,z:p0.z+dirSign*td.z*step};
+        var dep=P(p0).d-0.01;
+        jobs.push({d:dep,f:function(){
+          arrow3(ctx,P,p0,p1,'rgba(37,99,235,.85)',2.2,6);
+        }});
+      })(th,rr,mag);
+    }
+  });
+
+  jobs.sort(function(a,b){return b.d-a.d;});
+  for(i=0;i<jobs.length;i++)jobs[i].f();
+
+  setTxt('r1E',eng(this.Et,'V/m',3));
+  setTxt('r1D',eng(this.Dt,'C/m²',3));
+  setTxt('r1Jd',eng(this.Jd,'A/m²',3));
+  setTxt('r1Id',eng(this.Id,'A',3));
+  setTxt('r1Ic',eng(this.Ic,'A',3));
+  setTxt('r1BR',eng(this.B_at_R,'T',3));
+  var fl=$('f1');
+  if(fl){
+    var s='';
+    var diff=Math.abs(this.Id-this.Ic);
+    s+= diff<1e-18||diff/Math.max(1e-30,Math.abs(this.IdPeak))<1e-6 ? '<span class="flag g">I_d ≈ I_c（電流連續）</span>' : '<span class="flag r">數值不一致，請檢查</span>';
+    fl.innerHTML=s;
+  }
+};
+
+/* ==========================================================
+   模式 ③：均勻平面波（Faraday × Ampère-Maxwell 耦合）
+   世界座標：x = E 方向、y = B 方向、z = 傳播方向（沿用 Ch08 慣例）
+   ========================================================== */
+var M3={
+  t:0, playing:true, speed:1, dirty:true,
+  view:{yaw:0.62,pitch:0.34}, view0:{yaw:0.62,pitch:0.34},
+  f:1e9, E0:1, epsr:1, focus:'both', cv:null,
+  L:1.0
+};
+M3.calc=function(){
+  var eps=EPS0*this.epsr;
+  this.vp=1/Math.sqrt(MU0*eps);
+  this.lam=this.vp/this.f;
+  this.k=TAU/this.lam;
+  this.w=TAU*this.f;
+  this.B0=this.E0/this.vp;
+};
+M3.draw=function(){
+  var cv=this.cv; if(!cv)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H);
+  this.calc();
+  var L=this.L, A=0.30*L*this.E0;
+  var bb={x:[-A*1.35,A*1.35], y:[-A*1.35,A*1.35], z:[-L/2,L/2]};
+  var P=makeCam(this.view,W,H,bb,34);
+  var k=this.k, ph=this.t*TAU;
+  var cycles=L/this.lam;
+  var Efn=function(zz){return A*Math.cos(ph - k*zz);};
+
+  var gray='#94a3b8', grayL='rgba(148,163,184,.45)';
+  arrow3(ctx,P,{x:0,y:0,z:-L/2},{x:0,y:0,z:L/2*1.06},'#f59e0b',2,10);
+  text3(ctx,P,{x:0,y:0,z:L/2*1.06},' +z 傳播方向 k',"#b45309",4,-2);
+  var z0=-L/2;
+  arrow3(ctx,P,{x:0,y:0,z:z0},{x:A*1.28,y:0,z:z0},'rgba(220,38,38,.55)',1.6,8);
+  text3(ctx,P,{x:A*1.28,y:0,z:z0},' x (E)','rgba(220,38,38,.8)',3,-2);
+  arrow3(ctx,P,{x:0,y:0,z:z0},{x:0,y:A*1.28,z:z0},'rgba(37,99,235,.55)',1.6,8);
+  text3(ctx,P,{x:0,y:A*1.28,z:z0},' y (B)','rgba(37,99,235,.8)',3,-2);
+  ctx.save(); ctx.setLineDash([3,4]);
+  poly3(ctx,P,[{x:-A,y:-A,z:z0},{x:A,y:-A,z:z0},{x:A,y:A,z:z0},{x:-A,y:A,z:z0},{x:-A,y:-A,z:z0}],grayL,1);
+  ctx.restore();
+
+  var jobs=[];
+  var nArr=Math.round(clamp(cycles*8,14,64));
+  var step=L/nArr;
+  var showE=this.focus!=='ampere', showB=this.focus!=='faraday';
+  var eAlpha=this.focus==='ampere'?0.32:0.88, bAlpha=this.focus==='faraday'?0.32:0.85;
+  for(var i=0;i<=nArr;i++){
+    var z=-L/2+i*step;
+    var Ev=Efn(z); // E、B 同相，視覺上共用同一個正規化振幅 A 繪製（真實 B0=E0/vp 極小，見讀數欄）
+    var dep=P({x:0,y:0,z:z}).d;
+    (function(z,Ev,dep){
+      if(showE&&Math.abs(Ev)>A*0.02)jobs.push({d:dep+0.001,f:function(){
+        arrow3(ctx,P,{x:0,y:0,z:z},{x:Ev,y:0,z:z},'rgba(220,38,38,'+eAlpha+')',2,7);}});
+      if(showB&&Math.abs(Ev)>A*0.02)jobs.push({d:dep,f:function(){
+        arrow3(ctx,P,{x:0,y:0,z:z},{x:0,y:Ev,z:z},'rgba(37,99,235,'+bAlpha+')',2,7);}});
+    })(z,Ev,dep);
+  }
+  /* 耦合提示徽章：兩個小旋轉圈標示「這裡在講哪一條方程式」 */
+  if(this.focus!=='ampere'){
+    var zF=-L*0.22;
+    jobs.push({d:P({x:0,y:A*1.05,z:zF}).d-0.05, f:(function(zF){return function(){
+      curlBadge(ctx,P,{x:0,y:A*1.05,z:zF},'#dc2626','Faraday: ∂B/∂t→∇×E');
+    };})(zF)});
+  }
+  if(this.focus!=='faraday'){
+    var zA=L*0.22;
+    jobs.push({d:P({x:A*1.05,y:0,z:zA}).d-0.05, f:(function(zA){return function(){
+      curlBadge(ctx,P,{x:A*1.05,y:0,z:zA},'#2563eb','Ampère-Maxwell: ∂D/∂t→∇×H');
+    };})(zA)});
+  }
+  jobs.sort(function(a,b){return b.d-a.d;});
+  for(i=0;i<jobs.length;i++)jobs[i].f();
+
+  setTxt('r2lam',eng(this.lam,'m',3));
+  setTxt('r2k',this.k.toFixed(2)+' rad/m');
+  setTxt('r2vp',eng(this.vp,'m/s',3));
+  setTxt('r2b0',eng(this.B0,'T',3));
+};
+function curlBadge(ctx,P,p,color,label){
+  var q=P(p), rad=9;
+  ctx.save();
+  ctx.strokeStyle=color; ctx.lineWidth=2.2;
+  ctx.beginPath(); ctx.arc(q.x,q.y,rad,0.5,Math.PI*1.65); ctx.stroke();
+  var ang=Math.PI*1.65, ax=q.x+rad*Math.cos(ang), ay=q.y+rad*Math.sin(ang);
+  ctx.beginPath();
+  ctx.moveTo(ax,ay);
+  ctx.lineTo(ax-6*Math.cos(ang-0.6),ay-6*Math.sin(ang-0.6));
+  ctx.lineTo(ax-6*Math.cos(ang+0.6),ay-6*Math.sin(ang+0.6));
+  ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+  ctx.font='bold 11px "Segoe UI",sans-serif'; ctx.fillStyle=color;
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText(label,q.x+rad+5,q.y);
+  ctx.restore();
+}
+
+/* ==========================================================
+   模式 ④：螺線管感應 E 場（∇×E=−∂B/∂t 的旋度視覺化）
+   世界座標：螺線管軸沿 +y（與模式①的 B 場方向一致，便於對照）
+   ========================================================== */
+var M4={
+  t:0, playing:true, speed:1, dirty:true,
+  view:{yaw:0.75,pitch:0.30}, view0:{yaw:0.75,pitch:0.30},
+  f:1, B0:1, R:0.10, cv:null, cvB:null
+};
+M4.calc=function(){
+  this.w=TAU*this.f;
+  this.Bt=this.B0*Math.sin(this.w*this.t);
+  this.dBdt=this.B0*this.w*Math.cos(this.w*this.t);
+  this.ER=(this.R/2)*Math.abs(this.dBdt);          // r=R 峰值處（此瞬間的量值）
+  this.E2R=(this.R*this.R/(2*2*this.R))*Math.abs(this.dBdt);
+};
+M4.Emag=function(r){
+  var R=this.R, d=Math.abs(this.dBdt);
+  if(r<=R) return 0.5*r*d;
+  return (R*R/(2*r))*d;
+};
+M4.draw=function(){
+  var cv=this.cv; if(!cv)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H);
+  this.calc();
+  /* 包絡框緊貼「最外圈感應 E 場（半徑 2.1R，箭頭最長可再外伸至約 2.4R）」與
+     「螺線管線圈堆疊高度（約 ±0.6R）」的實際範圍 */
+  var R=this.R, ext=R*2.6, bbXZ=R*2.5, bbY=R*0.8;
+  var bb={x:[-bbXZ,bbXZ], y:[-bbY,bbY], z:[-bbXZ,bbXZ]};
+  var P=makeCam(this.view,W,H,bb,26);
+
+  /* 螺線管線圈（多圈，沿 y 堆疊） */
+  var Ncoil=7;
+  for(var c=0;c<Ncoil;c++){
+    var yy=(-0.42+ (c/(Ncoil-1))*0.84)*ext*0.55;
+    poly3(ctx,P,circlePts(0,yy,0,R,'y',40),'rgba(180,83,9,.55)',2.4);
+  }
+
+  /* 內部 B 場箭頭（沿 y，僅 r<R） */
+  var jobs=[];
+  var bLen=0.42*ext*clamp(Math.abs(this.Bt)/Math.max(0.05,this.B0),0.08,1);
+  var bSign=this.Bt>=0?1:-1;
+  var grid=[-0.5,0,0.5];
+  for(var i=0;i<grid.length;i++)for(var j=0;j<grid.length;j++){
+    var gx=grid[i]*R, gz=grid[j]*R;
+    if(gx*gx+gz*gz>R*R*0.85)continue;
+    (function(gx,gz){
+      var y0=-bLen*0.5*bSign, y1=bLen*0.5*bSign;
+      var dep=P({x:gx,y:0,z:gz}).d;
+      jobs.push({d:dep,f:function(){
+        arrow3(ctx,P,{x:gx,y:y0,z:gz},{x:gx,y:y1,z:gz},'rgba(37,99,235,.82)',2.4,7);
+      }});
+    })(gx,gz);
+  }
+
+  /* 感應 E 場：多個半徑的環，方向由 −dB/dt 的正負決定 */
+  var radii=[0.5*R,R,1.5*R,2.1*R];
+  var maxE=this.Emag(R)||1e-30;
+  var dirSign=(-this.dBdt)>=0?1:-1;
+  var NE=16;
+  var self=this;
+  radii.forEach(function(rr){
+    var mag=self.Emag(rr)/maxE;
+    for(var k=0;k<NE;k++){
+      var th=(k/NE)*TAU;
+      (function(th,rr,mag){
+        var p0={x:rr*Math.cos(th),y:0,z:rr*Math.sin(th)};
+        var td=tangentDir(th);
+        var step=(0.10+mag*0.42)*R;
+        var p1={x:p0.x+dirSign*td.x*step,y:0,z:p0.z+dirSign*td.z*step};
+        var dep=P(p0).d-0.015;
+        jobs.push({d:dep,f:function(){
+          arrow3(ctx,P,p0,p1,'rgba(22,163,74,.9)',2.4,7);
+        }});
+      })(th,rr,mag);
+    }
+  });
+
+  jobs.sort(function(a,b){return b.d-a.d;});
+  for(i=0;i<jobs.length;i++)jobs[i].f();
+
+  setTxt('r3B',eng(this.Bt,'T',3));
+  setTxt('r3dbdt',eng(this.dBdt,'T/s',3));
+  setTxt('r3ER',eng(this.ER,'V/m',3));
+  setTxt('r3E2R',eng(this.E2R,'V/m',3));
+  var fl=$('f3');
+  if(fl){
+    fl.innerHTML = dirSign>=0?'<span class="flag b">E 環繞方向：+t（右手定則、大拇指指向 +y 法線）</span>':'<span class="flag r">E 環繞方向：−t（右手定則、大拇指指向 +y 法線）</span>';
+  }
+  drawM4Chart();
+};
+function drawM4Chart(){
+  var cv=M4.cvB; if(!cv)return;
+  var ctx=cv._ctx,W=cv._w,H=cv._h;
+  bg(ctx,W,H);
+  var R=M4.R, maxR=2.3*R;
+  var padL=42,padR=14,padT=14,padB=30;
+  var plotW=W-padL-padR, plotH=H-padT-padB;
+  var maxE=M4.Emag(R)||1e-30;
+  function xOf(r){return padL+(r/maxR)*plotW;}
+  function yOf(e){return padT+plotH-(clamp(e/maxE,0,1.15))*plotH*0.86;}
+  /* 軸 */
+  ctx.strokeStyle='#cbd5e1'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  /* R 標記（虛線） */
+  ctx.save(); ctx.setLineDash([3,3]); ctx.strokeStyle='#f59e0b'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(xOf(R),padT); ctx.lineTo(xOf(R),padT+plotH); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='#92400e'; ctx.font='bold 10px "Segoe UI",sans-serif'; ctx.textAlign='center';
+  ctx.fillText('r = R',xOf(R),padT+plotH+13);
+  /* 曲線 */
+  ctx.strokeStyle='#16a34a'; ctx.lineWidth=2.4; ctx.beginPath();
+  var N=80;
+  for(var i=0;i<=N;i++){
+    var r=(i/N)*maxR;
+    var e=M4.Emag(r);
+    var x=xOf(r), y=yOf(e);
+    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  /* 峰值點 */
+  ctx.fillStyle='#16a34a';
+  ctx.beginPath(); ctx.arc(xOf(R),yOf(maxE),4,0,TAU); ctx.fill();
+  ctx.fillStyle='#64748b'; ctx.font='10px "Segoe UI",sans-serif'; ctx.textAlign='left';
+  ctx.fillText('E(r) 相對大小',padL+4,padT+10);
+  ctx.textAlign='right';
+  ctx.fillText('r',padL+plotW,padT+plotH+13);
+}
+
+MODES=[M1,M2,M3,M4];
+
+/* ============ 版面／尺寸 ============ */
+function layout(){
+  if(M1.cv){fit(M1.cv,1.5,440);M1.dirty=true;}
+  if(M2.cv){fit(M2.cv,1.5,440);M2.dirty=true;}
+  if(M3.cv){fit(M3.cv,1.72,460);M3.dirty=true;}
+  if(M4.cv){fit(M4.cv,1.3,400);M4.dirty=true;}
+  if(M4.cvB){fit(M4.cvB,1.3,400);}
+}
+
+/* ============ 控制項 ============ */
+function bindRange(id,fn){
+  var el=$(id); if(!el)return;
+  var h=function(){fn(parseFloat(el.value));};
+  el.addEventListener('input',h);
+  el.addEventListener('change',h);
+  h();
+}
+function initControls(){
+  /* --- 模式 1：Faraday --- */
+  bindRange('s0f',function(v){ M1.f=lerpLog(v/100,0.1,3); setTxt('v0f',M1.f.toFixed(2)+' Hz'); M1.dirty=true; });
+  bindRange('s0b',function(v){ M1.B0=lerpLog(Math.max(v,1)/100,0.05,2); setTxt('v0b',M1.B0.toFixed(2)+' T'); M1.dirty=true; });
+  bindRange('s0n',function(v){ M1.N=Math.round(v); setTxt('v0n',M1.N.toFixed(0)); M1.dirty=true; });
+  bindRange('s0r',function(v){ M1.rloop=v/100; setTxt('v0r',M1.rloop.toFixed(2)+' m'); M1.dirty=true; });
+  bindRange('s0R',function(v){ M1.Rcoil=v; setTxt('v0R',M1.Rcoil.toFixed(1)+' Ω'); M1.dirty=true; });
+  bindRange('s0v',function(v){ M1.speed=lerpLog(Math.max(v,1)/100,0.1,3); setTxt('v0v',M1.speed.toFixed(2)+'×'); });
+
+  /* --- 模式 2：位移電流 --- */
+  bindRange('s1v',function(v){ M2.V0=lerpLog(Math.max(v,1)/100,10,1000); setTxt('v1v',M2.V0.toFixed(0)+' V'); M2.dirty=true; });
+  bindRange('s1f',function(v){ M2.f=lerpLog(Math.max(v,1)/100,10,1e5); setTxt('v1f',eng(M2.f,'Hz',2)); M2.dirty=true; });
+  bindRange('s1r',function(v){ M2.Rp=v/100; setTxt('v1r',M2.Rp.toFixed(3)+' m'); M2.dirty=true; });
+  bindRange('s1d',function(v){ M2.d=v/10000; setTxt('v1d',(M2.d*1000).toFixed(2)+' mm'); M2.dirty=true; });
+  bindRange('s1e',function(v){ M2.epsr=v/10; setTxt('v1e',M2.epsr.toFixed(1)); M2.dirty=true; });
+  bindRange('s1sp',function(v){ M2.speed=lerpLog(Math.max(v,1)/100,0.05,3); setTxt('v1sp',M2.speed.toFixed(2)+'×'); });
+
+  /* --- 模式 3：平面波 --- */
+  bindRange('s2f',function(v){
+    M3.f=1e9*Math.pow(10,(v-50)/50);
+    setTxt('v2f',eng(M3.f,'Hz',2)); M3.dirty=true;
+  });
+  bindRange('s2a',function(v){ M3.E0=v/100; setTxt('v2a',M3.E0.toFixed(2)+' V/m'); M3.dirty=true; });
+  bindRange('s2e',function(v){ M3.epsr=v/10; setTxt('v2e',M3.epsr.toFixed(1)); M3.dirty=true; });
+  bindRange('s2sp',function(v){ M3.speed=lerpLog(Math.max(v,1)/100,0.05,3); setTxt('v2sp',M3.speed.toFixed(2)+'×'); });
+
+  /* --- 模式 4：螺線管 --- */
+  bindRange('s3f',function(v){ M4.f=lerpLog(v/100,0.1,3); setTxt('v3f',M4.f.toFixed(2)+' Hz'); M4.dirty=true; });
+  bindRange('s3b',function(v){ M4.B0=lerpLog(Math.max(v,1)/100,0.05,2); setTxt('v3b',M4.B0.toFixed(2)+' T'); M4.dirty=true; });
+  bindRange('s3r',function(v){ M4.R=v/100; setTxt('v3r',M4.R.toFixed(2)+' m'); M4.dirty=true; });
+  bindRange('s3sp',function(v){ M4.speed=lerpLog(Math.max(v,1)/100,0.1,3); setTxt('v3sp',M4.speed.toFixed(2)+'×'); });
+}
+function setRange(id,val){ var e=$(id); if(e){e.value=val; e.dispatchEvent(new Event('input'));} }
+function invLog(v,a,b,scale){ return Math.round(clamp(Math.log(v/a)/Math.log(b/a),0,1)*scale); }
+
+/* ============ 進度 ============ */
+var done=[false,false,false,false];
+function markDone(i){
+  if(i<0||i>3)return;
+  done[i]=true;
+  var b=$('badge'+i); if(b)b.classList.add('done');
+  var n=done.filter(Boolean).length;
+  $('progressFill').style.width=(n/4*100)+'%';
+  $('progressText').textContent=n+' / 4 個模式已探索';
+  if(n===4){var fc=$('finalCard'); if(fc)fc.style.display='block';}
+}
+function showSection(i){
+  active=i;
+  var secs=document.querySelectorAll('.section');
+  for(var a=0;a<secs.length;a++)secs[a].classList.toggle('active',a===i);
+  var tabs=document.querySelectorAll('#navTabs .nav-tab');
+  for(var b=0;b<tabs.length;b++)tabs[b].classList.toggle('active',b===i);
+  layout();
+  MODES[i].dirty=true;
+  MODES[i].draw();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* Event delegation; no inline handlers. */
+function initEvents(){
+  document.body.addEventListener('click',function(e){
+    var t=e.target.closest('[data-action]'); if(!t)return;
+    var act=t.dataset.action;
+
+    if(act==='show'){ showSection(parseInt(t.dataset.idx,10)); }
+
+    else if(act==='col'){ t.classList.toggle('open'); t.nextElementSibling.classList.toggle('open'); }
+
+    else if(act==='check'){ t.classList.toggle('checked');
+      t.querySelector('.check').textContent=t.classList.contains('checked')?'✓':''; }
+
+    else if(act==='done'){
+      markDone(parseInt(t.dataset.idx,10));
+      var nx=parseInt(t.dataset.next,10);
+      if(nx>=0)showSection(nx);
+      else{ var fc=$('finalCard'); if(fc)fc.scrollIntoView({behavior:'smooth'}); }
+    }
+
+    else if(act==='play'){
+      var m=MODES[parseInt(t.dataset.m,10)];
+      m.playing=!m.playing;
+      t.classList.toggle('on',m.playing);
+      t.textContent=m.playing?'⏸ 暫停':'▶ 播放';
+      m.dirty=true;
+    }
+
+    else if(act==='reset-view'){
+      var m2=MODES[parseInt(t.dataset.m,10)];
+      m2.view.yaw=m2.view0.yaw; m2.view.pitch=m2.view0.pitch; m2.dirty=true; m2.draw();
+    }
+
+    else if(act==='view-preset'){
+      var m3=MODES[parseInt(t.dataset.m,10)];
+      m3.view.yaw=parseFloat(t.dataset.yaw); m3.view.pitch=parseFloat(t.dataset.pitch);
+      m3.dirty=true; m3.draw();
+    }
+
+    else if(act==='pf'){ /* 模式①預設情境 */
+      setRange('s0f',invLog(parseFloat(t.dataset.f),0.1,3,100));
+      setRange('s0b',invLog(Math.max(parseFloat(t.dataset.b),0.05),0.05,2,100));
+      setRange('s0n',parseFloat(t.dataset.n));
+      M1.dirty=true; M1.draw();
+    }
+
+    else if(act==='pc'){ /* 模式②預設情境 */
+      setRange('s1v',invLog(Math.max(parseFloat(t.dataset.v),10),10,1000,100));
+      setRange('s1f',invLog(Math.max(parseFloat(t.dataset.f),10),10,1e5,100));
+      setRange('s1r',parseFloat(t.dataset.r)*100);
+      setRange('s1d',parseFloat(t.dataset.d)*10000);
+      setRange('s1e',parseFloat(t.dataset.e)*10);
+      M2.dirty=true; M2.draw();
+    }
+
+    else if(act==='ps'){ /* 模式④預設情境 */
+      setRange('s3b',invLog(Math.max(parseFloat(t.dataset.b),0.05),0.05,2,100));
+      setRange('s3f',invLog(parseFloat(t.dataset.f),0.1,3,100));
+      setRange('s3r',parseFloat(t.dataset.r)*100);
+      M4.dirty=true; M4.draw();
+    }
+
+    else if(act==='focus'){
+      M3.focus=t.dataset.v;
+      var bs=document.querySelectorAll('[data-action="focus"]');
+      for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].dataset.v===M3.focus);
+      M3.dirty=true; M3.draw();
+    }
+  });
+}
+
+/* ============ 初始化 ============ */
+function init(){
+  M1.cv=$('c0'); M2.cv=$('c1'); M3.cv=$('c2'); M4.cv=$('c3a'); M4.cvB=$('c3b');
+  layout();
+  initControls();
+  initEvents();
+
+  orbit(M1.cv,M1.view,function(){M1.dirty=true;if(!M1.playing)M1.draw();});
+  orbit(M2.cv,M2.view,function(){M2.dirty=true;if(!M2.playing)M2.draw();});
+  orbit(M3.cv,M3.view,function(){M3.dirty=true;if(!M3.playing)M3.draw();});
+  orbit(M4.cv,M4.view,function(){M4.dirty=true;if(!M4.playing)M4.draw();});
+
+  var rt=null;
+  window.addEventListener('resize',function(){
+    if(rt)clearTimeout(rt);
+    rt=setTimeout(function(){layout();MODES[active].draw();},160);
+  });
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden){ last=0; layout(); MODES[active].dirty=true; MODES[active].draw(); }
+  });
+
+  for(var i=0;i<4;i++){MODES[i].dirty=true;}
+  M1.draw(); M2.draw(); M3.draw(); M4.draw();
+  requestAnimationFrame(tick);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+else init();
+
+})();
+</script>
+</body>
+</html>

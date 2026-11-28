@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 7 週互動動畫</title>
+<meta name="description" content="非同步自學動畫，共五段，從先到先處理的時序圖一路講到餓死、死結、MMU 和分頁。">
+<style>
+:root{
+  --bg:#F2EEE3;--ink:#24211D;--ink2:#676158;--line:#B8B1A4;--acc:#C7522A;--acc2:#A8431F;
+  --paper:#FBF8F1;--panel:#E8E1D1;--frame:#8F887C;--teal:#3E6E73;--tealL:#D6E4E1;--ochreL:#F1DEB0;
+  --sans:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Heiti TC",sans-serif;
+  --serif:"Noto Serif TC","Noto Sans TC","Microsoft JhengHei","PingFang TC","Heiti TC",serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:#F2EEE3;color:#24211D;font-family:var(--sans);line-height:1.6;overflow-x:hidden}
+button{font-family:inherit}
+a{color:var(--acc2)}
+#app{min-height:100vh;display:flex;flex-direction:column}
+.view{flex:1 0 auto;width:100%}
+.view[hidden]{display:none!important}
+.foot{flex:0 0 auto;padding:9px 16px;font-size:13px;line-height:1.5;color:var(--ink2);border-top:1px solid var(--line);text-align:center;background:#EFEADD}
+
+/* ---------- 目錄 ---------- */
+#toc{max-width:1100px;margin:0 auto;padding:28px 16px 28px}
+.kicker{margin:0;color:var(--acc2);font-weight:700;font-size:15px;letter-spacing:.04em}
+#toc h1{font-family:var(--serif);font-size:30px;line-height:1.35;margin:4px 0 10px;font-weight:700}
+.lead{margin:0 0 6px;font-size:17px;max-width:46em}
+.lead2{margin:0 0 18px;font-size:15px;color:var(--ink2);max-width:46em}
+.resume{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 18px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;background:var(--paper);font-size:15px}
+.resume[hidden]{display:none}
+.resume a{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}
+.cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.card a.go{display:flex;gap:14px;padding:16px 16px 12px;color:inherit;text-decoration:none;flex:1;min-height:44px}
+.card a.go:hover{background:#FFFDF7}
+.card a.go:focus-visible,.btn:focus-visible,.sub:focus-visible,.resume a:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.num{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--acc2);color:#fff;font-weight:700;font-size:19px;display:flex;align-items:center;justify-content:center;font-family:var(--serif)}
+.card h3{margin:0 0 4px;font-family:var(--serif);font-size:19px;line-height:1.4}
+.card p{margin:0;font-size:15px}
+.card .meta{margin-top:8px;font-size:13px;color:var(--ink2)}
+.sub{display:flex;align-items:center;min-height:44px;padding:0 16px;border-top:1px solid #E1DACB;font-size:14px;color:var(--acc2);text-decoration:none}
+.sub:hover{background:#FFFDF7}
+.selfread{margin:18px 0 0;padding:10px 14px;border-left:4px solid var(--acc);background:var(--paper);font-size:15px;max-width:52em}
+.howto{margin:14px 0 0;font-size:14px;color:var(--ink2)}
+
+/* ---------- 播放器 ---------- */
+.p-head{display:flex;align-items:center;gap:12px;padding:8px 20px;border-bottom:1px solid var(--line);background:#EFEADD}
+.p-title{flex:1;min-width:0}
+.p-seg{font-size:13px;color:var(--ink2);display:block;line-height:1.4}
+.p-title h2{font-family:var(--serif);font-size:21px;margin:0;line-height:1.35;font-weight:700}
+.pages{font-size:13px;color:var(--ink2)}
+.btn{min-height:46px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--frame);background:var(--paper);color:var(--ink);font-size:17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1.2;touch-action:manipulation}
+.btn:hover{background:#FFFDF7}
+.btn.primary{background:var(--acc2);border-color:var(--acc2);color:#fff}
+.btn.primary:hover{background:#933A1B}
+.btn:disabled{opacity:.38;cursor:default}
+.btn svg{width:18px;height:18px;flex:0 0 auto}
+.btn.small{font-size:15px;min-height:44px}
+.p-main{padding:10px 20px 12px}
+.stage{background:var(--paper);border:1px solid var(--line);border-radius:14px;position:relative}
+.stage svg.scene{display:block;width:100%;height:auto;aspect-ratio:5/3}
+.stage svg.scene[hidden]{display:none}
+.panel{display:flex;flex-direction:column;gap:10px;padding-top:12px}
+.stepbar{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px;color:var(--ink2);flex-wrap:wrap}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:#D8D1C3}
+.dot.done{background:#B9A88E}
+.dot.cur{background:var(--acc)}
+.s-title{font-family:var(--serif);font-size:20px;margin:0;line-height:1.4}
+.cap{font-size:19px;line-height:1.75;margin:0}
+.take{background:#FFF9EE;border:2px solid var(--acc);border-radius:12px;padding:10px 14px 12px}
+.take[hidden]{display:none}
+.take-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 6px;font-weight:700;font-size:17px;color:var(--acc2)}
+.tag{display:inline-block;background:var(--acc2);color:#fff;border-radius:999px;padding:1px 10px;font-size:13px;font-weight:700;line-height:1.7}
+.tag.soft{background:var(--teal)}
+.take .tnote{font-size:14px;font-weight:400;color:var(--ink2)}
+.take p{margin:6px 0 0;font-size:18px;line-height:1.7}
+.take b{color:var(--acc2)}
+.take-more{padding:0 4px}
+.take-more[hidden]{display:none}
+.take-more p{margin:0;font-size:16px;line-height:1.7;color:var(--ink2)}
+.take-more b{color:var(--ink2)}
+.take strong{color:var(--acc);font-weight:700}
+.ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.after{display:flex;gap:8px}
+.after .btn{flex:1}
+.after[hidden]{display:none}
+.keys{margin:0;font-size:13px;color:var(--ink2)}
+.rotate-hint{display:none;margin:6px 0 0;font-size:13px;color:var(--ink2)}
+
+@media (min-width:900px) and (min-height:560px){
+  #player:not([hidden]){display:flex;flex-direction:column;height:calc(100vh - 39px);min-height:520px}
+  .p-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:18px}
+  .stage{min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .stage svg.scene{width:100%;height:100%;aspect-ratio:auto}
+  .panel{padding-top:0;min-height:0;overflow:auto}
+  .ctrls{margin-top:auto}
+}
+@media (max-width:899px),(max-height:559px){
+  .p-head{flex-wrap:wrap;padding:8px 16px;row-gap:2px}
+  .pages{order:3;flex-basis:100%}
+  .p-main{padding:10px 16px 16px}
+  .rotate-hint{display:block}
+}
+@media (max-width:599px){
+  .stage svg.scene.stack{aspect-ratio:25/52}
+}
+@media (max-width:420px){
+  #toc h1{font-size:25px}
+  .p-title h2{font-size:18px}
+  .cap{font-size:18px}
+  .take p{font-size:17px}
+  .btn{font-size:16px;padding:6px 8px}
+  .cards{grid-template-columns:1fr}
+  .keys{display:none}
+}
+
+/* ---------- SVG 場景 ---------- */
+.scene text{font-family:var(--sans)}
+.nt,.nt *{transition:none!important}
+.still .scene *,.still .scene{transition:none!important;animation:none!important}
+.scene.stack .rhalf{transform:translate(-500px,520px)}
+.scene.stack .divider{display:none}
+.cpu-box{fill:#ECE6D8;stroke:#8F887C;stroke-width:3;transition:stroke .4s,stroke-width .4s}
+.cpu-box.hi{stroke:#C7522A;stroke-width:6}
+.lab .f{fill:#A8431F;font-weight:700}
+.lab .m{fill:#676158}
+.hlrect{transition:fill .3s,stroke .3s}
+.hlrect.hi{fill:#EE9E7C;stroke:#A8431F;stroke-width:3}
+.hltext.hi{fill:#C7522A}
+.cellbox.hi rect{stroke:#C7522A;stroke-width:4}
+.flash.hi{opacity:1}
+.mmu-box{fill:#EEF3F1;stroke:#3E6E73;stroke-width:2.5;transition:stroke .3s,stroke-width .3s,fill .3s}
+.mmu-box.hi{stroke:#C7522A;stroke-width:5;fill:#FBEDE4}
+.gate rect{fill:#FFFFFF;stroke:#8F887C;stroke-width:1.5;transition:fill .3s,stroke .3s}
+.gate.ok rect{fill:#E3EFDC;stroke:#6F8A3F;stroke-width:2.5}
+.gate.no rect{fill:#F7D9CF;stroke:#C7522A;stroke-width:2.5}
+.lamp{fill:#D8D1C3;transition:fill .3s}
+.lamp.ok{fill:#6F8A3F}
+.lamp.no{fill:#C7522A}
+.shelf{fill:#F7F5EF;stroke:#C9C1B1;stroke-width:1.5;transition:fill .3s,stroke .3s}
+.shelf.hi{fill:#FBE3D6;stroke:#C7522A;stroke-width:3}
+.shelf.lit{fill:#FFF1C9;stroke:#C99A3A;stroke-width:3}
+.word{transition:fill .3s}
+.word rect{fill:#EFEBE2;stroke:#D2CBBE;stroke-width:1.5;transition:fill .3s,stroke .3s}
+.word text{fill:#A39B8D;font-weight:700;transition:fill .3s}
+.word.on rect{fill:#3E6E73;stroke:#3E6E73}
+.word.on text{fill:#FFFFFF}
+.corner.hi text{fill:#C7522A}
+@keyframes k-bob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+@keyframes k-convA{0%{transform:translateX(0);opacity:0}10%{opacity:1}80%{transform:translateX(150px);opacity:1}100%{transform:translateX(150px);opacity:0}}
+@keyframes k-convB{0%{transform:translateX(-50px);opacity:0}10%{opacity:1}80%{transform:translateX(100px);opacity:1}100%{transform:translateX(100px);opacity:0}}
+@keyframes k-convC{0%{transform:translateX(-100px);opacity:0}10%{opacity:1}80%{transform:translateX(50px);opacity:1}100%{transform:translateX(50px);opacity:0}}
+@keyframes k-pulse{from{opacity:.35}to{opacity:1}}
+@keyframes k-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.lp-bob{animation:k-bob .32s ease-in-out infinite alternate}
+.lp-convA{animation:k-convA 3.3s linear infinite}
+.lp-convB{animation:k-convB 3.3s linear -1.1s infinite}
+.lp-convC{animation:k-convC 3.3s linear -2.2s infinite}
+.lp-pulse{animation:k-pulse .9s ease-in-out infinite alternate}
+.lp-spin{animation:k-spin 2.2s linear infinite}
+@media (prefers-reduced-motion:reduce){
+  .scene [class*="lp-"]{animation:none!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="toc" class="view" aria-labelledby="tocTitle">
+    
+    <h1 id="tocTitle">互動動畫：CPU 排程與記憶體管理</h1>
+    <p class="lead">五段動畫。按「下一步」或鍵盤右鍵，一步一步往下看；每一步都有文字說明，不開聲音也看得懂。每段最後一步是「這段要記得」。</p>
+    <p class="lead2">建議先看完各段動畫。動畫裡的數字是例子，看懂流程就好。</p>
+    <div id="resume" class="resume" hidden></div>
+    <ol id="cards" class="cards"></ol>
+    <p class="howto">錄影或分享時，網址後面加 ?a=段號&amp;s=步號，可以直接打開某一段的某一步，例如 ?a=2&amp;s=5。</p>
+  </section>
+
+  <section id="player" class="view" hidden aria-label="動畫播放">
+    <header class="p-head">
+      <button id="bToc" class="btn small" type="button">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>回目錄</button>
+      <div class="p-title">
+        <span id="pSeg" class="p-seg"></span>
+        <h2 id="pTitle"></h2>
+      </div>
+      <span id="pPages" class="pages"></span>
+    </header>
+    <div class="p-main">
+      <div id="stage" class="stage"></div>
+      <div class="panel">
+        <p class="rotate-hint">手機橫放，圖會比較大。</p>
+        <div class="stepbar"><span id="pStep"></span><span id="dots" class="dots" aria-hidden="true"></span></div>
+        <h3 id="sTitle" class="s-title"></h3>
+        <p id="cap" class="cap" aria-live="polite"></p>
+        <div id="take" class="take" hidden aria-live="polite"></div>
+        <div id="takeMore" class="take-more" hidden aria-live="polite"></div>
+        <div class="ctrls">
+          <button id="bPrev" class="btn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>上一步</button>
+          <button id="bNext" class="btn primary" type="button">下一步<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button id="bAuto" class="btn" type="button" aria-pressed="false"></button>
+          <button id="bHome" class="btn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10a5.5 5.5 0 1 0 1.8-4.1M4.5 3.5v3.2h3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>從頭</button>
+        </div>
+        <div id="after" class="after" hidden>
+          <button id="bNextSeg" class="btn primary" type="button"></button>
+        </div>
+        <p class="keys">鍵盤左右鍵也能換步。</p>
+      </div>
+    </div>
+  </section>
+  <footer class="foot">非同步自學動畫</footer>
+</div>
+<script>
+(function () {
+'use strict';
+var DATA = {"animations":[{"no":1,"title":"先到先處理示範例：看懂一張時序圖","tocLine":"跟著下面這個例子，看時序圖怎麼從左往右長出來，換個順序以後平均等待差多少。","tocPages":"","takeawayTag":"重點","takeawayNote":"","tocLinks":[],"steps":[{"title":"三張訂單照順序排好","caption":"三個程序依序抵達：P1 要 15 毫秒，P2 和 P3 各要 3 毫秒。假設三個一開始就都在排隊。"},{"title":"先到先處理：P1 先上","caption":"先到先處理：誰先到就先做誰，輪到就一次做完。P1 最先到，在時序圖上從 0 做到 15。"},{"title":"時序圖由左往右讀","caption":"時序圖由左往右是時間，格子裡寫 CPU 正在做誰。P2 從 15 做到 18，P3 從 18 做到 21。"},{"title":"開始做的時間點＝等了多久","caption":"大家一開始就在排隊，所以開始做的時間點就是等了多久：P1 等 0，P2 等 15，P3 等 18。"},{"title":"用一個數字來比","caption":"要比兩種排法，用一個數字最方便：三個等待時間平均是 11 毫秒。看懂就好，不用練。"},{"title":"換個順序：P2、P3、P1","caption":"改成 P2 先到、P3 第二、P1 最後。這次 P2 等 0、P3 等 3、P1 等 6，平均只剩 3 毫秒。"},{"title":"為什麼差這麼多","caption":"第一種順序，最久的 P1 排在最前面，後面兩個 3 毫秒就能做完的程序，只能乾等它做完。"},{"title":"這段要記得","caption":"同樣的程序，抵達的順序不同，平均等待時間可以差很多。先到先處理最簡單，卻不一定最好。"}],"takeaway":[{"label":"先到先處理","text":"同樣的程序，抵達的順序不同，平均等待時間可以差很多。先到先處理最簡單，卻不一定最好。"}]},{"no":2,"title":"餓死和死結：一樣等不到，差在哪","tocLine":"看低優先權的訂單怎麼一直被插隊，再看兩張訂單怎麼各拿一樣工具、互相卡住。","tocPages":"","takeawayTag":"重點","takeawayNote":"","tocLinks":[{"s":5,"label":"從第 5 步開始看（死結）"}],"steps":[{"title":"優先權排程：等級高的先做","caption":"優先權排程：替每個程序排等級，等級高的先做。這個例子數字越小越優先。"},{"title":"又來一張第 1 優先","caption":"輪到 P1 之前，又來一張第 1 優先的訂單，插到 P1 前面。店長照樣拿最前面那張。"},{"title":"一直被插隊：餓死","caption":"高優先權的訂單一直進來，P1 一直被插隊，永遠等不到 CPU 這項資源。這個現象叫餓死。"},{"title":"解法：等越久，越往前排","caption":"解法：把等待時間也算進優先權。等超過一定時間，就提高它的優先權，總有一天輪得到。"},{"title":"用資源照三步","caption":"程序用資源都照三步：請求、使用、釋放。先開口借，借到了用，用完還回去。"},{"title":"各拿一樣，又等對方那一樣","caption":"訂單甲占住唯一的平底鍋，還差鍋鏟；訂單乙占住唯一的鍋鏟，還差平底鍋。"},{"title":"誰都不放手：死結","caption":"兩張單都不肯先放，誰都動不了，一直等下去，這就是死結。只要兩個程序就可能發生。"},{"title":"餓死和死結並排","caption":"餓死：系統裡其他程序照樣在跑，只有某個低優先權的程序一直被插隊、輪不到。死結：卡住的那幾個程序互相等對方，誰都走不了，不會自己解開。"},{"title":"這段要記得","caption":"優先權排程裡，低優先權的程序一直等不到資源（這裡是 CPU），叫餓死。死結是互相等對方手上的資源，兩個程序就可能發生。"}],"takeaway":[{"label":"餓死（Starvation）","text":"優先權排程裡，低優先權的程序一直等不到資源（這裡是 CPU），叫餓死。"},{"label":"死結（Deadlock）","text":"程序互相等對方手上的資源，誰都動不了，兩個程序就可能發生，用不著四個以上。"},{"label":"餓死的解法","text":"等越久優先權越高。","extra":true}]},{"no":3,"title":"時間一到就換手：進度卡記下做到哪","tocLine":"看依序循環排程時間到了怎麼換下一張，進度卡怎麼抄、下次怎麼接著做。","tocPages":"","takeawayTag":"重點","takeawayNote":"","tocLinks":[],"steps":[{"title":"排一條隊，先定好時間間隔","caption":"依序循環排程為分時系統設計：CPU 的時間切成很小段，大家輪流用。每張訂單都釘著自己的進度卡（PCB）。"},{"title":"P1 上場，時間到了還沒做完","caption":"P1 先上。時間一到，P1 還沒做完，料理區就要換給下一張。"},{"title":"換手前，抄進度卡","caption":"換手之前，店長把步驟牌、小便條和砧板上有什麼，都抄到釘在訂單上的進度卡，也就是 PCB。"},{"title":"排到最後面，下一張上來","caption":"抄好以後，P1 排到隊伍最後面。下一張 P2 上來，照它自己的進度卡開始做。"},{"title":"時間還沒到就做完","caption":"時間還沒到就做完的，自己交出 CPU。P3 做到時間到，一樣抄好進度卡、排到後面。"},{"title":"又輪到 P1，照進度卡接著做","caption":"又輪到 P1：店長照進度卡把料理台擺回原樣，P1 從上次停下的地方接著做。"},{"title":"兩種換人的時機","caption":"兩種換人的時機要分清楚：程序去等東西才換，是多元程式規劃；時間一到就換，是分時系統。"},{"title":"這段要記得","caption":"依序循環排程為分時系統設計，每個程序輪流用一段時間間隔，沒做完的狀態記進 PCB。"}],"takeaway":[{"lead":"分時系統","text":"把 CPU 時間切成小段輪流用。"},{"label":"PCB 和換人的時機","text":"每個程序都有一張程序控制表（PCB），記錄它的資訊和狀態。時間一到就換是分時系統，程序去等東西才換是多元程式規劃。"},{"label":"依序循環排程","text":"為分時系統設計，每個程序輪流用一段時間間隔，沒做完的狀態記進 PCB。","extra":true}]},{"no":4,"title":"第 326 格在哪：MMU 把邏輯位址換成實際位址","tocLine":"看食譜上的第 326 格怎麼變成冰箱的第 14826 格，伸手拿別層的東西會被怎麼攔下來。","tocPages":"","takeawayTag":"重點","takeawayNote":"","tocLinks":[{"s":6,"label":"從第 6 步開始看（保護）"}],"steps":[{"title":"好幾張訂單共用一台冰箱","caption":"好幾張訂單的食材都放在同一台冰箱。店長要管三件事：分配、位址對應、保護。"},{"title":"分配：從第 14500 格開始的那一層","caption":"店長把冰箱從第 14500 格開始的那一層，分給 P1。記住從哪一格開始的，叫基底暫存器。"},{"title":"食譜上寫的是第 326 格","caption":"寫程式時不知道會被放在哪裡，所以食譜寫的是從自己開頭算起的第 326 格，這叫邏輯位址。"},{"title":"加上基底：第 14826 格","caption":"主廚報出 326，走道口的盒子加上基底暫存器的 14500，換成冰箱的第 14826 格，這叫實際位址。"},{"title":"做這個換算的，叫 MMU","caption":"負責把邏輯位址換成實際位址的硬體，叫 MMU（記憶體管理單元）。記住這個名稱即可。"},{"title":"保護：先和界線比","caption":"再加一個界線暫存器，記住這張單最多用到哪裡。每次都先和界線比，沒超過才加上基底。"},{"title":"超過界線：錯誤中斷","caption":"超過界線，就發出錯誤中斷，交給作業系統處理。這張單的食材只能放在自己那一層，帳本那層誰都不准碰。"},{"title":"這段要記得","caption":"邏輯位址靠基底暫存器換成實際位址，負責換算的硬體是 MMU（記憶體管理單元）。"}],"takeaway":[{"label":"MMU","text":"邏輯位址靠基底暫存器換成實際位址，負責換算的硬體是 MMU（記憶體管理單元）。"},{"label":"界線暫存器","text":"檢查有沒有超出範圍，保護作業系統。","extra":true}]},{"no":5,"title":"分頁：切成一樣大的保鮮盒","tocLine":"看冰箱為什麼會明明有空位卻放不下，換成一樣大的保鮮盒以後怎麼放。","tocPages":"","takeawayTag":"重點","takeawayNote":"","tocLinks":[],"steps":[{"title":"每張單要一整塊連在一起的空間","caption":"如果每張訂單都要一整塊連在一起的空間，冰箱用久了，會東空一塊、西空一塊。"},{"title":"加起來夠，卻放不進去","caption":"新訂單要的空間，每一個空位都不夠大。明明加起來還有空間，卻放不進去。"},{"title":"切成大小相同的頁面","caption":"分頁：把程序要用的記憶體，切成大小相同的頁面，不管裡面裝什麼。冰箱也切成一樣大的格子。"},{"title":"哪格空著就放哪格","caption":"哪一格空著就放哪一格，不用連在一起，只要記好每一盒放在哪。剛才放不進去的，現在放得進去。"},{"title":"拿東西時，一樣是 MMU 幫忙換","caption":"主廚要拿頁面 3，一樣由 MMU 幫忙，把位址換到那一盒實際放的格子。"},{"title":"分頁和分段","caption":"分頁照固定大小切，每一頁一樣大；分段照內容的意思切，像主程式一段、資料一段，大小不一樣。"},{"title":"這段要記得","caption":"分頁：把程序的記憶體需求，切成大小相同的頁面（Page）。"}],"takeaway":[{"label":"分頁","text":"把程序的記憶體需求，切成大小相同的頁面（Page）。分頁切出來的叫頁面，大小相同。"}]}]};
+
+var Q = new URLSearchParams(location.search);
+var STILL = Q.get('still') === '1';
+var RM = false;
+try { RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+if (STILL) document.documentElement.classList.add('still');
+var NARROW = null;
+try { NARROW = window.matchMedia('(max-width: 599px)'); } catch (e) {}
+
+var NS = 'http://www.w3.org/2000/svg';
+var C = {
+  ink:'#24211D', ink2:'#676158', line:'#B8B1A4', acc:'#C7522A', acc2:'#A8431F', paper:'#FBF8F1',
+  frame:'#8F887C', teal:'#3E6E73', tealL:'#D6E4E1', ochre:'#C99A3A', ochreL:'#F1DEB0',
+  wood:'#CDB48A', woodL:'#E6C996', cab:'#E2D6BF', skin:'#EBCBA7', white:'#FFFDF8',
+  aisle:'#E3DBCB', grey:'#EFEBE2', mute:'#A39B8D', fridge:'#F7F5EF', inner:'#E6EEEC', green:'#6F8A3F'
+};
+/* 每個程序一個顏色：深色給票面色條與長條，淺色給時序圖格子 */
+var PC = {P1: '#B5653F', P2: '#3E6E73', P3: '#B98A2E', P4: '#6F8A3F', P5: '#5E6E86', P6: '#8C6A9A', P7: '#A0794B', P8: '#7D8A94'};
+var PL = {P1: '#F0D2C1', P2: '#C9DEDA', P3: '#F1DEB0', P4: '#D9E4C6', P5: '#D3DAE6', P6: '#E3D6E8', P7: '#EBDCC6', P8: '#DCE1E4'};
+
+/* ---------- SVG 小工具 ---------- */
+function S(tag, a, p) {
+  var e = document.createElementNS(NS, tag);
+  if (a) { for (var k in a) { if (a[k] !== null && a[k] !== undefined) e.setAttribute(k, a[k]); } }
+  if (p) p.appendChild(e);
+  return e;
+}
+function T(p, x, y, s, o) {
+  o = o || {};
+  var e = S('text', {x: x, y: y, 'font-size': o.fs || 20, 'text-anchor': o.a || 'middle', fill: o.c || C.ink,
+    'font-weight': o.w || null, 'class': o.cls || null}, p);
+  e.textContent = s;
+  return e;
+}
+function G(p, a) { return S('g', a || null, p); }
+function at(p, x, y, sc) { return S('g', {transform: 'translate(' + x + ',' + y + ')' + (sc ? ' scale(' + sc + ')' : '')}, p); }
+function line(p, x1, y1, x2, y2, o) {
+  o = o || {};
+  return S('line', {x1: x1, y1: y1, x2: x2, y2: y2, stroke: o.c || C.frame, 'stroke-width': o.w || 2,
+    'stroke-dasharray': o.dash || null, 'stroke-linecap': o.cap || 'round', 'marker-end': o.me || null, 'marker-start': o.ms || null, 'class': o.cls || null}, p);
+}
+function rect(p, x, y, w, h, o) {
+  o = o || {};
+  return S('rect', {x: x, y: y, width: w, height: h, rx: o.rx === undefined ? 4 : o.rx, fill: o.f || 'none', stroke: o.s || null,
+    'stroke-width': o.sw || (o.s ? 1.5 : null), 'stroke-dasharray': o.dash || null, 'class': o.cls || null}, p);
+}
+function path(p, d, o) {
+  o = o || {};
+  return S('path', {d: d, fill: o.f || 'none', stroke: o.s || null, 'stroke-width': o.sw || (o.s ? 2 : null),
+    'stroke-dasharray': o.dash || null, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'marker-end': o.me || null, 'class': o.cls || null}, p);
+}
+
+/* ---------- 場景 ---------- */
+function Scene(no, title) {
+  this.no = no;
+  this.svg = S('svg', {viewBox: '0 0 1000 600', 'class': 'scene', role: 'img', 'aria-label': title, preserveAspectRatio: 'xMidYMid meet'});
+  this.defs = S('defs', null, this.svg);
+  this.root = G(this.svg);
+  this.reg = {}; this.base = {}; this.loops = {};
+}
+Scene.prototype.R = function (id, el, props) {
+  props = props || {};
+  if (this.reg[id]) throw new Error('duplicate id ' + id);
+  var b = {o: 1, x: 0, y: 0, s: 1, sx: 1, r: 0, c: {}, tx: null};
+  for (var k in props) { if (k === 'origin') continue; if (k === 'c') b.c = Object.assign({}, props.c); else b[k] = props[k]; }
+  if (el.tagName === 'text' && b.tx === null) b.tx = el.textContent;
+  var og = props.origin;
+  if (Array.isArray(og)) { el.style.transformBox = 'view-box'; el.style.transformOrigin = og[0] + 'px ' + og[1] + 'px'; }
+  else { el.style.transformBox = 'fill-box'; el.style.transformOrigin = og === 'left' ? '0% 50%' : (og === 'top' ? '50% 0%' : '50% 50%'); }
+  this.reg[id] = el; this.base[id] = b;
+  return el;
+};
+Scene.prototype.L = function (id, el, cls, origin) {
+  this.loops[id] = {el: el, cls: cls};
+  if (origin) { el.style.transformBox = 'view-box'; el.style.transformOrigin = origin[0] + 'px ' + origin[1] + 'px'; }
+  else { el.style.transformBox = 'fill-box'; el.style.transformOrigin = '50% 50%'; }
+  return el;
+};
+Scene.prototype.marker = function (name, color) {
+  var id = 'mk' + this.no + name;
+  var m = S('marker', {id: id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse', markerUnits: 'strokeWidth'}, this.defs);
+  S('path', {d: 'M0 0 L10 5 L0 10 z', fill: color}, m);
+  return 'url(#' + id + ')';
+};
+/* 註冊一個「可移動」的群組：群組本身不帶 transform 屬性 */
+Scene.prototype.box = function (p, id, props) { var g = G(p); this.R(id, g, props); return g; };
+Scene.prototype.T = function (id, p, x, y, s, o, props) { var t = T(p, x, y, s, o); this.R(id, t, props); return t; };
+
+/* ---------- 人物 ---------- */
+function person(p, x, y, kind) {
+  var g = at(p, x, y);
+  var bodyC = kind === 'chef' ? C.white : (kind === 'manager' ? '#F2ECE1' : '#E9C27A');
+  S('rect', {x: -21, y: 17, width: 42, height: 60, rx: 15, fill: bodyC, stroke: C.frame, 'stroke-width': 2}, g);
+  if (kind === 'chef') S('path', {d: 'M-10 30 L10 30 L12 64 L-12 64 Z', fill: '#EFE9DC', stroke: '#C9C1B1', 'stroke-width': 1.5}, g);
+  else if (kind === 'helper') S('path', {d: 'M-12 29 L12 29 L13 66 L-13 66 Z', fill: '#D39A3A', stroke: '#A87A28', 'stroke-width': 1.5}, g);
+  else {
+    S('path', {d: 'M-19 26 L-6 22 L0 48 L6 22 L19 26 L17 70 L-17 70 Z', fill: '#6B5B4E'}, g);
+    S('path', {d: 'M-3 22 L3 22 L4 44 L0 50 L-4 44 Z', fill: C.acc}, g);
+  }
+  S('circle', {cx: 0, cy: 0, r: 16, fill: C.skin, stroke: C.frame, 'stroke-width': 2}, g);
+  S('circle', {cx: -5, cy: -1, r: 1.9, fill: C.ink}, g);
+  S('circle', {cx: 5, cy: -1, r: 1.9, fill: C.ink}, g);
+  S('path', {d: 'M-4 7 Q0 10 4 7', fill: 'none', stroke: C.ink, 'stroke-width': 1.5, 'stroke-linecap': 'round'}, g);
+  if (kind === 'chef') {
+    S('circle', {cx: -9, cy: -29, r: 8, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+    S('circle', {cx: 0, cy: -33, r: 9.5, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+    S('circle', {cx: 9, cy: -29, r: 8, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+    S('rect', {x: -13, y: -27, width: 26, height: 12, rx: 2, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+  } else if (kind === 'helper') {
+    S('path', {d: 'M-16 -5 Q0 -23 16 -5 L16 -1 Q0 -15 -16 -1 Z', fill: C.teal}, g);
+  } else {
+    S('path', {d: 'M-16 -3 Q-15 -19 0 -19 Q15 -19 16 -3 Q10 -12 0 -12 Q-10 -12 -16 -3 Z', fill: '#4A4640'}, g);
+  }
+  return g;
+}
+/* 可選擇上下晃動的人物：外層 loop 群組不帶 transform 屬性 */
+function personL(sc, p, x, y, kind, s, loopId) {
+  var w = G(p);
+  if (loopId) sc.L(loopId, w, 'lp-bob');
+  person(at(w, x, y, s || 1), 0, 0, kind);
+  return w;
+}
+function lab(sc, p, x, y, f, m, id, props, o) {
+  o = o || {};
+  var g = G(p, {'class': 'lab'});
+  if (id) sc.R(id, g, props);
+  T(g, x, y, f, {fs: o.fs || 20, cls: 'f', a: o.a});
+  if (m) T(g, x, y + (o.gap || 22), m, {fs: o.ms || 16, cls: 'm', a: o.a});
+  return g;
+}
+function banner(sc, x, y) {
+  var g = sc.box(sc.root, 'banner', {o: 0});
+  S('rect', {x: x - 105, y: y - 24, width: 210, height: 44, rx: 22, fill: C.acc}, g);
+  T(g, x, y + 7, '這段要記得', {fs: 22, w: 700, c: '#FFFFFF'});
+  return g;
+}
+function pill(p, cx, cy, w, h, txt, o) {
+  o = o || {};
+  var g = G(p);
+  S('rect', {x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: h / 2, fill: o.f || '#E8E1D1', stroke: o.s || null, 'stroke-width': o.s ? 1.5 : null}, g);
+  T(g, cx, cy + (o.dy !== undefined ? o.dy : (o.fs || 14) * 0.36), txt, {fs: o.fs || 14, w: 700, c: o.c || C.ink});
+  return g;
+}
+
+/* ---------- 廚房物件 ---------- */
+function egg(p, x, y) { var g = at(p, x, y); S('ellipse', {rx: 7, ry: 9, fill: '#FFFBF0', stroke: '#B8A98E', 'stroke-width': 1.5}, g); return g; }
+function bowl(p, x, y, fillC) { var g = at(p, x, y); S('path', {d: 'M-13 -5 Q-12 8 0 8 Q12 8 13 -5 Z', fill: fillC || '#FFFFFF', stroke: C.frame, 'stroke-width': 1.5}, g); return g; }
+function veg(p, x, y) { var g = at(p, x, y);
+  S('path', {d: 'M-1 10 C -11 4 -10 -7 -3 -11 C 0 -4 0 4 -1 10 Z', fill: '#8DB05A', stroke: '#5F7F37', 'stroke-width': 1.1}, g);
+  S('path', {d: 'M1 10 C 11 4 10 -7 3 -11 C 0 -4 0 4 1 10 Z', fill: '#9DC06A', stroke: '#5F7F37', 'stroke-width': 1.1}, g);
+  S('rect', {x: -2, y: 4, width: 4, height: 7, rx: 1.5, fill: '#F1F4E6', stroke: '#9FB07F', 'stroke-width': 0.8}, g); return g; }
+function meat(p, x, y) { var g = at(p, x, y); S('path', {d: 'M-10 -4 Q-6 -10 4 -8 Q12 -5 10 3 Q6 9 -4 8 Q-12 5 -10 -4 Z', fill: '#D98C7A', stroke: '#A85F4F', 'stroke-width': 1.2}, g); S('circle', {cx: 2, cy: 0, r: 2.5, fill: '#F6E2D8'}, g); return g; }
+function fish(p, x, y) { var g = at(p, x, y); S('path', {d: 'M-11 0 Q-3 -8 7 0 Q-3 8 -11 0 Z M7 0 L12 -5 L12 5 Z', fill: '#9DB4C4', stroke: '#62798A', 'stroke-width': 1.2}, g); return g; }
+function tofu(p, x, y) { var g = at(p, x, y); S('rect', {x: -9, y: -7, width: 18, height: 14, rx: 2, fill: '#FFFDF6', stroke: '#A89E8A', 'stroke-width': 1.5}, g); return g; }
+function pan(p, x, y, s) {
+  var g = at(p, x, y, s);
+  S('ellipse', {cx: 0, cy: 0, rx: 26, ry: 9, fill: '#5A5650', stroke: '#3D3A35', 'stroke-width': 2}, g);
+  S('rect', {x: 24, y: -3.5, width: 34, height: 7, rx: 3.5, fill: '#7A5A3A', stroke: '#553E28', 'stroke-width': 1.5}, g);
+  return g;
+}
+function spatula(p, x, y, s) {
+  var g = at(p, x, y, s);
+  S('rect', {x: -30, y: -3, width: 34, height: 6, rx: 3, fill: '#7A5A3A', stroke: '#553E28', 'stroke-width': 1.5}, g);
+  S('path', {d: 'M4 -10 L28 -8 L28 8 L4 10 Z', fill: '#B9BDC0', stroke: '#6E7478', 'stroke-width': 1.5}, g);
+  return g;
+}
+function counter(p, x, y, w) {
+  S('rect', {x: x, y: y, width: w, height: 12, rx: 3, fill: C.wood, stroke: '#A88F62', 'stroke-width': 1.5}, p);
+}
+/* 進度卡（PCB）：淺青綠色卡片，上緣一根紅色圖釘。和小便條（黃色、上緣夾子）不同 */
+function pcbCard(p, x, y, w, h) {
+  var g = G(p);
+  S('rect', {x: x, y: y, width: w, height: h, rx: 4, fill: '#D6E4E1', stroke: '#3E6E73', 'stroke-width': 1.5}, g);
+  S('circle', {cx: x + w / 2, cy: y + 4, r: 3.6, fill: '#C7522A', stroke: '#8E3517', 'stroke-width': 1}, g);
+  return g;
+}
+/* 小便條（指令暫存器）：黃色、上緣一個夾子 */
+function noteSlip(p, x, y, w, h) {
+  var g = G(p);
+  S('rect', {x: x, y: y, width: w, height: h, rx: 2, fill: '#FFF4C7', stroke: '#C9B26A', 'stroke-width': 1.5}, g);
+  S('rect', {x: x + w / 2 - 9, y: y - 5, width: 18, height: 9, rx: 2, fill: C.frame}, g);
+  return g;
+}
+/* 票面：hook 在 (0,0)，票身從 y=8 開始 */
+function ticketBody(p, name, col, w, h, fsName, noHook) {
+  if (!noHook) { S('line', {x1: 0, y1: 0, x2: 0, y2: 8, stroke: C.frame, 'stroke-width': 2}, p);
+  S('circle', {cx: 0, cy: 0, r: 3, fill: C.frame}, p); }
+  S('rect', {x: -w / 2, y: 8, width: w, height: h, rx: 4, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, p);
+  S('rect', {x: -w / 2 + 0.75, y: 8.75, width: w - 1.5, height: 6, fill: col}, p);
+  if (name) T(p, 0, 40, name, {fs: fsName || 22, w: 700});
+}
+function rail(p, x1, x2, y) { line(p, x1, y, x2, y, {c: C.frame, w: 4}); }
+function oven(p, x, y, s) {
+  var g = at(p, x, y, s);
+  S('rect', {x: -40, y: -34, width: 80, height: 68, rx: 6, fill: '#D9D2C4', stroke: C.frame, 'stroke-width': 2}, g);
+  S('rect', {x: -32, y: -20, width: 64, height: 44, rx: 4, fill: '#5A4A3E', stroke: '#3D322A', 'stroke-width': 1.5}, g);
+  S('rect', {x: -24, y: -14, width: 48, height: 30, rx: 3, fill: '#E3A35F', opacity: 0.55}, g);
+  S('rect', {x: -30, y: -31, width: 60, height: 6, rx: 3, fill: '#8F887C'}, g);
+  return g;
+}
+function kTimer(p, x, y, r) {
+  var g = at(p, x, y);
+  S('rect', {x: -5, y: -r - 8, width: 10, height: 8, rx: 2, fill: C.frame}, g);
+  S('circle', {cx: 0, cy: 0, r: r, fill: '#FFFFFF', stroke: C.acc2, 'stroke-width': 3}, g);
+  for (var i = 0; i < 12; i++) {
+    var a = i * Math.PI / 6;
+    S('line', {x1: Math.sin(a) * (r - 3), y1: -Math.cos(a) * (r - 3), x2: Math.sin(a) * (r - 7), y2: -Math.cos(a) * (r - 7), stroke: '#B8B1A4', 'stroke-width': 1.5}, g);
+  }
+  return g;
+}
+function lockIcon(p, x, y, s) {
+  var g = at(p, x, y, s);
+  S('path', {d: 'M-11 -4 L-11 -13 Q-11 -25 0 -25 Q11 -25 11 -13 L11 -4', fill: 'none', stroke: '#5A5650', 'stroke-width': 5}, g);
+  S('rect', {x: -17, y: -6, width: 34, height: 28, rx: 5, fill: '#C99A3A', stroke: '#8A6620', 'stroke-width': 2}, g);
+  S('circle', {cx: 0, cy: 6, r: 4, fill: '#5A4A2A'}, g);
+  return g;
+}
+function recipeCard(p, x, y, w, h, tabX) {
+  var g = G(p);
+  S('rect', {x: x, y: y, width: w, height: h, rx: 3, fill: '#FFF8E6', stroke: '#B8A06A', 'stroke-width': 1.5}, g);
+  S('rect', {x: (tabX !== undefined ? x + tabX : x + w / 2) - 8, y: y - 5, width: 16, height: 8, fill: '#D9C58F'}, g);
+  return g;
+}
+
+/* ================= 動畫 1：先到先處理示範例 ================= */
+var SEQ = {};
+(function () {
+var X0 = 150, K = 30;               /* 時序圖：0 毫秒在 x=150，每毫秒 30 */
+var KS = 610;                       /* 料理區裡掛單的位置 */
+function tk(sc, p, id, name, badge, ms, frac) {
+  var g = sc.box(p, id, {x: -70, o: 0});
+  ticketBody(g, name, PC[name], 82, 120);
+  pill(g, 0, 64, 60, 28, badge, {fs: 13});
+  sc.R(id + 'b', rect(g, -33, 86, 66 * frac, 10, {rx: 2, f: PC[name]}), {origin: 'left'});
+  T(g, 0, 117, ms + ' 毫秒', {fs: 14, c: C.ink2});
+  pcbCard(g, 10, 126, 34, 22);
+  T(g, 0, 170, '程序', {fs: 14, c: C.ink2});
+  return g;
+}
+function chart(sc, p, id, rows, cells, label, avgTxt, bigTxt, yOff, props) {
+  var g = sc.box(p, id, props);
+  var gi = sc.box(g, id + 'in');
+  var ry = [358, 378, 398].map(function (v) { return v + yOff; });
+  rows.forEach(function (r, i) {
+    var rid = id + 'w' + (i + 1);
+    var rg = sc.box(gi, rid, {o: 0});
+    T(rg, 138, ry[i], r[0] + ' 等 ' + r[1], {fs: 13, a: 'end', c: C.ink2});
+    if (r[1] === 0) S('circle', {cx: X0, cy: ry[i] - 4, r: 4.5, fill: PC[r[0]]}, rg);
+    else {
+      sc.R(rid + 'l', line(rg, X0, ry[i] - 4, X0 + r[1] * K, ry[i] - 4, {c: PC[r[0]], w: 3, dash: '6 5', cap: 'butt'}), {origin: 'left', sx: 0});
+      line(rg, X0 + r[1] * K, ry[i] - 10, X0 + r[1] * K, ry[i] + 2, {c: PC[r[0]], w: 2.5});
+    }
+  });
+  var cy = 408 + yOff;
+  line(gi, X0, cy + 32, 800, cy + 32, {c: C.ink2, w: 2});
+  sc.T(id + 'lb', gi, 138, cy + 22, label, {fs: 14, a: 'end', w: 700, c: C.ink2}, {o: 0});
+  cells.forEach(function (c) {
+    var cid = id + c[0];
+    var x1 = X0 + c[1] * K, x2 = X0 + c[2] * K;
+    var cg = G(gi);
+    sc.R(cid, rect(cg, x1, cy, x2 - x1, 32, {rx: 3, f: PL[c[0]], s: PC[c[0]], cls: 'hlrect'}), {origin: 'left', sx: 0});
+    sc.T(cid + 't', cg, (x1 + x2) / 2, cy + 22, c[0], {fs: 16, w: 700}, {o: 0});
+  });
+  var ticks = [0].concat(cells.map(function (c) { return c[2]; }));
+  ticks.forEach(function (t, i) {
+    var tg = sc.box(gi, id + 'k' + t, {o: i === 0 ? 1 : 0});
+    line(tg, X0 + t * K, cy + 32, X0 + t * K, cy + 37, {c: C.ink2, w: 2});
+    sc.T(id + 'kt' + t, tg, X0 + t * K, cy + 58, String(t), {fs: 15, w: 700, c: C.ink2, cls: 'hltext'});
+  });
+  sc.T(id + 'avg', g, 812, cy + 22, avgTxt, {fs: 16, w: 700, a: 'start', c: C.ink2}, {o: 0});
+  var bg = sc.box(g, id + 'big', {o: 0, s: 0.8, origin: [840, cy + 20]});
+  T(bg, 812, cy - 8, '平均等待', {fs: 14, a: 'start', c: C.ink2});
+  T(bg, 812, cy + 34, bigTxt, {fs: 38, w: 700, a: 'start', c: C.acc2});
+  T(bg, 812 + (bigTxt.length > 1 ? 58 : 34), cy + 34, '毫秒', {fs: 15, a: 'start', c: C.ink2});
+  return g;
+}
+/* 料理區做一張單：送進去，長條做掉，格子長出來，再離開 */
+function runJob(t0, tid, cell, tick, ms, extra) {
+  var d = ms * 110, ev = [];
+  ev.push([t0, 600, {}]); ev[0][2][tid] = {x: KS};
+  var e2 = {}; e2[tid + 'b'] = {sx: 0}; e2[cell] = {sx: 1}; ev.push([t0 + 650, d, e2, 'lin']);
+  var e3 = {}; e3[cell + 't'] = {o: 1}; e3[tick] = {o: 1}; ev.push([t0 + 650 + d, 250, e3]);
+  var e4 = {}; e4[tid] = {o: 0}; ev.push([t0 + 750 + d, 250, e4]);
+  if (extra) ev.push([t0 + 750 + d, 450, extra]);
+  return {ev: ev, end: t0 + 1200 + d};
+}
+function cat() { var out = []; for (var i = 0; i < arguments.length; i++) out = out.concat(arguments[i]); return out; }
+function flash(t, ids, on, off) {
+  var a = {}, b = {};
+  ids.forEach(function (id) { a[id] = on; b[id] = off; });
+  return [[t, 200, a, 'tr'], [t + 240, 200, b, 'tr']];
+}
+var j1 = runJob(100, 'tP1', 'cAP1', 'cAk15', 15, {tP2: {x: 270}, tP3: {x: 180}});
+var j2 = runJob(0, 'tP2', 'cAP2', 'cAk18', 3, {tP3: {x: 270}});
+var j3 = runJob(j2.end + 50, 'tP3', 'cAP3', 'cAk21', 3);
+var q2 = runJob(2700, 'tQ2', 'cBP2', 'cBk3', 3, {tQ3: {x: 270}, tQ1: {x: 180}});
+var q3 = runJob(q2.end + 50, 'tQ3', 'cBP3', 'cBk6', 3, {tQ1: {x: 270}});
+var q1 = runJob(q3.end + 50, 'tQ1', 'cBP1', 'cBk21', 15);
+var pt = j3.end + 250, pd = 1200;
+SEQ[1] = {
+  build: function (sc) {
+    var R = sc.root;
+    var cn = sc.box(R, 'corner'); cn.setAttribute('class', 'corner');
+    T(cn, 985, 28, '看懂流程就好', {fs: 15, a: 'end', c: C.ink2});
+    sc.T('shared', R, 20, 28, '兩次都照先到先處理，只有抵達順序不同', {fs: 15, w: 700, a: 'start', c: C.acc2}, {o: 0});
+    var top = sc.box(R, 'top');
+    T(top, 30, 60, '出單架（就緒佇列）', {fs: 17, w: 700, a: 'start', c: C.ink2});
+    rail(top, 40, 320, 78);
+    /* 料理區 */
+    S('rect', {x: 390, y: 50, width: 270, height: 280, rx: 12, 'class': 'cpu-box'}, top);
+    T(top, 404, 76, '料理區（CPU）', {fs: 17, w: 700, a: 'start', c: C.ink2});
+    rail(top, 566, 652, 78);
+    personL(sc, top, 435, 200, 'chef', 0.8, 'chefB');
+    personL(sc, top, 540, 200, 'helper', 0.8, 'asstB');
+    counter(top, 402, 262, 246);
+    lab(sc, top, 435, 297, '控制單元', '主廚', null, null, {fs: 16, ms: 14, gap: 19});
+    lab(sc, top, 540, 297, '算術邏輯單元', '助手', null, null, {fs: 16, ms: 14, gap: 19});
+    /* 店長：站在出單架旁 */
+    personL(sc, top, 346, 186, 'manager', 0.8);
+    lab(sc, top, 346, 272, '作業系統', '店長', null, null, {fs: 16, ms: 14, gap: 20});
+    /* 訂單：第一種順序三張、第二種順序三張 */
+    var tw = at(top, 0, 78);
+    tk(sc, tw, 'tP1', 'P1', '抵達 1', 15, 1);
+    tk(sc, tw, 'tP2', 'P2', '抵達 2', 3, 0.2);
+    tk(sc, tw, 'tP3', 'P3', '抵達 3', 3, 0.2);
+    tk(sc, tw, 'tQ2', 'P2', '抵達 1', 3, 0.2);
+    tk(sc, tw, 'tQ3', 'P3', '抵達 2', 3, 0.2);
+    tk(sc, tw, 'tQ1', 'P1', '抵達 3', 15, 1);
+    var pl = sc.box(top, 'pcbL', {o: 0});
+    line(pl, 117, 230, 117, 264, {c: C.teal, w: 2});
+    S('circle', {cx: 117, cy: 230, r: 3, fill: C.teal}, pl);
+    T(pl, 60, 286, '進度卡（PCB）', {fs: 15, w: 700, a: 'start', c: C.teal});
+    /* 表一：欄位照上傳版第 24 張 */
+    var t1 = G(top);
+    rect(t1, 680, 48, 310, 32, {rx: 0, f: C.teal});
+    [['程序', 710], ['抵達順序', 790], ['所需時間（毫秒）', 915]].forEach(function (h) { T(t1, h[1], 69, h[0], {fs: 14, w: 700, c: '#FFFFFF'}); });
+    rect(t1, 680, 48, 310, 122, {rx: 0, s: C.frame});
+    [110, 140].forEach(function (y) { line(t1, 680, y, 990, y, {c: '#CFC8BA', w: 1.5, cap: 'butt'}); });
+    [740, 840].forEach(function (x) { line(t1, x, 80, x, 170, {c: '#CFC8BA', w: 1.5, cap: 'butt'}); });
+    [['P1', '1', '15'], ['P2', '2', '3'], ['P3', '3', '3']].forEach(function (r, i) {
+      var y = 100 + i * 30;
+      T(t1, 710, y, r[0], {fs: 15, w: 700});
+      sc.T('ta' + (i + 1), t1, 790, y, r[1], {fs: 15});
+      T(t1, 915, y, r[2], {fs: 15});
+    });
+    /* 表二：等待時間 */
+    var t2 = sc.box(top, 'tbl2', {o: 0});
+    rect(t2, 680, 180, 200, 32, {rx: 0, f: C.teal});
+    T(t2, 710, 201, '程序', {fs: 14, w: 700, c: '#FFFFFF'});
+    T(t2, 810, 201, '等待時間（毫秒）', {fs: 14, w: 700, c: '#FFFFFF'});
+    rect(t2, 680, 180, 200, 122, {rx: 0, s: C.frame});
+    [242, 272].forEach(function (y) { line(t2, 680, y, 880, y, {c: '#CFC8BA', w: 1.5, cap: 'butt'}); });
+    line(t2, 740, 212, 740, 302, {c: '#CFC8BA', w: 1.5, cap: 'butt'});
+    ['P1', 'P2', 'P3'].forEach(function (n, i) { T(t2, 710, 232 + i * 30, n, {fs: 15, w: 700}); });
+    /* 等待時間的數字：從時序圖左邊的標籤位置浮到表裡 */
+    [358, 378, 398].forEach(function (yy, i) {
+      var y = 232 + i * 30;
+      sc.T('tw' + (i + 1), top, 810, y, ['0', '15', '18'][i], {fs: 15, w: 700, c: C.acc2}, {o: 0, x: 128 - 810, y: yy - y});
+    });
+    sc.T('fml', top, 680, 332, '（0＋15＋18）÷ 3 ＝ 11 毫秒', {fs: 17, w: 700, a: 'start', c: C.acc2}, {o: 0});
+    /* 時序圖 */
+    var cA = chart(sc, R, 'cA', [['P1', 0], ['P2', 15], ['P3', 18]], [['P1', 0, 15], ['P2', 15, 18], ['P3', 18, 21]], '第一種順序', '平均 11 毫秒', '11', 0);
+    sc.T('ttl', cA, 20, 336, '時序圖（甘特圖）', {fs: 16, w: 700, a: 'start'}, {o: 0});
+    chart(sc, R, 'cB', [['P2', 0], ['P3', 3], ['P1', 6]], [['P2', 0, 3], ['P3', 3, 6], ['P1', 6, 21]], '第二種順序', '平均 3 毫秒', '3', 126, {o: 0});
+    var ptr = sc.box(R, 'ptr', {o: 0});
+    S('path', {d: 'M' + X0 + ' 470 L' + (X0 - 7) + ' 482 L' + (X0 + 7) + ' 482 Z', fill: C.acc}, ptr);
+    sc.T('dry', R, 710, 392, '乾等', {fs: 15, w: 700, a: 'start', c: C.acc}, {o: 0});
+    var fin = sc.box(R, 'fin', {o: 0});
+    T(fin, 500, 488, '抵達的順序不同，平均等待時間可以差很多', {fs: 22, w: 700, c: C.acc2});
+    T(fin, 500, 524, '先到先處理最簡單，卻不一定最好', {fs: 19, c: C.ink});
+    banner(sc, 500, 36);
+  },
+  steps: [
+    {seq: [[0, 900, {tP1: {o: 1, x: 270}}], [450, 850, {tP2: {o: 1, x: 180}}], [900, 800, {tP3: {o: 1, x: 90}}], [1800, 400, {pcbL: {o: 1}}]]},
+    {seq: cat([[0, 300, {pcbL: {o: 0}}], [400, 400, {ttl: {o: 1}}]], j1.ev), loops: ['chefB', 'asstB']},
+    {seq: cat(j2.ev, j3.ev, [[pt, 300, {ptr: {o: 1}}], [pt + 300, pd, {ptr: {x: 630}}, 'lin']],
+      flash(pt + 300, ['cAkt0'], {c: {hi: 1}}, {c: {hi: 0}}), flash(pt + 300 + pd * 15 / 21, ['cAkt15'], {c: {hi: 1}}, {c: {hi: 0}}),
+      flash(pt + 300 + pd * 18 / 21, ['cAkt18'], {c: {hi: 1}}, {c: {hi: 0}}), flash(pt + 300 + pd, ['cAkt21'], {c: {hi: 1}}, {c: {hi: 0}}),
+      [[pt + 300 + pd + 400, 300, {ptr: {o: 0}}]]), loops: ['chefB', 'asstB']},
+    {seq: [[0, 300, {cAw1: {o: 1}}], [300, 300, {cAw2: {o: 1}}], [300, 1000, {cAw2l: {sx: 1}}, 'lin'], [500, 300, {cAw3: {o: 1}}], [500, 1200, {cAw3l: {sx: 1}}, 'lin'],
+      [1800, 400, {tbl2: {o: 1}}],
+      [2000, 200, {tw1: {o: 1}}], [2200, 700, {tw1: {x: 0, y: 0}}],
+      [2400, 200, {tw2: {o: 1}}], [2600, 700, {tw2: {x: 0, y: 0}}],
+      [2800, 200, {tw3: {o: 1}}], [3000, 700, {tw3: {x: 0, y: 0}}]]},
+    {seq: cat([[0, 600, {fml: {o: 1}}]], flash(800, ['corner'], {c: {hi: 1}}, {c: {hi: 0}}), flash(1300, ['corner'], {c: {hi: 1}}, {c: {hi: 0}}))},
+    {seq: cat([[0, 500, {cAin: {o: 0.35}, cAavg: {o: 1}}], [0, 400, {tbl2: {o: 0}, fml: {o: 0}, tw1: {o: 0}, tw2: {o: 0}, tw3: {o: 0}}], [300, 400, {shared: {o: 1}, cAlb: {o: 1}, cBlb: {o: 1}}],
+      [400, 300, {ta1: {o: 0}, ta2: {o: 0}, ta3: {o: 0}}], [700, 0, {ta1: {tx: '3'}, ta2: {tx: '1'}, ta3: {tx: '2'}}], [750, 300, {ta1: {o: 1}, ta2: {o: 1}, ta3: {o: 1}}],
+      [600, 900, {tQ2: {o: 1, x: 270}}], [1200, 800, {tQ3: {o: 1, x: 180}}], [1800, 700, {tQ1: {o: 1, x: 90}}], [2400, 400, {cB: {o: 1}}]],
+      q2.ev, q3.ev, q1.ev,
+      [[q1.end + 100, 300, {cBw1: {o: 1}}], [q1.end + 300, 300, {cBw2: {o: 1}}], [q1.end + 300, 500, {cBw2l: {sx: 1}}, 'lin'], [q1.end + 600, 300, {cBw3: {o: 1}}], [q1.end + 600, 700, {cBw3l: {sx: 1}}, 'lin'],
+       [q1.end + 1350, 0, {tw1: {tx: '6'}, tw2: {tx: '0'}, tw3: {tx: '3'}, fml: {tx: '（0＋3＋6）÷ 3 ＝ 3 毫秒'}}],
+       [q1.end + 1400, 400, {tbl2: {o: 1}, tw1: {o: 1}, tw2: {o: 1}, tw3: {o: 1}}], [q1.end + 1700, 400, {fml: {o: 1}}], [q1.end + 2100, 400, {cBavg: {o: 1}}]]), loops: ['chefB', 'asstB']},
+    {seq: cat([[0, 400, {cAin: {o: 1}}], [200, 400, {cAP1: {c: {hi: 1}}}]],
+      flash(450, ['cAw2', 'cAw3'], {o: 0.2}, {o: 1}), flash(950, ['cAw2', 'cAw3'], {o: 0.2}, {o: 1}),
+      [[900, 300, {dry: {o: 1}}]], flash(1600, ['cBw3'], {o: 0.2}, {o: 1}),
+      [[2100, 400, {cAavg: {o: 0}, cBavg: {o: 0}}], [2200, 500, {cAbig: {o: 1, s: 1}, cBbig: {o: 1, s: 1}}]])},
+    {seq: [[0, 600, {top: {o: 0}, dry: {o: 0}}], [400, 900, {cA: {y: -196}, cB: {y: -180}}], [1000, 500, {fin: {o: 1}, banner: {o: 1}}]]}
+  ]
+};
+})();
+
+/* ================= 動畫 2：餓死和死結 ================= */
+(function () {
+var S0 = 520, S1 = 412, S2 = 304;      /* 出單架：最前面、第二、第三 */
+var KX = 700, KY = 64;                  /* 料理區裡掛單的位置（相對出單架） */
+var TAG = {1: {w: 82, h: 32, f: '#8E3517', c: '#FFFFFF', fs: 15}, 2: {w: 78, h: 30, f: '#C7522A', c: '#FFFFFF', fs: 14}, 3: {w: 74, h: 30, f: '#F1DEB0', c: '#24211D', fs: 13, s: '#C99A3A'}};
+function prioTag(p, n, cy) {
+  var t = TAG[n], g = G(p);
+  S('rect', {x: -t.w / 2, y: cy - t.h / 2, width: t.w, height: t.h, rx: 6, fill: t.f, stroke: t.s || null, 'stroke-width': t.s ? 1.5 : null}, g);
+  T(g, 0, cy + t.fs * 0.36, '第 ' + n + ' 優先', {fs: t.fs, w: 700, c: t.c});
+  return g;
+}
+function tk(sc, p, id, name, prio, base) {
+  var g = sc.box(p, id, base);
+  ticketBody(g, name, PC[name], 96, 96);
+  if (name === 'P1') {
+    [3, 2, 1].forEach(function (n) { var tg = G(g); sc.R('p1t' + n, tg, {o: n === 3 ? 1 : 0}); prioTag(tg, n, 68); });
+  } else prioTag(g, prio, 68);
+  pcbCard(g, 14, 100, 34, 22);
+  T(g, 0, 145, '程序', {fs: 14, c: C.ink2});
+  return g;
+}
+function mv(t, d, set, fl) { return fl ? [t, d, set, fl] : [t, d, set]; }
+/* 新單插隊：從入口低一點的位置走到最前面，再掛上去 */
+function cutIn(t, id) { var a = {}, b = {}; a[id] = {o: 1, x: S0}; b[id] = {y: 0}; return [[t, 600, a], [t + 600, 200, b]]; }
+function toK(t, id) { var a = {}; a[id] = {x: KX, y: KY}; return [t, 500, a]; }
+function out(t, id) { var a = {}; a[id] = {o: 0}; return [t, 250, a]; }
+function cat() { var o = []; for (var i = 0; i < arguments.length; i++) o = o.concat(arguments[i]); return o; }
+/* 並排畫面用的小票 */
+function mini(p, x, y, name, prio) {
+  var g = at(p, x, y);
+  S('rect', {x: -22, y: 0, width: 44, height: 56, rx: 3, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+  S('rect', {x: -21.25, y: 0.75, width: 42.5, height: 5, fill: PC[name]}, g);
+  T(g, 0, 25, name, {fs: 13, w: 700});
+  var t = TAG[prio];
+  S('rect', {x: -16, y: 35, width: 32, height: 12, rx: 3, fill: t.f, stroke: t.s || null, 'stroke-width': t.s ? 1 : null}, g);
+  pcbCard(g, 6, 53, 18, 12);
+  return g;
+}
+SEQ[2] = {
+  build: function (sc) {
+    var R = sc.root, mA = sc.marker('a', C.teal), mR = sc.marker('r', C.acc2), mG = sc.marker('g', '#5A5650');
+    /* ---------- 第 1～4 步：優先權排程 ---------- */
+    var A = sc.box(R, 'sA');
+    sc.T('legend', A, 110, 50, '這個例子：數字越小越優先', {fs: 17, w: 700, a: 'start', c: C.acc2}, {o: 0});
+    T(A, 110, 136, '出單架（就緒佇列）', {fs: 17, w: 700, a: 'start', c: C.ink2});
+    T(A, 57, 136, '入口', {fs: 14, c: C.ink2});
+    line(A, 24, 152, 88, 152, {c: C.ink2, w: 2.5, me: sc.marker('e', C.ink2)});
+    rail(A, 110, 580, 150);
+    S('rect', {x: 640, y: 170, width: 320, height: 262, rx: 12, 'class': 'cpu-box'}, A);
+    T(A, 655, 196, '料理區（CPU）', {fs: 17, w: 700, a: 'start', c: C.ink2});
+    rail(A, 662, 740, 214);
+    personL(sc, A, 800, 290, 'chef', 0.8, 'chefB');
+    personL(sc, A, 895, 290, 'helper', 0.8, 'asstB');
+    counter(A, 765, 352, 182);
+    lab(sc, A, 800, 386, '控制單元', '主廚', null, null, {fs: 16, ms: 14, gap: 19});
+    lab(sc, A, 895, 386, '算術邏輯單元', '助手', null, null, {fs: 15, ms: 14, gap: 19});
+    personL(sc, A, 590, 250, 'manager', 0.8);
+    lab(sc, A, 590, 338, '作業系統', '店長', null, null, {fs: 16, ms: 14, gap: 19});
+    var tw = at(A, 0, 150);
+    /* P1 的等待條：放在 P1 的票裡，跟著 P1 移動 */
+    var g1 = tk(sc, tw, 'tP1', 'P1', 3, {x: -60, o: 0});
+    var wbg = sc.box(g1, 'wbg', {o: 0});
+    T(wbg, -48, -62, '已經等了多久', {fs: 13, a: 'start', c: C.ink2});
+    sc.R('wb', rect(wbg, -48, -52, 200, 12, {rx: 3, f: '#C99A3A'}), {origin: 'left', sx: 0});
+    sc.T('noLuck', g1, 72, -42, '一直輪不到', {fs: 14, w: 700, a: 'start', c: C.acc}, {o: 0});
+    tk(sc, tw, 'tP2', 'P2', 1, {x: -60, o: 0});
+    tk(sc, tw, 'tP3', 'P3', 2, {x: -60, o: 0});
+    [['tP4', 'P4', 1], ['tP5', 'P5', 2], ['tP6', 'P6', 1], ['tP7', 'P7', 1]].forEach(function (a) { tk(sc, tw, a[0], a[1], a[2], {x: -60, y: 60, o: 0}); });
+    var ar = sc.box(A, 'upArr', {o: 0});
+    T(ar, 700, 52, '等越久，優先權越高', {fs: 16, w: 700, c: C.teal});
+    line(ar, 622, 70, 778, 70, {c: C.teal, w: 3, me: mA});
+    var np = sc.box(A, 'plate1', {o: 0});
+    S('rect', {x: 215, y: 448, width: 230, height: 44, rx: 22, fill: C.acc2}, np);
+    T(np, 330, 477, '餓死（Starvation）', {fs: 20, w: 700, c: '#FFFFFF'});
+
+    /* ---------- 第 5～7 步：死結 ---------- */
+    var B = sc.box(R, 'sB', {o: 0});
+    var mk = G(B, {opacity: 0.4});
+    S('rect', {x: 846, y: 18, width: 136, height: 70, rx: 10, 'class': 'cpu-box'}, mk);
+    T(mk, 914, 58, '料理區（CPU）', {fs: 14, w: 700, c: C.ink2});
+    T(B, 500, 48, '再看另一種等不到：死結', {fs: 20, w: 700, c: C.acc2});
+    T(B, 500, 82, '料理區（CPU）、平底鍋、鍋鏟，都是程序要用的資源', {fs: 15, c: C.ink2});
+    S('rect', {x: 380, y: 152, width: 240, height: 10, rx: 3, fill: C.wood, stroke: '#A88F62', 'stroke-width': 1.5}, B);
+    T(B, 455, 186, '平底鍋', {fs: 15, w: 700});
+    T(B, 455, 208, '只有一個', {fs: 13, w: 700, c: C.acc2});
+    T(B, 578, 186, '鍋鏟', {fs: 15, w: 700});
+    T(B, 578, 208, '只有一個', {fs: 13, w: 700, c: C.acc2});
+    [['oA', 230, '甲'], ['oB', 770, '乙']].forEach(function (o) {
+      var g = sc.box(B, o[0], {o: o[0] === 'oA' ? 1 : 0});
+      var tg = at(g, o[1], 242);
+      ticketBody(tg, null, o[0] === 'oA' ? PC.P5 : PC.P6, 96, 96, 26, true);
+      T(tg, 0, 58, o[2], {fs: 26, w: 700});
+      pcbCard(tg, 14, 100, 34, 22);
+      T(tg, 0, 145, '程序', {fs: 14, c: C.ink2});
+      S('rect', {x: o[1] - 75, y: 418, width: 150, height: 14, rx: 7, fill: '#D8CDB8', stroke: C.frame, 'stroke-width': 1.5}, g);
+      T(g, o[1], 458, '訂單' + o[2] + '的托盤', {fs: 13, c: C.ink2});
+      var wt = sc.box(g, o[0] + 'w', {o: 0});
+      var bx = o[0] === 'oA' ? o[1] - 68 : o[1] + 68;
+      S('circle', {cx: bx, cy: 266, r: 18, fill: C.acc}, wt);
+      T(wt, bx, 271, '等', {fs: 14, w: 700, c: '#FFFFFF'});
+    });
+    var panG = sc.box(B, 'pan'); pan(panG, 440, 140);
+    var spG = sc.box(B, 'spat'); spatula(spG, 578, 142);
+    function bub(id, x, y, w, txt, tailL) {
+      var g = sc.box(B, id, {o: 0});
+      S('rect', {x: x, y: y, width: w, height: 34, rx: 17, fill: '#FFFFFF', stroke: C.frame, 'stroke-width': 1.5}, g);
+      S('path', {d: tailL ? ('M' + (x + 14) + ' ' + (y + 33) + ' L' + (x + 2) + ' ' + (y + 46) + ' L' + (x + 26) + ' ' + (y + 34)) : ('M' + (x + w - 26) + ' ' + (y + 34) + ' L' + (x + w - 2) + ' ' + (y + 46) + ' L' + (x + w - 14) + ' ' + (y + 33)),
+        fill: '#FFFFFF', stroke: C.frame, 'stroke-width': 1.5}, g);
+      T(g, x + w / 2, y + 22.5, txt, {fs: 15, w: 700});
+    }
+    bub('bReq', 282, 214, 116, '請求平底鍋', true);
+    bub('bNeedA', 282, 214, 116, '還差鍋鏟', true);
+    bub('bNeedB', 614, 214, 116, '還差平底鍋', false);
+    var words = sc.box(B, 'words', {o: 0});
+    [['w1', 390, '請求'], ['w2', 500, '使用'], ['w3', 610, '釋放']].forEach(function (w) {
+      var g = G(words, {'class': 'word'}); sc.R(w[0], g);
+      S('rect', {x: w[1] - 38, y: 504, width: 76, height: 32, rx: 16}, g);
+      T(g, w[1], 526, w[2], {fs: 16});
+    });
+    line(words, 432, 520, 458, 520, {c: C.line, w: 2}); line(words, 542, 520, 568, 520, {c: C.line, w: 2});
+    var aD = sc.box(B, 'arrD', {o: 0});
+    path(aD, 'M284 300 C 420 250, 600 290, 734 398', {s: C.acc2, sw: 3, dash: '8 7', me: mR});
+    path(aD, 'M716 334 C 600 420, 420 446, 270 410', {s: C.acc2, sw: 3, dash: '8 7', me: mR});
+    var aS = sc.box(B, 'arrS', {o: 0});
+    path(aS, 'M284 300 C 420 250, 600 290, 734 398', {s: C.acc2, sw: 3.5, me: mR});
+    path(aS, 'M716 334 C 600 420, 420 446, 270 410', {s: C.acc2, sw: 3.5, me: mR});
+    var lk = sc.box(B, 'lock', {o: 0, s: 0.6});
+    lockIcon(lk, 500, 352, 1.2);
+    var np2 = sc.box(B, 'plate2', {o: 0});
+    S('rect', {x: 300, y: 522, width: 220, height: 44, rx: 22, fill: C.acc2}, np2);
+    T(np2, 410, 551, '死結（Deadlock）', {fs: 20, w: 700, c: '#FFFFFF'});
+    var two = sc.box(B, 'two', {o: 0});
+    T(two, 580, 566, '2', {fs: 58, w: 700, c: C.acc2});
+    T(two, 618, 550, '兩張訂單就夠了', {fs: 17, w: 700, a: 'start'});
+
+    /* ---------- 第 8、9 步：並排 ---------- */
+    var SP = sc.box(R, 'split', {o: 0, origin: [500, 300]});
+    var Lh = G(SP), Rh = G(SP, {'class': 'rhalf'});
+    line(SP, 500, 30, 500, 470, {c: C.line, w: 2, dash: '6 6', cls: 'divider'});
+    T(Lh, 250, 62, '餓死', {fs: 30, w: 700, c: C.acc2});
+    rail(Lh, 40, 330, 170);
+    S('rect', {x: 346, y: 118, width: 140, height: 200, rx: 10, 'class': 'cpu-box'}, Lh);
+    T(Lh, 416, 142, '料理區（CPU）', {fs: 13, w: 700, c: C.ink2});
+    personL(sc, Lh, 416, 236, 'chef', 0.6, 'chefM');
+    counter(Lh, 362, 282, 108);
+    var p1 = at(Lh, 0, 0);
+    mini(p1, 76, 176, 'P1', 3);
+    T(Lh, 54, 124, '已經等了多久', {fs: 12, a: 'start', c: C.ink2});
+    rect(Lh, 54, 134, 170, 11, {rx: 3, f: '#C99A3A'});
+    [['convA', 'P5', 2, 180], ['convB', 'P6', 1, 230], ['convC', 'P7', 1, 280]].forEach(function (c) {
+      var w = G(Lh); sc.L(c[0], w, 'lp-' + c[0]);
+      mini(w, c[3], 176, c[1], c[2]);
+    });
+    T(Lh, 250, 380, '其他程序照樣在跑', {fs: 18, w: 700});
+    T(Lh, 250, 410, '只有低優先權的一直輪不到', {fs: 18, w: 700});
+    T(Rh, 750, 62, '死結', {fs: 30, w: 700, c: C.acc2});
+    [[620, '甲', PC.P5], [880, '乙', PC.P6]].forEach(function (o) {
+      var tg = at(Rh, o[0], 110, 0.75);
+      ticketBody(tg, null, o[2], 96, 96, 26, true);
+      T(tg, 0, 58, o[1], {fs: 26, w: 700});
+      pcbCard(tg, 14, 100, 34, 22);
+      S('rect', {x: o[0] - 56, y: 272, width: 112, height: 12, rx: 6, fill: '#D8CDB8', stroke: C.frame, 'stroke-width': 1.5}, Rh);
+    });
+    pan(Rh, 606, 264, 0.8);
+    spatula(Rh, 884, 266, 0.8);
+    path(Rh, 'M660 150 C 730 120, 800 170, 858 250', {s: C.acc2, sw: 3, me: mR});
+    path(Rh, 'M842 190 C 780 250, 700 270, 640 258', {s: C.acc2, sw: 3, me: mR});
+    lockIcon(Rh, 752, 216, 0.9);
+    T(Rh, 750, 380, '互相等對方', {fs: 18, w: 700});
+    T(Rh, 750, 410, '不會自己解開', {fs: 18, w: 700});
+    var fin = sc.box(R, 'fin9', {o: 0});
+    T(fin, 250, 520, '餓死（Starvation）', {fs: 24, w: 700, c: C.acc2});
+    T(fin, 660, 520, '死結（Deadlock）', {fs: 24, w: 700, c: C.acc2});
+    T(fin, 800, 530, '2', {fs: 52, w: 700, c: C.acc2});
+    T(fin, 750, 560, '兩個程序就可能發生', {fs: 16, c: C.ink});
+    banner(sc, 500, 36);
+  },
+  steps: [
+    /* 1 */ {seq: [[0, 800, {tP1: {o: 1, x: S0}}], [300, 800, {tP2: {o: 1, x: S1}}], [600, 800, {tP3: {o: 1, x: S2}}], [900, 400, {legend: {o: 1}}],
+      [1500, 250, {tP1: {y: 60}}], [1750, 700, {tP1: {x: S2}, tP2: {x: S0}, tP3: {x: S1}}], [2450, 250, {tP1: {y: 0}}],
+      toK(2500, 'tP2'), out(3150, 'tP2'), [3350, 500, {tP3: {x: KX, y: KY}}], [3450, 450, {tP1: {x: S0}}]], loops: ['chefB', 'asstB']},
+    /* 2 */ {seq: cat([[0, 450, {tP1: {x: S1}}], [300, 300, {wbg: {o: 1}}], [300, 2100, {wb: {sx: 0.25}}, 'lin']], cutIn(150, 'tP4'),
+      [out(1100, 'tP3'), toK(1350, 'tP4'), [1850, 400, {tP1: {x: S0}}]]), loops: ['chefB', 'asstB']},
+    /* 3 */ {seq: cat([[0, 3900, {wb: {sx: 0.55}}, 'lin'], [0, 400, {tP1: {x: S1}}]], cutIn(80, 'tP5'),
+      [[900, 400, {tP5: {x: S1}, tP1: {x: S2}}]], cutIn(980, 'tP6'),
+      [out(1800, 'tP4'), toK(2000, 'tP6'), [2500, 400, {tP5: {x: S0}, tP1: {x: S1}}]],
+      [[2900, 400, {tP5: {x: S1}, tP1: {x: S2}}]], cutIn(2980, 'tP7'),
+      [[3500, 300, {noLuck: {o: 1}}], [3700, 400, {plate1: {o: 1}}]]), loops: ['chefB', 'asstB']},
+    /* 4 */ {seq: [[0, 300, {noLuck: {o: 0}, plate1: {o: 0}}], [200, 400, {upArr: {o: 1}}],
+      [200, 600, {wb: {sx: 0.7}}, 'lin'], [800, 300, {p1t3: {o: 0}, p1t2: {o: 1}}],
+      [1100, 600, {wb: {sx: 0.85}}, 'lin'], [1700, 300, {p1t2: {o: 0}, p1t1: {o: 1}}],
+      [2000, 250, {tP1: {y: 60}}], [2250, 650, {tP1: {x: S0}, tP7: {x: S1}, tP5: {x: S2}}], [2900, 250, {tP1: {y: 0}}],
+      out(3150, 'tP6'), [3400, 250, {wbg: {o: 0}}], toK(3450, 'tP1'), [3950, 400, {tP7: {x: S0}, tP5: {x: S1}}]], loops: ['chefB', 'asstB']},
+    /* 5 */ {seq: [[0, 500, {sA: {o: 0}}], [300, 500, {sB: {o: 1}}], [1000, 300, {bReq: {o: 1}, w1: {c: {on: 1}}, words: {o: 1}}],
+      [1500, 700, {pan: {x: -224, y: 270}}], [2200, 300, {w2: {c: {on: 1}}, bReq: {o: 0}}],
+      [2700, 700, {pan: {x: 0, y: 0}}], [3400, 300, {w3: {c: {on: 1}}}]]},
+    /* 6 */ {seq: [[0, 400, {words: {o: 0}, oB: {o: 1}}], [300, 700, {pan: {x: -224, y: 270}, spat: {x: 190, y: 268}}],
+      [1100, 300, {bNeedA: {o: 1}, bNeedB: {o: 1}}], [1500, 500, {arrD: {o: 1}}]]},
+    /* 7 */ {seq: [[0, 400, {arrD: {o: 0}, arrS: {o: 1}}], [400, 500, {lock: {o: 1, s: 1}}],
+      [900, 400, {oAw: {o: 1}, oBw: {o: 1}}, 'tr'], [1400, 400, {oAw: {o: 0.2}, oBw: {o: 0.2}}, 'tr'], [1900, 400, {oAw: {o: 1}, oBw: {o: 1}}, 'tr'], [2400, 400, {oAw: {o: 0.2}, oBw: {o: 0.2}}, 'tr'], [2900, 400, {oAw: {o: 1}, oBw: {o: 1}}],
+      [1200, 400, {plate2: {o: 1}}], [1700, 400, {two: {o: 1}}]]},
+    /* 8 */ {split: true, seq: [[0, 500, {sB: {o: 0}}], [400, 600, {split: {o: 1}}]], loops: ['convA', 'convB', 'convC', 'chefM']},
+    /* 9 */ {seq: [[0, 700, {split: {s: 0.84, y: -12}}], [500, 500, {fin9: {o: 1}, banner: {o: 1}}]], loops: ['convA', 'convB', 'convC', 'chefM']}
+  ]
+};
+})();
+
+/* ================= 動畫 3：依序循環排程與進度卡 ================= */
+(function () {
+var S0 = 450, S1 = 310, S2 = 170, KX = 642, KY = 40;
+var LEN = {P1: 70, P2: 20, P3: 40};
+function tk(sc, p, id, name, x) {
+  var g = sc.box(p, id, {x: x, o: 0});
+  ticketBody(g, name, PC[name], 96, 96);
+  var L = LEN[name];
+  S('rect', {x: -35, y: 62, width: L, height: 12, rx: 2, fill: PC[name], stroke: PC[name], 'stroke-width': 1.5}, g);
+  sc.R(id + 'd', S('rect', {x: -35, y: 62, width: L, height: 12, rx: 2, fill: '#FFFFFF', opacity: 0.72}, g), {origin: 'left', sx: 0});
+  pcbCard(g, -66, 100, 132, 64);
+  sc.T(id + 'st', g, -54, 127, '狀態：就緒', {fs: 12, a: 'start', w: 700});
+  sc.T(id + 'pr', g, -54, 151, '做到哪裡：還沒開始', {fs: 12, a: 'start'});
+  [['i1', 14], ['i2', 29], ['i3', 44]].forEach(function (ic, k) {
+    var ig = sc.box(g, id + ic[0], {o: 0});
+    if (k === 0) { S('rect', {x: ic[1], y: 142, width: 11, height: 9, rx: 1, fill: '#EFEBE2', stroke: C.frame, 'stroke-width': 1}, ig); line(ig, ic[1] + 3, 146.5, ic[1] + 8, 146.5, {c: C.ink, w: 1.2}); }
+    if (k === 1) S('rect', {x: ic[1], y: 143, width: 11, height: 8, rx: 1, fill: '#FFF4C7', stroke: '#C9B26A', 'stroke-width': 1}, ig);
+    if (k === 2) { S('rect', {x: ic[1], y: 147, width: 11, height: 4, rx: 1, fill: C.woodL, stroke: '#B0925A', 'stroke-width': 1}, ig); S('circle', {cx: ic[1] + 5, cy: 144.5, r: 2.2, fill: '#8DB05A'}, ig); }
+    path(ig, 'M' + (ic[1] + 7) + ' 152 L' + (ic[1] + 9.5) + ' 154.5 L' + (ic[1] + 14) + ' 149', {s: C.green, sw: 1.8});
+  });
+  T(g, 0, 186, '程序', {fs: 14, c: C.ink2});
+  return g;
+}
+function mini3(sc, p, id, x, y, name, props) {
+  var g = sc.box(at(p, x, y), id, props);
+  S('line', {x1: 0, y1: 0, x2: 0, y2: 4, stroke: C.frame, 'stroke-width': 1.5}, g);
+  S('rect', {x: -22, y: 4, width: 44, height: 50, rx: 3, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+  S('rect', {x: -21.25, y: 4.75, width: 42.5, height: 5, fill: PC[name]}, g);
+  T(g, 0, 30, name, {fs: 14, w: 700});
+  pcbCard(g, 4, 48, 20, 13);
+  return g;
+}
+function cat() { var o = []; for (var i = 0; i < arguments.length; i++) o = o.concat(arguments[i]); return o; }
+function shake(t, id) { var a = {}, b = {}, c = {}; a[id] = {x: 3}; b[id] = {x: -3}; c[id] = {x: 0}; return [[t, 70, a, 'tr'], [t + 80, 70, b, 'tr'], [t + 160, 70, a, 'tr'], [t + 240, 70, c, 'tr']]; }
+var ON = {pcC: {o: 1}, irC: {o: 1}, rgC: {o: 1}}, OFF = {pcC: {o: 0}, irC: {o: 0}, rgC: {o: 0}};
+SEQ[3] = {
+  build: function (sc) {
+    var R = sc.root, mA = sc.marker('a', C.teal), mB = sc.marker('b', C.teal);
+    var M = sc.box(R, 'sMain');
+    T(M, 40, 90, '出單架（就緒佇列）', {fs: 17, w: 700, a: 'start', c: C.ink2});
+    rail(M, 96, 526, 110);
+    /* 料理區 */
+    S('rect', {x: 545, y: 96, width: 445, height: 464, rx: 12, 'class': 'cpu-box'}, M);
+    T(M, 561, 124, '料理區（CPU）', {fs: 17, w: 700, a: 'start', c: C.ink2});
+    rail(M, 580, 704, 150);
+    personL(sc, M, 825, 372, 'chef', 0.8, 'chefB');
+    personL(sc, M, 925, 372, 'helper', 0.8, 'asstB');
+    lab(sc, M, 825, 306, '控制單元', '主廚', null, null, {fs: 15, ms: 13, gap: 20});
+    lab(sc, M, 925, 306, '算術邏輯單元', '助手', null, null, {fs: 15, ms: 13, gap: 20});
+    counter(M, 560, 436, 416);
+    /* 步驟牌（程式計數器）：不寫第幾步 */
+    line(M, 580, 430, 576, 436, {c: C.frame, w: 2}); line(M, 620, 430, 624, 436, {c: C.frame, w: 2});
+    rect(M, 574, 398, 52, 32, {rx: 3, f: '#EFEBE2', s: C.frame, sw: 1.5});
+    var pcC = sc.box(M, 'pcC', {o: 0});
+    line(pcC, 583, 410, 617, 410, {c: C.ink2, w: 3}); line(pcC, 583, 419, 607, 419, {c: C.ink2, w: 3});
+    /* 小便條（指令暫存器） */
+    noteSlip(M, 660, 404, 60, 26);
+    var irC = sc.box(M, 'irC', {o: 0});
+    path(irC, 'M668 418 Q674 412 680 418 T692 418 T704 418 T712 416', {s: C.ink2, sw: 2});
+    /* 砧板和小碗（暫存器） */
+    rect(M, 736, 428, 54, 8, {rx: 2, f: C.woodL, s: '#B0925A'});
+    bowl(M, 806, 431);
+    var rgC = sc.box(M, 'rgC', {o: 0});
+    veg(rgC, 756, 420); S('ellipse', {cx: 806, cy: 428, rx: 8, ry: 3, fill: '#F2C94C'}, rgC);
+    lab(sc, M, 600, 470, '程式計數器', '步驟牌', null, null, {fs: 14, ms: 13, gap: 18});
+    lab(sc, M, 690, 470, '指令暫存器', '小便條', null, null, {fs: 14, ms: 13, gap: 18});
+    lab(sc, M, 770, 470, '暫存器', '砧板和小碗', null, null, {fs: 14, ms: 13, gap: 18});
+    /* 計時器：時間間隔 */
+    var tm = sc.box(M, 'timer', {o: 0});
+    kTimer(tm, 955, 40, 17);
+    sc.R('hand', line(tm, 955, 40, 955, 28, {c: C.acc2, w: 3}), {origin: [955, 40]});
+    S('circle', {cx: 955, cy: 40, r: 3, fill: C.acc2}, tm);
+    /* 只標「時間間隔（time slice）」，和錶面中心對齊 */
+    T(tm, 926, 45, '時間間隔（time slice）', {fs: 15, w: 700, a: 'end', c: C.acc2});
+    sc.T('ding', M, 955, 80, '時間到', {fs: 14, w: 700, c: C.acc}, {o: 0});
+    /* 店長：出單架前端的下面 */
+    personL(sc, M, 505, 420, 'manager', 0.8);
+    lab(sc, M, 505, 505, '作業系統', '店長', null, null, {fs: 15, ms: 13, gap: 18});
+    var cp = sc.box(M, 'cpL', {o: 0});
+    T(cp, 496, 372, '店長抄進度卡', {fs: 14, w: 700, a: 'end', c: C.teal});
+    line(cp, 512, 388, 562, 312, {c: C.teal, w: 2, dash: '5 4'});
+    var rs = sc.box(M, 'rsL', {o: 0});
+    T(rs, 496, 372, '店長照進度卡擺回', {fs: 14, w: 700, a: 'end', c: C.teal});
+    line(rs, 512, 388, 562, 312, {c: C.teal, w: 2, dash: '5 4'});
+    /* 抄寫與擺回的箭頭 */
+    [['ar1', 600, 394, 600, 320], ['ar2', 688, 398, 680, 320], ['ar3', 760, 420, 700, 320]].forEach(function (a) {
+      var g = sc.box(M, a[0], {o: 0}); line(g, a[1], a[2], a[3], a[4], {c: C.teal, w: 2.5, me: mA});
+      var g2 = sc.box(M, a[0] + 'r', {o: 0}); line(g2, a[3], a[4], a[1], a[2], {c: C.teal, w: 2.5, me: mB});
+    });
+    var tw = at(M, 0, 110);
+    tk(sc, tw, 'tP1', 'P1', S0);
+    tk(sc, tw, 'tP2', 'P2', S1);
+    tk(sc, tw, 'tP3', 'P3', S2);
+    var pl = sc.box(M, 'pcbL', {o: 0});
+    line(pl, 222, 276, 222, 318, {c: C.teal, w: 2});
+    S('circle', {cx: 222, cy: 276, r: 3, fill: C.teal}, pl);
+    T(pl, 178, 342, '每張訂單都釘著進度卡（PCB）', {fs: 15, w: 700, c: C.teal});
+
+    /* ---------- 第 7 步：兩種換人的時機（並排） ---------- */
+    var SP = sc.box(R, 'split', {o: 0});
+    var Lh = G(SP), Rh = G(SP, {'class': 'rhalf'});
+    line(SP, 500, 30, 500, 540, {c: C.line, w: 2, dash: '6 6', cls: 'divider'});
+    T(Lh, 250, 58, '多元程式規劃', {fs: 24, w: 700, c: C.acc2});
+    S('rect', {x: 230, y: 84, width: 240, height: 202, rx: 10, 'class': 'cpu-box'}, Lh);
+    T(Lh, 350, 104, '料理區（CPU）', {fs: 13, w: 700, c: C.ink2});
+    personL(sc, Lh, 410, 220, 'chef', 0.6, 'chefL');
+    counter(Lh, 244, 262, 212);
+    oven(Lh, 100, 250);
+    T(Lh, 100, 310, '烤箱', {fs: 15, w: 700});
+    T(Lh, 100, 332, '程序去等東西', {fs: 13, c: C.ink2});
+    rail(Lh, 240, 470, 336);
+    var dish = sc.box(Lh, 'dish');
+    S('path', {d: 'M312 250 L348 250 L344 262 L316 262 Z', fill: '#8F887C', stroke: '#5A5650', 'stroke-width': 1.5}, dish);
+    S('rect', {x: 318, y: 244, width: 24, height: 6, rx: 2, fill: '#D98C7A'}, dish);
+    mini3(sc, Lh, 'tQ', 300, 118, 'P1');
+    mini3(sc, Lh, 'tY', 420, 336, 'P2');
+    sc.T('qWait', Lh, 110, 200, '進度卡：等待', {fs: 12, w: 700, c: C.teal}, {o: 0});
+    T(Lh, 250, 440, '程序去等東西才換', {fs: 20, w: 700});
+    T(Lh, 250, 470, '去等的時候，CPU 先做別人', {fs: 15, c: C.ink2});
+    T(Rh, 750, 58, '分時系統', {fs: 24, w: 700, c: C.acc2});
+    var tm2 = G(Rh);
+    kTimer(tm2, 566, 132, 22);
+    sc.R('hand2', line(tm2, 566, 132, 566, 116, {c: C.acc2, w: 3}), {origin: [566, 132]});
+    S('circle', {cx: 566, cy: 132, r: 3, fill: C.acc2}, tm2);
+    sc.T('ding2', Rh, 566, 184, '時間到', {fs: 13, w: 700, c: C.acc}, {o: 0});
+    S('rect', {x: 616, y: 84, width: 250, height: 202, rx: 10, 'class': 'cpu-box'}, Rh);
+    T(Rh, 741, 104, '料理區（CPU）', {fs: 13, w: 700, c: C.ink2});
+    personL(sc, Rh, 800, 220, 'chef', 0.6, 'chefR');
+    counter(Rh, 630, 262, 222);
+    rail(Rh, 616, 866, 336);
+    mini3(sc, Rh, 'tR', 690, 118, 'P1');
+    mini3(sc, Rh, 'tS', 840, 336, 'P2');
+    T(Rh, 750, 440, '時間一到就換', {fs: 20, w: 700});
+    T(Rh, 750, 470, 'CPU 時間切成小段', {fs: 15, c: C.ink2});
+    pill(Rh, 750, 510, 212, 30, '依序循環排程屬於這一種', {f: C.teal, c: '#FFFFFF', fs: 14});
+
+    /* ---------- 第 8 步：這段要記得 ---------- */
+    var sum = sc.box(R, 'sum', {o: 0});
+    S('rect', {x: 320, y: 96, width: 360, height: 196, rx: 10, fill: '#D6E4E1', stroke: '#3E6E73', 'stroke-width': 2.5}, sum);
+    S('circle', {cx: 500, cy: 110, r: 7, fill: '#C7522A', stroke: '#8E3517', 'stroke-width': 1.5}, sum);
+    T(sum, 500, 150, '進度卡（PCB）', {fs: 22, w: 700, c: C.teal});
+    T(sum, 350, 200, '狀態', {fs: 20, w: 700, a: 'start'});
+    line(sum, 410, 204, 650, 204, {c: '#8FB1AC', w: 1.5, cap: 'butt'});
+    T(sum, 350, 252, '做到哪裡', {fs: 20, w: 700, a: 'start'});
+    line(sum, 450, 256, 650, 256, {c: '#8FB1AC', w: 1.5, cap: 'butt'});
+    T(sum, 500, 330, '每個程序都有一張程序控制表（PCB）', {fs: 18, w: 700});
+    oven(sum, 250, 440, 0.8);
+    T(sum, 250, 508, '多元程式規劃', {fs: 18, w: 700, c: C.acc2});
+    T(sum, 250, 532, '程序去等東西才換', {fs: 14, c: C.ink2});
+    kTimer(sum, 750, 440, 26);
+    line(sum, 750, 440, 750, 422, {c: C.acc2, w: 3});
+    T(sum, 750, 508, '分時系統', {fs: 18, w: 700, c: C.acc2});
+    T(sum, 750, 532, '時間一到就換', {fs: 14, c: C.ink2});
+    banner(sc, 500, 36);
+  },
+  steps: [
+    /* 1 */ {seq: [[0, 500, {tP1: {o: 1}}], [200, 500, {tP2: {o: 1}}], [400, 500, {tP3: {o: 1}}], [900, 400, {pcbL: {o: 1}}], [1300, 500, {timer: {o: 1}}]]},
+    /* 2 */ {seq: cat([[0, 300, {pcbL: {o: 0}}], [100, 600, {tP1: {x: KX, y: KY}}], [700, 0, {tP1st: {tx: '狀態：執行'}}], [600, 400, {tP2: {x: S0}, tP3: {x: S1}}],
+      [800, 400, ON], [1000, 1300, {hand: {r: 360}, tP1d: {sx: 25 / 70}}, 'lin'], [2300, 300, {ding: {o: 1}}]], shake(2300, 'timer')), loops: ['chefB', 'asstB']},
+    /* 3 */ {seq: [[0, 300, {ding: {o: 0}}], [200, 400, {cpL: {o: 1}}],
+      [500, 400, {ar1: {o: 1}}], [600, 0, {tP1pr: {tx: '做到哪裡：'}}], [800, 300, {tP1i1: {o: 1}}],
+      [1100, 400, {ar2: {o: 1}}], [1400, 300, {tP1i2: {o: 1}}],
+      [1700, 400, {ar3: {o: 1}}], [2000, 300, {tP1i3: {o: 1}}], [2400, 0, {tP1st: {tx: '狀態：就緒'}}]]},
+    /* 4 */ {seq: [[0, 300, {ar1: {o: 0}, ar2: {o: 0}, ar3: {o: 0}, cpL: {o: 0}}], [200, 400, OFF],
+      [400, 400, {tP1: {y: 240}}], [800, 700, {tP1: {x: S1}}], [1500, 400, {tP1: {y: 0}}],
+      [800, 600, {tP2: {x: KX, y: KY}}], [900, 400, {tP3: {x: S0}}], [1400, 0, {tP2st: {tx: '狀態：執行'}}],
+      [1600, 400, ON], [1900, 0, {hand: {r: 0}}]], loops: ['chefB', 'asstB']},
+    /* 5 */ {seq: cat([[0, 900, {hand: {r: 180}, tP2d: {sx: 1}}, 'lin'], [900, 0, {tP2st: {tx: '狀態：結束'}}], [1000, 300, OFF], [1100, 400, {tP2: {o: 0}}], [1300, 0, {hand: {r: 0}}],
+      [1300, 500, {tP3: {x: KX, y: KY}}], [1400, 400, {tP1: {x: S0}}], [1800, 0, {tP3st: {tx: '狀態：執行'}}], [1800, 300, ON],
+      [1900, 700, {hand: {r: 360}, tP3d: {sx: 25 / 40}}, 'lin'], [2600, 200, {ding: {o: 1}}]], shake(2600, 'timer'),
+      [[2850, 250, {ar1: {o: 1}, ar2: {o: 1}, ar3: {o: 1}}], [3050, 250, {tP3pr: {tx: '做到哪裡：'}, tP3i1: {o: 1}, tP3i2: {o: 1}, tP3i3: {o: 1}}], [3150, 0, {tP3st: {tx: '狀態：就緒'}}],
+       [3350, 250, {ar1: {o: 0}, ar2: {o: 0}, ar3: {o: 0}, ding: {o: 0}, pcC: {o: 0}, irC: {o: 0}, rgC: {o: 0}}],
+       [3550, 300, {tP3: {y: 240}}], [3850, 500, {tP3: {x: S1}}], [4350, 300, {tP3: {y: 0}}]]), loops: ['chefB', 'asstB']},
+    /* 6 */ {seq: [[0, 0, {hand: {r: 0}}], [100, 600, {tP1: {x: KX, y: KY}}], [300, 400, {tP3: {x: S0}}], [700, 300, {rsL: {o: 1}}],
+      [900, 400, {ar1r: {o: 1}, ar2r: {o: 1}, ar3r: {o: 1}}], [1300, 400, ON], [1600, 0, {tP1st: {tx: '狀態：執行'}}],
+      [1700, 1000, {hand: {r: 360}, tP1d: {sx: 50 / 70}}, 'lin']], loops: ['chefB', 'asstB']},
+    /* 7 */ {split: true, seq: [[0, 500, {sMain: {o: 0}}], [300, 600, {split: {o: 1}}],
+      [1000, 700, {dish: {x: -230, y: -12}}], [1700, 500, {tQ: {x: -190}}], [2100, 300, {qWait: {o: 1}}], [2300, 600, {tY: {x: -120, y: -218}}],
+      [1000, 1100, {hand2: {r: 360}}, 'lin'], [2100, 250, {ding2: {o: 1}}], [2300, 500, {tR: {x: -40, y: 218}}], [2800, 600, {tS: {x: -150, y: -218}}]], loops: ['chefL', 'chefR']},
+    /* 8 */ {seq: [[0, 500, {split: {o: 0}}], [300, 600, {sum: {o: 1}}], [800, 400, {banner: {o: 1}}]]}
+  ]
+};
+})();
+
+/* ================= 動畫 4：MMU 把邏輯位址換成實際位址 ================= */
+(function () {
+function slip(sc, p, id, x, y, txt, w, props) {
+  var g = sc.box(p, id, props || {o: 0});
+  S('rect', {x: x - w / 2, y: y - 11, width: w, height: 22, rx: 2, fill: '#FFF8E6', stroke: '#B8A06A', 'stroke-width': 1.5}, g);
+  if (txt) sc.T(id + 't', g, x, y + 5, txt, {fs: 14, w: 700});
+  else { line(g, x - w / 2 + 7, y - 3, x + w / 2 - 7, y - 3, {c: '#C9B98F', w: 1.5}); line(g, x - w / 2 + 7, y + 4, x + w / 2 - 12, y + 4, {c: '#C9B98F', w: 1.5}); }
+  return g;
+}
+function mini(p, x, y, name) {
+  var g = at(p, x, y);
+  S('line', {x1: 0, y1: 0, x2: 0, y2: 4, stroke: C.frame, 'stroke-width': 1.5}, g);
+  S('rect', {x: -22, y: 4, width: 44, height: 50, rx: 3, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+  S('rect', {x: -21.25, y: 4.75, width: 42.5, height: 5, fill: PC[name]}, g);
+  T(g, 0, 32, name, {fs: 14, w: 700});
+  pcbCard(g, 4, 48, 20, 13);
+  return g;
+}
+function book(p, x, y) {
+  var g = at(p, x, y);
+  S('rect', {x: -16, y: -13, width: 32, height: 26, rx: 2, fill: '#6B5B4E', stroke: '#4A3E35', 'stroke-width': 1.5}, g);
+  S('rect', {x: -12, y: -9, width: 22, height: 18, rx: 1, fill: '#F2ECE1'}, g);
+  line(g, -8, -3, 6, -3, {c: C.frame, w: 1.2}); line(g, -8, 3, 6, 3, {c: C.frame, w: 1.2});
+  return g;
+}
+SEQ[4] = {
+  build: function (sc) {
+    var R = sc.root, mR = sc.marker('r', C.acc), mA = sc.marker('a', C.ink2);
+    var M = sc.box(R, 'main');
+    /* 三件事 */
+    [['wd1', 430, 56, '分配'], ['wd2', 530, 84, '位址對應'], ['wd3', 630, 56, '保護']].forEach(function (w) {
+      var g = G(M, {'class': 'word'}); sc.R(w[0], g);
+      S('rect', {x: w[1] - w[2] / 2, y: 24, width: w[2], height: 32, rx: 16}, g);
+      T(g, w[1], 46, w[3], {fs: 15});
+    });
+    var cn = sc.box(M, 'corner', {o: 0});
+    T(cn, 985, 28, '數字看懂就好', {fs: 14, a: 'end', c: C.ink2});
+    /* 訂單（每張都有進度卡） */
+    rail(M, 22, 268, 30);
+    mini(M, 70, 30, 'P1'); mini(M, 145, 30, 'P2'); mini(M, 220, 30, 'P3');
+    T(M, 145, 112, '訂單（程序）', {fs: 13, c: C.ink2});
+    sc.R('p1ring', rect(M, 44, 24, 52, 74, {rx: 6, s: C.acc, sw: 2.5}), {o: 0});
+    /* 料理區 */
+    S('rect', {x: 20, y: 130, width: 270, height: 290, rx: 12, 'class': 'cpu-box'}, M);
+    T(M, 36, 156, '料理區（CPU）', {fs: 17, w: 700, a: 'start', c: C.ink2});
+    personL(sc, M, 90, 250, 'chef', 0.85);
+    personL(sc, M, 210, 250, 'helper', 0.85);
+    counter(M, 34, 316, 242);
+    lab(sc, M, 90, 354, '控制單元', '主廚', null, null, {fs: 16, ms: 14, gap: 19});
+    lab(sc, M, 210, 354, '算術邏輯單元', '助手', null, null, {fs: 15, ms: 14, gap: 19});
+    var say = sc.box(M, 'say', {o: 0});
+    S('rect', {x: 118, y: 186, width: 58, height: 28, rx: 14, fill: '#FFFFFF', stroke: C.frame, 'stroke-width': 1.5}, say);
+    S('path', {d: 'M124 210 L110 222 L134 213 Z', fill: '#FFFFFF', stroke: C.frame, 'stroke-width': 1.2}, say);
+    T(say, 147, 206, '326', {fs: 15, w: 700});
+    /* 走道（匯流排） */
+    S('rect', {x: 290, y: 336, width: 310, height: 36, fill: C.aisle, stroke: C.line, 'stroke-width': 1.5}, M);
+    line(M, 298, 354, 592, 354, {c: '#CFC6B4', w: 2, dash: '10 8'});
+    T(M, 445, 396, '走道（匯流排）', {fs: 15, w: 700, c: C.ink2});
+    /* MMU 盒子：料理區灰框外、走道靠料理區那一端，和走道分開畫 */
+    sc.R('mmuPH', rect(M, 300, 120, 225, 196, {rx: 10, s: C.line, sw: 2, dash: '7 6'}));
+    var mb = sc.box(M, 'mmuB', {o: 0});
+    sc.R('mmuR', S('rect', {x: 300, y: 120, width: 225, height: 196, rx: 10, 'class': 'mmu-box'}, mb));
+    line(mb, 505, 316, 505, 336, {c: C.frame, w: 2.5});
+    rect(mb, 314, 132, 197, 38, {rx: 5, f: '#FFFFFF', s: C.teal});
+    T(mb, 326, 156, '基底暫存器', {fs: 14, w: 700, a: 'start', c: C.teal});
+    sc.T('baseV', mb, 499, 157, '14500', {fs: 17, w: 700, a: 'end'}, {o: 0});
+    var s2 = sc.box(mb, 'scr2', {o: 0});
+    rect(s2, 314, 176, 197, 38, {rx: 5, f: '#FFFFFF', s: C.teal});
+    T(s2, 326, 200, '界線暫存器', {fs: 14, w: 700, a: 'start', c: C.teal});
+    rect(s2, 446, 185, 53, 20, {rx: 3, f: '#EFEBE2', s: '#D2CBBE'});
+    var stg = sc.box(mb, 'stg', {o: 0});
+    rect(stg, 314, 222, 197, 82, {rx: 6, f: '#FFFFFF', s: C.frame});
+    T(stg, 412.5, 244, '位址換算', {fs: 13, w: 700, c: C.ink2});
+    sc.T('mth', stg, 412.5, 282, '14500 ＋ 326 ＝ 14826', {fs: 15, w: 700, c: C.acc2}, {o: 0});
+    var g1 = G(mb, {'class': 'gate'}); sc.R('g1', g1, {o: 0});
+    S('rect', {x: 314, y: 222, width: 94, height: 82, rx: 6}, g1);
+    T(g1, 361, 244, '比界線小嗎？', {fs: 12, w: 700});
+    sc.R('lamp1', S('circle', {cx: 334, cy: 277, r: 9, 'class': 'lamp'}, g1));
+    sc.T('g1t', g1, 353, 282, '沒超過', {fs: 13, w: 700, a: 'start'}, {o: 0});
+    var g2 = G(mb, {'class': 'gate'}); sc.R('g2', g2, {o: 0});
+    S('rect', {x: 416, y: 222, width: 95, height: 82, rx: 6}, g2);
+    T(g2, 463.5, 244, '＋ 基底', {fs: 14, w: 700});
+    sc.T('g2r', g2, 463.5, 284, '14826', {fs: 16, w: 700, c: C.acc2}, {o: 0});
+    var ml = sc.box(M, 'mmuLbl', {o: 0});
+    T(ml, 412, 84, 'MMU（記憶體管理單元）', {fs: 20, w: 700, c: C.acc2});
+    T(ml, 412, 106, '負責換算的硬體', {fs: 13, c: C.ink2});
+    sc.T('rpL', M, 562, 326, '實際位址', {fs: 13, w: 700, c: C.acc2}, {o: 0});
+    /* 冰箱（記憶體） */
+    S('rect', {x: 600, y: 110, width: 280, height: 430, rx: 10, fill: C.fridge, stroke: C.frame, 'stroke-width': 2.5}, M);
+    line(M, 600, 176, 880, 176, {c: C.frame, w: 2, cap: 'butt'});
+    recipeCard(M, 616, 118, 248, 54, 22);
+    T(M, 716, 138, '食譜（程式）', {fs: 13, w: 700});
+    var rl = T(M, 716, 161, '拿第 326 格的蛋', {fs: 14, cls: 'hltext'}); sc.R('recHi', rl);
+    var lp = sc.box(M, 'logP', {o: 0}); pill(lp, 820, 153, 76, 30, '邏輯位址', {f: C.teal, c: '#FFFFFF', fs: 12});
+    sc.R('bP3', rect(M, 612, 186, 256, 50, {rx: 4, cls: 'shelf'}));
+    T(M, 624, 216, 'P3 的那一層', {fs: 14, a: 'start', c: C.ink2});
+    fish(M, 820, 211); veg(M, 846, 211);
+    sc.R('bP2', rect(M, 612, 242, 256, 50, {rx: 4, cls: 'shelf'}));
+    T(M, 624, 272, 'P2 的那一層', {fs: 14, a: 'start', c: C.ink2});
+    tofu(M, 820, 267); meat(M, 846, 267);
+    sc.R('bP1', rect(M, 612, 298, 256, 148, {rx: 4, cls: 'shelf'}));
+    T(M, 856, 322, 'P1 的那一層', {fs: 14, w: 700, a: 'end'});
+    for (var ty = 334; ty <= 440; ty += 12) line(M, 613, ty, 619, ty, {c: '#D2CBBE', w: 1.2, cap: 'butt'});
+    var tg = sc.box(M, 'tag', {o: 0}); pill(tg, 672, 314, 112, 28, '第 14500 格', {f: C.acc2, c: '#FFFFFF', fs: 13});
+    var bk = sc.box(M, 'brk', {o: 0});
+    line(bk, 628, 336, 628, 404, {c: C.teal, w: 2.5}); line(bk, 621, 336, 635, 336, {c: C.teal, w: 2.5}); line(bk, 621, 404, 635, 404, {c: C.teal, w: 2.5});
+    line(bk, 640, 404, 784, 404, {c: C.teal, w: 1.5, dash: '4 4'});
+    T(bk, 644, 362, '從這一層開頭', {fs: 13, a: 'start', c: C.teal});
+    T(bk, 644, 384, '算起第 326 格', {fs: 13, w: 700, a: 'start', c: C.teal});
+    sc.R('cellHi', rect(M, 780, 388, 40, 32, {rx: 4, s: C.acc, sw: 3}), {o: 0});
+    sc.T('cellL', M, 800, 376, '第 14826 格', {fs: 13, w: 700, c: C.acc2}, {o: 0});
+    var lim = sc.box(M, 'lim', {o: 0});
+    line(lim, 612, 446, 868, 446, {c: C.acc2, w: 5, cap: 'butt'});
+    T(lim, 628, 435, '界線', {fs: 13, w: 700, a: 'start', c: C.acc2});
+    sc.R('bOS', rect(M, 612, 452, 256, 80, {rx: 4, cls: 'shelf'}));
+    book(M, 650, 492);
+    T(M, 740, 486, '店長的帳本', {fs: 15, w: 700});
+    T(M, 740, 508, '（作業系統區）', {fs: 14, c: C.ink2});
+    var osF = sc.box(M, 'osF', {o: 0});
+    rect(osF, 606, 449, 268, 88, {rx: 6, s: C.acc, sw: 3, dash: '8 5'});
+    T(osF, 856, 522, '誰都不准碰', {fs: 13, w: 700, a: 'end', c: C.acc});
+    T(M, 740, 566, '冰箱（記憶體）', {fs: 16, w: 700, c: C.ink2});
+    var ov = sc.box(M, 'ovA', {o: 0});
+    /* 超過界線的位址：箭頭停在界線上的 X，馬上被攔下來，不伸進帳本層 */
+    line(ov, 830, 332, 830, 432, {c: C.acc, w: 2.5, dash: '6 5', me: mR});
+    line(ov, 822, 438, 838, 454, {c: C.acc, w: 3.5}); line(ov, 838, 438, 822, 454, {c: C.acc, w: 3.5});
+    T(ov, 820, 353, '超過界線的位址', {fs: 12, w: 700, a: 'end', c: C.acc});
+    /* 店長：冰箱右邊、帳本層前面 */
+    personL(sc, M, 940, 500, 'manager', 0.8);
+    lab(sc, M, 940, 452, '作業系統', '店長', null, null, {fs: 15, ms: 13, gap: 18});
+    var chip = sc.box(M, 'chip', {o: 0});
+    pill(chip, 930, 440, 60, 22, '14500', {f: C.acc2, c: '#FFFFFF', fs: 14});
+    var it = sc.box(M, 'intL', {o: 0});
+    S('polyline', {points: '525,142 590,142 590,100 985,100 985,500 966,500', fill: 'none', stroke: C.acc, 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'marker-end': mR}, it);
+    T(it, 790, 87, '錯誤中斷，交給作業系統處理', {fs: 14, w: 700, c: C.acc});
+    /* 會移動的東西 */
+    slip(sc, M, 'sA', 150, 300, '326', 52);
+    slip(sc, M, 'sB', 505, 326, '14826', 60);
+    slip(sc, M, 'sC', 150, 300, '326', 52);
+    slip(sc, M, 'sD', 505, 326, '14826', 60);
+    slip(sc, M, 'sE', 150, 300, '', 52);
+    var xm = sc.box(M, 'xMark', {o: 0});
+    line(xm, 284, 256, 308, 276, {c: C.acc, w: 3.5}); line(xm, 308, 256, 284, 276, {c: C.acc, w: 3.5});
+    var eg = sc.box(M, 'eggM'); egg(eg, 800, 404);
+
+    /* ---------- 第 8 步：這段要記得 ---------- */
+    var sum = sc.box(R, 'sum', {o: 0});
+    S('rect', {x: 40, y: 170, width: 220, height: 160, rx: 12, 'class': 'cpu-box'}, sum);
+    T(sum, 150, 198, '料理區（CPU）', {fs: 16, w: 700, c: C.ink2});
+    person(at(sum, 150, 268, 0.7), 0, 0, 'chef');
+    line(sum, 264, 250, 352, 250, {c: C.ink2, w: 3, me: mA});
+    T(sum, 306, 232, '邏輯位址', {fs: 13, c: C.ink2});
+    T(sum, 306, 276, '326', {fs: 15, w: 700});
+    S('rect', {x: 360, y: 150, width: 290, height: 200, rx: 12, fill: '#EEF3F1', stroke: C.acc, 'stroke-width': 4}, sum);
+    T(sum, 505, 130, 'MMU（記憶體管理單元）', {fs: 26, w: 700, c: C.acc2});
+    T(sum, 505, 182, '負責換算的硬體', {fs: 14, c: C.ink2});
+    rect(sum, 378, 204, 118, 124, {rx: 8, f: '#FFFFFF', s: C.frame});
+    T(sum, 437, 256, '比界線小嗎？', {fs: 15, w: 700});
+    T(sum, 437, 294, '界線暫存器', {fs: 13, c: C.teal});
+    rect(sum, 514, 204, 118, 124, {rx: 8, f: '#FFFFFF', s: C.frame});
+    T(sum, 573, 256, '＋ 基底', {fs: 16, w: 700});
+    T(sum, 573, 294, '基底暫存器', {fs: 13, c: C.teal});
+    line(sum, 498, 262, 512, 262, {c: C.ink2, w: 2});
+    line(sum, 654, 250, 742, 250, {c: C.ink2, w: 3, me: mA});
+    T(sum, 696, 232, '實際位址', {fs: 13, c: C.ink2});
+    T(sum, 696, 276, '14826', {fs: 15, w: 700});
+    S('rect', {x: 750, y: 170, width: 210, height: 160, rx: 10, fill: C.fridge, stroke: C.frame, 'stroke-width': 2.5}, sum);
+    T(sum, 855, 198, '冰箱（記憶體）', {fs: 16, w: 700, c: C.ink2});
+    rect(sum, 768, 216, 174, 96, {rx: 4, f: '#F7F5EF', s: '#C9C1B1'});
+    T(sum, 855, 244, 'P1 的那一層', {fs: 14, w: 700});
+    egg(sum, 855, 282);
+    T(sum, 500, 420, '邏輯位址靠基底暫存器換成實際位址', {fs: 20, w: 700});
+    T(sum, 500, 454, '負責換算的硬體是 MMU', {fs: 22, w: 700, c: C.acc2});
+    banner(sc, 500, 36);
+  },
+  steps: [
+    /* 1 */ {seq: [[0, 400, {wd1: {c: {on: 1}}}], [700, 400, {wd2: {c: {on: 1}}}], [1400, 400, {wd3: {c: {on: 1}}}]]},
+    /* 2 */ {seq: [[0, 400, {mmuB: {o: 1}, mmuPH: {o: 0}}], [200, 400, {p1ring: {o: 1}, bP1: {c: {hi: 1}}}], [500, 300, {tag: {o: 1}}],
+      [700, 300, {chip: {o: 1}}], [1000, 500, {chip: {y: -340}}], [1500, 700, {chip: {x: -452}}], [2200, 300, {chip: {y: -288}}], [2500, 200, {chip: {o: 0}, baseV: {o: 1}}]]},
+    /* 3 */ {seq: [[0, 400, {recHi: {c: {hi: 1}}}], [300, 400, {logP: {o: 1}}], [800, 300, {bP1: {c: {hi: 0}}}], [800, 500, {brk: {o: 1}}]]},
+    /* 4 */ {seq: [[0, 300, {recHi: {c: {hi: 0}}, corner: {o: 1}}], [200, 300, {say: {o: 1}}], [500, 250, {sA: {o: 1}}], [700, 500, {sA: {x: 180, y: -38}}], [1000, 300, {stg: {o: 1}}],
+      [1200, 200, {sA: {o: 0}}], [1300, 400, {mth: {o: 1}}], [1800, 200, {sB: {o: 1}, rpL: {o: 1}}], [2000, 250, {sB: {y: 28}}], [2250, 550, {sB: {x: 105, y: 28}}], [2800, 350, {sB: {x: 285, y: 78}}],
+      [3150, 200, {sB: {o: 0}, cellHi: {o: 1}, cellL: {o: 1}}], [3400, 350, {eggM: {x: -194, y: -50}}], [3750, 650, {eggM: {x: -500, y: -50}}], [4400, 350, {eggM: {x: -650, y: -96}}], [4400, 300, {say: {o: 0}}]]},
+    /* 5 */ {seq: [[0, 400, {mmuLbl: {o: 1}}], [300, 400, {mmuR: {c: {hi: 1}}}]]},
+    /* 6 */ {seq: [[0, 300, {cellHi: {o: 0}, cellL: {o: 0}, rpL: {o: 0}, mmuR: {c: {hi: 0}}}], [200, 400, {lim: {o: 1}}], [500, 400, {scr2: {o: 1}}], [800, 300, {stg: {o: 0}}], [900, 400, {g1: {o: 1}, g2: {o: 1}}],
+      [1300, 250, {sC: {o: 1}}], [1500, 500, {sC: {x: 168, y: -38}}], [2000, 200, {sC: {o: 0}}], [2000, 300, {g1: {c: {ok: 1}}, lamp1: {c: {ok: 1}}, g1t: {o: 1}}],
+      [2400, 300, {g2r: {o: 1}}], [2700, 200, {sD: {o: 1}}], [2900, 250, {sD: {y: 28}}], [3150, 500, {sD: {x: 105, y: 28}}], [3650, 300, {sD: {x: 285, y: 78}}], [3950, 200, {sD: {o: 0}, cellHi: {o: 1}}]]},
+    /* 7 */ {seq: [[0, 300, {cellHi: {o: 0}, g1: {c: {ok: 0}}, lamp1: {c: {ok: 0}}, g1t: {o: 0}, g2r: {o: 0}}], [300, 250, {sE: {o: 1}}], [500, 500, {sE: {x: 146, y: -34}}],
+      [1000, 0, {g1t: {tx: '超過'}}], [1000, 300, {g1: {c: {no: 1}}, lamp1: {c: {no: 1}}, g1t: {o: 1}, xMark: {o: 1}}], [1300, 500, {ovA: {o: 1}}], [1800, 600, {intL: {o: 1}}], [2400, 400, {osF: {o: 1}}]]},
+    /* 8 */ {seq: [[0, 500, {main: {o: 0}}], [300, 600, {sum: {o: 1}}], [800, 400, {banner: {o: 1}}]]}
+  ]
+};
+})();
+
+/* ================= 動畫 5：分頁 ================= */
+(function () {
+var FX = 646, FW = 208, Y0 = 104, H = 42;       /* 冰箱一排層架：10 格，每格一樣高 */
+var SX = 390, SY = 150;                          /* 新訂單食材排隊的位置 */
+function sy(i) { return Y0 + H * i; }
+function mini(sc, p, id, x, y, name, props) {
+  var g = sc.box(at(p, x, y), id, props);
+  S('line', {x1: 0, y1: 0, x2: 0, y2: 4, stroke: C.frame, 'stroke-width': 1.5}, g);
+  S('rect', {x: -22, y: 4, width: 44, height: 50, rx: 3, fill: C.white, stroke: C.frame, 'stroke-width': 1.5}, g);
+  S('rect', {x: -21.25, y: 4.75, width: 42.5, height: 5, fill: PC[name]}, g);
+  T(g, 0, 32, name, {fs: 14, w: 700});
+  pcbCard(g, 4, 48, 20, 13);
+  return g;
+}
+function content(p, x, y, w, h, kind) {
+  S('rect', {x: x + 96, y: y + 2, width: w - 98, height: h - 4, rx: 3, fill: kind === 'veg' ? '#E3EDD3' : '#F5DCD3'}, p);
+  var s = h < 30 ? 0.55 : 1;
+  for (var i = 0; i < 3; i++) { var ig = at(p, x + w - 70 + i * 22, y + h / 2, s); if (kind === 'veg') veg(ig, 0, 0); else meat(ig, 0, 0); }
+}
+function miniFridge(p, x, y, hi) {
+  var g = G(p);
+  S('rect', {x: x, y: y, width: 16, height: 32, rx: 2, fill: C.fridge, stroke: C.frame, 'stroke-width': 1.2}, g);
+  S('rect', {x: x + 2, y: y + 1 + hi * 3, width: 12, height: 3, fill: C.acc}, g);
+  return g;
+}
+SEQ[5] = {
+  build: function (sc) {
+    var R = sc.root, mA = sc.marker('a', C.ink2);
+    var M = sc.box(R, 'main');
+    /* 訂單（每張都有進度卡） */
+    rail(M, 22, 300, 40);
+    mini(sc, M, 'k1', 50, 40, 'P1'); mini(sc, M, 'k2', 105, 40, 'P2'); mini(sc, M, 'k3', 160, 40, 'P3'); mini(sc, M, 'k4', 215, 40, 'P4');
+    mini(sc, M, 'k5', 270, 40, 'P5', {o: 0});
+    T(M, 160, 124, '訂單（程序）', {fs: 13, c: C.ink2});
+    /* 第 5 步：料理區、MMU、走道 */
+    var kk = sc.box(M, 'kit', {o: 0});
+    S('rect', {x: 20, y: 330, width: 250, height: 230, rx: 12, 'class': 'cpu-box'}, kk);
+    T(kk, 34, 356, '料理區（CPU）', {fs: 16, w: 700, a: 'start', c: C.ink2});
+    personL(sc, kk, 80, 432, 'chef', 0.8);
+    personL(sc, kk, 190, 432, 'helper', 0.8);
+    counter(kk, 32, 494, 226);
+    lab(sc, kk, 80, 528, '控制單元', '主廚', null, null, {fs: 14, ms: 13, gap: 18});
+    lab(sc, kk, 190, 528, '算術邏輯單元', '助手', null, null, {fs: 14, ms: 13, gap: 18});
+    S('rect', {x: 270, y: 466, width: 362, height: 36, fill: C.aisle, stroke: C.line, 'stroke-width': 1.5}, kk);
+    line(kk, 278, 484, 624, 484, {c: '#CFC6B4', w: 2, dash: '10 8'});
+    T(kk, 458, 524, '走道（匯流排）', {fs: 14, w: 700, c: C.ink2});
+    S('rect', {x: 285, y: 338, width: 200, height: 110, rx: 10, 'class': 'mmu-box'}, kk);
+    line(kk, 470, 448, 470, 466, {c: C.frame, w: 2.5});
+    T(kk, 385, 318, 'MMU（記憶體管理單元）', {fs: 18, w: 700, c: C.acc2});
+    T(kk, 385, 364, '位址換算', {fs: 13, w: 700, c: C.ink2});
+    var mm = sc.box(kk, 'mmMap', {o: 0});
+    T(mm, 358, 410, '頁面 3', {fs: 14, w: 700});
+    line(mm, 386, 405, 412, 405, {c: C.ink2, w: 2, me: mA});
+    miniFridge(mm, 420, 386, 6);
+    var say = sc.box(kk, 'say', {o: 0});
+    S('rect', {x: 104, y: 368, width: 70, height: 26, rx: 13, fill: '#FFFFFF', stroke: C.frame, 'stroke-width': 1.5}, say);
+    S('path', {d: 'M110 391 L98 402 L120 393 Z', fill: '#FFFFFF', stroke: C.frame, 'stroke-width': 1.2}, say);
+    T(say, 139, 386, '頁面 3', {fs: 14, w: 700});
+    /* 冰箱：由上往下一排一樣高的層架 */
+    S('rect', {x: 632, y: 90, width: 236, height: 448, rx: 10, fill: C.fridge, stroke: C.frame, 'stroke-width': 2.5}, M);
+    T(M, 750, 562, '冰箱（記憶體）', {fs: 16, w: 700, c: C.ink2});
+    rect(M, FX, sy(0), FW, H * 10, {rx: 3, f: '#FFFFFF', s: '#C9C1B1'});
+    var grid = sc.box(M, 'grid', {o: 0});
+    for (var i = 1; i < 9; i++) line(grid, FX + 2, sy(i), FX + FW - 2, sy(i), {c: '#9FB7B3', w: 1.5, dash: '5 4', cap: 'butt'});
+    [['bk1', 0, 2, 'P1', 'veg'], ['bk2', 2, 1, 'P2', 'meat'], ['bk3', 3, 2, 'P3', 'veg'], ['bk4', 5, 3, 'P4', 'meat']].forEach(function (b) {
+      var g = sc.box(M, b[0]);
+      S('rect', {x: FX + 1, y: sy(b[1]) + 1, width: FW - 2, height: H * b[2] - 2, rx: 3, fill: PL[b[3]], stroke: PC[b[3]], 'stroke-width': 1.5}, g);
+      T(g, FX + 14, sy(b[1]) + 26, b[3], {fs: 14, w: 700, a: 'start'});
+      for (var k = 0; k < b[2]; k++) { var cx = FX + FW - 56, cy = sy(b[1] + k) + H / 2; if (b[4] === 'veg') { veg(g, cx, cy); veg(g, cx + 24, cy); } else { meat(g, cx, cy); fish(g, cx + 26, cy); } }
+    });
+    var os = G(M);
+    S('rect', {x: FX + 1, y: sy(8) + 1, width: FW - 2, height: H * 2 - 2, rx: 3, fill: '#EFE7D9', stroke: '#8F887C', 'stroke-width': 1.5}, os);
+    T(os, 750, sy(8) + 36, '店長的帳本', {fs: 15, w: 700});
+    T(os, 750, sy(8) + 58, '（作業系統區）', {fs: 13, c: C.ink2});
+    /* 空位旁的括號 */
+    var br = sc.box(M, 'brk', {o: 0});
+    [[2, 1], [5, 3]].forEach(function (g) {
+      var y1 = sy(g[0]) + 3, y2 = sy(g[0] + g[1]) - 3;
+      line(br, 880, y1, 880, y2, {c: C.teal, w: 2.5}); line(br, 874, y1, 880, y1, {c: C.teal, w: 2.5}); line(br, 874, y2, 880, y2, {c: C.teal, w: 2.5});
+    });
+    T(br, 934, 286, '加起來其實夠', {fs: 14, w: 700, c: C.teal});
+    sc.T('qm', M, 494, 136, '？', {fs: 30, w: 700, c: C.acc}, {o: 0});
+    /* 新訂單 P5：一整塊，剛好四格長 */
+    var b5 = sc.box(M, 'blk5', {o: 0});
+    S('rect', {x: SX, y: SY, width: FW, height: H * 4, rx: 3, fill: '#FFFFFF'}, b5);
+    content(b5, SX, SY, FW, H * 1.5, 'veg'); content(b5, SX, SY + H * 1.5, FW, H * 2.5, 'meat');
+    S('rect', {x: SX, y: SY, width: FW, height: H * 4, rx: 3, fill: 'none', stroke: PC.P5, 'stroke-width': 2}, b5);
+    T(b5, SX + 14, SY + 26, 'P5', {fs: 14, w: 700, a: 'start'});
+    sc.R('bad', rect(b5, SX - 3, SY - 3, FW + 6, H * 4 + 6, {rx: 5, s: C.acc, sw: 4}), {o: 0});
+    /* 切好的四個保鮮盒（頁面） */
+    var PGS = [];
+    for (var k = 1; k <= 4; k++) {
+      var g = sc.box(M, 'pg' + k, {o: 0, origin: [SX + FW / 2, SY + H * (k - 1) + H / 2]});
+      var y = SY + H * (k - 1);
+      S('rect', {x: SX + 1, y: y + 1, width: FW - 2, height: H - 2, rx: 5, fill: '#FFFFFF'}, g);
+      if (k === 1) content(g, SX, y, FW, H, 'veg');
+      else if (k === 2) { content(g, SX, y, FW, H / 2, 'veg'); content(g, SX, y + H / 2, FW, H / 2, 'meat'); }
+      else content(g, SX, y, FW, H, 'meat');
+      S('rect', {x: SX + 1, y: y + 1, width: FW - 2, height: H - 2, rx: 5, fill: 'none', stroke: C.teal, 'stroke-width': 2.5}, g);
+      S('rect', {x: SX + 1, y: y + 1, width: FW - 2, height: 5, rx: 2, fill: C.teal, opacity: 0.55}, g);
+      var pl = G(g); sc.R('pg' + k + 'l', pl); pill(pl, SX + 48, y + H / 2 + 1, 74, 30, '頁面 ' + k, {f: '#FFFFFF', s: C.teal, fs: 13});
+      PGS.push(g);
+    }
+    sc.T('legend', M, 494, 136, '保鮮盒＝頁面（Page）', {fs: 15, w: 700, c: C.teal}, {o: 0});
+    /* 記好每一盒放在哪 */
+    var lst = sc.box(M, 'list', {o: 0});
+    T(lst, 495, 141, '記好每一盒放在哪', {fs: 15, w: 700});
+    [[1, 2], [2, 5], [3, 6], [4, 7]].forEach(function (r, i) {
+      var y = 176 + i * 36;
+      T(lst, 400, y, '頁面 ' + r[0], {fs: 14, w: 700, a: 'start'});
+      line(lst, 456, y - 5, 486, y - 5, {c: C.ink2, w: 2, me: mA});
+      miniFridge(lst, 496, y - 21, r[1]);
+    });
+    var s1 = sc.box(M, 'sl1', {o: 0});
+    S('rect', {x: 112, y: 474, width: 56, height: 22, rx: 2, fill: '#FFF8E6', stroke: '#B8A06A', 'stroke-width': 1.5}, s1);
+    T(s1, 140, 490, '頁面 3', {fs: 13, w: 700});
+    var s2 = sc.box(M, 'sl2', {o: 0});
+    S('rect', {x: 450, y: 473, width: 40, height: 22, rx: 2, fill: '#FFF8E6', stroke: '#B8A06A', 'stroke-width': 1.5}, s2);
+    miniFridge(s2, 462, 468, 6);
+    sc.R('cellHi', rect(M, FX - 2, sy(6) - 2, FW + 4, H + 4, {rx: 4, s: C.acc, sw: 3.5}), {o: 0});
+
+    /* ---------- 第 6 步：分頁和分段（並排） ---------- */
+    var SP = sc.box(R, 'split', {o: 0});
+    var Lh = G(SP), Rh = G(SP, {'class': 'rhalf'});
+    line(SP, 500, 30, 500, 460, {c: C.line, w: 2, dash: '6 6', cls: 'divider'});
+    T(Lh, 250, 64, '分頁', {fs: 32, w: 700, c: C.acc2});
+    [[90, 110], [260, 110], [90, 200], [260, 200]].forEach(function (b) {
+      S('rect', {x: b[0], y: b[1], width: 150, height: 70, rx: 8, fill: '#D6E4E1', stroke: C.teal, 'stroke-width': 3}, Lh);
+      S('rect', {x: b[0] + 2, y: b[1] + 2, width: 146, height: 8, rx: 3, fill: C.teal, opacity: 0.6}, Lh);
+      T(Lh, b[0] + 75, b[1] + 46, '頁面', {fs: 18, w: 700, c: C.teal});
+    });
+    T(Lh, 250, 330, '頁面（Page）', {fs: 24, w: 700, c: C.acc2});
+    T(Lh, 250, 364, '大小相同', {fs: 20, w: 700});
+    T(Lh, 250, 394, '照固定大小切，不管裡面裝什麼', {fs: 15, c: C.ink2});
+    var rg = G(Rh, {opacity: 0.8});
+    T(rg, 750, 64, '分段', {fs: 22, w: 700, c: C.ink2});
+    S('rect', {x: 590, y: 110, width: 170, height: 60, rx: 8, fill: '#F4EFE4', stroke: '#B8B1A4', 'stroke-width': 2}, rg);
+    recipeCard(rg, 606, 124, 40, 32);
+    line(rg, 612, 138, 640, 138, {c: '#C9B98F', w: 1.5}); line(rg, 612, 147, 634, 147, {c: '#C9B98F', w: 1.5});
+    T(rg, 706, 146, '主程式一段', {fs: 15, w: 700, c: C.ink2});
+    S('rect', {x: 590, y: 192, width: 260, height: 104, rx: 8, fill: '#F4EFE4', stroke: '#B8B1A4', 'stroke-width': 2}, rg);
+    veg(rg, 620, 232); meat(rg, 648, 232); egg(rg, 676, 232); fish(rg, 620, 264); tofu(rg, 648, 264);
+    T(rg, 772, 250, '資料一段', {fs: 15, w: 700, c: C.ink2});
+    T(rg, 750, 350, '照內容切，大小不一樣', {fs: 16, w: 700, c: C.ink2});
+    T(rg, 750, 380, '這裡沒有講分段', {fs: 13, c: C.ink2});
+
+    /* ---------- 第 7 步：這段要記得 ---------- */
+    var sum = sc.box(R, 'sum', {o: 0});
+    [230, 370, 510, 650].forEach(function (x, i) {
+      S('rect', {x: x, y: 170, width: 120, height: 90, rx: 8, fill: '#D6E4E1', stroke: C.teal, 'stroke-width': 3}, sum);
+      S('rect', {x: x + 2, y: 172, width: 116, height: 9, rx: 3, fill: C.teal, opacity: 0.6}, sum);
+      T(sum, x + 60, 226, '頁面', {fs: 20, w: 700, c: C.teal});
+    });
+    T(sum, 500, 320, '分頁：切成大小相同的頁面（Page）', {fs: 24, w: 700, c: C.acc2});
+    T(sum, 500, 356, '分頁切出來的叫頁面，大小相同', {fs: 18});
+    banner(sc, 500, 36);
+    sc.PGS = PGS;
+  },
+  steps: [
+    /* 1 */ {seq: [[600, 400, {k2: {o: 0}, k4: {o: 0}}], [900, 700, {bk2: {o: 0}, bk4: {o: 0}}]]},
+    /* 2 */ {seq: [[0, 400, {k5: {o: 1}}], [200, 400, {blk5: {o: 1}}],
+      [800, 500, {blk5: {x: FX - SX, y: sy(2) - SY}}], [1300, 250, {bad: {o: 1}}], [1600, 450, {blk5: {x: 0, y: 0}, bad: {o: 0}}],
+      [2150, 550, {blk5: {x: FX - SX, y: sy(5) - SY}}], [2700, 250, {bad: {o: 1}}], [3000, 450, {blk5: {x: 0, y: 0}, bad: {o: 0}}],
+      [3500, 400, {brk: {o: 1}, qm: {o: 1}}]]},
+    /* 3 */ {seq: [[0, 500, {grid: {o: 1}}], [300, 300, {qm: {o: 0}}], [700, 200, {blk5: {o: 0}, pg1: {o: 1}, pg2: {o: 1}, pg3: {o: 1}, pg4: {o: 1}}],
+      [900, 500, {pg2: {y: 6}, pg3: {y: 12}, pg4: {y: 18}}], [1300, 400, {legend: {o: 1}}]]},
+    /* 4 */ {seq: [[0, 300, {brk: {o: 0}, legend: {o: 0}}], [200, 600, {pg1: {x: FX - SX, y: sy(2) - SY}}], [700, 600, {pg4: {x: FX - SX, y: sy(7) - (SY + H * 3)}}],
+      [1200, 600, {pg2: {x: FX - SX, y: sy(5) - (SY + H)}}], [1700, 600, {pg3: {x: FX - SX, y: sy(6) - (SY + H * 2)}}], [2400, 500, {list: {o: 1}}]]},
+    /* 5 */ {seq: [[0, 500, {kit: {o: 1}}], [500, 300, {say: {o: 1}}], [800, 250, {sl1: {o: 1}}], [1050, 500, {sl1: {x: 180, y: -80}}], [1550, 200, {sl1: {o: 0}, mmMap: {o: 1}}],
+      [1900, 200, {sl2: {o: 1}}], [2100, 700, {sl2: {x: 160}}], [2800, 300, {sl2: {x: 280, y: -107}}], [3100, 200, {sl2: {o: 0}, cellHi: {o: 1}}],
+      [3300, 200, {pg3l: {o: 0}}], [3400, 350, {pg3: {x: 156, y: 229, s: 0.35}}], [3750, 700, {pg3: {x: -204, y: 229}}], [4450, 350, {pg3: {x: -359, y: 225}}], [4450, 300, {say: {o: 0}}]]},
+    /* 6 */ {split: true, seq: [[0, 500, {main: {o: 0}}], [300, 600, {split: {o: 1}}]]},
+    /* 7 */ {seq: [[0, 500, {split: {o: 0}}], [300, 600, {sum: {o: 1}}], [800, 400, {banner: {o: 1}}]]}
+  ]
+};
+})();
+
+/* ---------- 狀態計算 ---------- */
+function cloneP(p) { return {o: p.o, x: p.x, y: p.y, s: p.s, sx: p.sx, r: p.r, c: Object.assign({}, p.c), tx: p.tx}; }
+function cloneSt(st) { var o = {}; for (var k in st) o[k] = cloneP(st[k]); return o; }
+function mergeInto(st, set, no) {
+  for (var id in set) {
+    var p = st[id];
+    if (!p) throw new Error('動畫 ' + no + ' 沒有這個元件：' + id);
+    var d = set[id];
+    for (var k in d) { if (k === 'c') Object.assign(p.c, d.c); else p[k] = d[k]; }
+  }
+}
+function isTr(ev) { return typeof ev[3] === 'string' && ev[3].indexOf('tr') >= 0; }
+function isLin(ev) { return typeof ev[3] === 'string' && ev[3].indexOf('lin') >= 0; }
+var SCENES = {}, CACHE = {};
+/* 元件建好後，先把所有步驟（包含過場中暫時亮一下的效果）會動到的 class 和文字都登錄進初始狀態：
+   class 記下建好時有沒有，文字記下建好時的內容。這樣每一步的狀態都把這些外觀寫齊，
+   每次重畫都整組套用，後面步驟加上的外觀回到前面時會清掉。
+   不論從哪一步、用什麼方式到第 k 步，畫面都和新開頁面依序走到第 k 步相同。 */
+function registerAll(sc, a) {
+  SEQ[a].steps.forEach(function (st) {
+    st.seq.forEach(function (ev) {
+      for (var id in ev[2]) {
+        var d = ev[2][id], b = sc.base[id], el = sc.reg[id];
+        if (!b) continue;
+        if (d.c) for (var c in d.c) { if (!Object.prototype.hasOwnProperty.call(b.c, c)) b.c[c] = el.classList.contains(c) ? 1 : 0; }
+        if (Object.prototype.hasOwnProperty.call(d, 'tx') && b.tx === null) b.tx = el.textContent;
+      }
+    });
+  });
+}
+function getScene(a) {
+  if (SCENES[a]) return SCENES[a];
+  var sc = new Scene(a, DATA.animations[a - 1].title);
+  SEQ[a].build(sc);
+  registerAll(sc, a);
+  SCENES[a] = sc; CACHE[a] = {};
+  document.getElementById('stage').appendChild(sc.svg);
+  return sc;
+}
+function stateAt(a, k) {
+  var sc = getScene(a);
+  if (CACHE[a][k]) return CACHE[a][k];
+  var st = k === 0 ? cloneSt(sc.base) : cloneSt(stateAt(a, k - 1));
+  if (k > 0) SEQ[a].steps[k - 1].seq.forEach(function (ev) { if (!isTr(ev)) mergeInto(st, ev[2], a); });
+  CACHE[a][k] = st;
+  return st;
+}
+/* 登錄過的 class 由狀態決定、照登錄順序排在後面；其他 class（建好時就有的）照原順序留在前面。
+   class 字串因此只看狀態，和怎麼走到這一步無關；全部拿掉時連 class 屬性一起拿掉。 */
+function setCls(el, want) {
+  var cur = el.getAttribute('class'), keep = [];
+  (cur || '').split(/\s+/).forEach(function (t) { if (t && !Object.prototype.hasOwnProperty.call(want, t)) keep.push(t); });
+  for (var c in want) { if (want[c]) keep.push(c); }
+  var s = keep.join(' ');
+  if (s) { if (cur !== s) el.setAttribute('class', s); }
+  else if (cur !== null) el.removeAttribute('class');
+}
+function paint(sc, id, p, d, fadeOnly, lin) {
+  var el = sc.reg[id];
+  var ease = lin ? 'linear' : 'cubic-bezier(.45,.05,.35,1)';
+  if (d > 0) el.style.transition = fadeOnly ? ('opacity ' + d + 'ms ease') : ('opacity ' + d + 'ms ease, transform ' + d + 'ms ' + ease);
+  else el.style.transition = 'none';
+  el.style.opacity = p.o;
+  el.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) rotate(' + p.r + 'deg) scale(' + (p.s * p.sx) + ',' + p.s + ')';
+  setCls(el, p.c);
+  if (p.tx !== null && el.textContent !== p.tx) el.textContent = p.tx;
+}
+function render(sc, st, d, fadeOnly) {
+  if (!d) sc.svg.classList.add('nt');
+  for (var id in st) paint(sc, id, st[id], d || 0, fadeOnly);
+  if (!d) { void sc.svg.getBoundingClientRect(); sc.svg.classList.remove('nt'); }
+}
+function setLoops(sc, list) {
+  for (var id in sc.loops) {
+    var L0 = sc.loops[id];
+    L0.el.classList.remove(L0.cls);
+    if (L0.el.getAttribute('class') === '') L0.el.removeAttribute('class');
+  }
+  if (STILL || RM) return;
+  (list || []).forEach(function (id) { var L = sc.loops[id]; if (L) L.el.classList.add(L.cls); });
+}
+/* 左右並排的步驟：畫面窄（手機直立）時改成上下排 */
+function applyLayout() {
+  if (!P.sc || !P.a || !P.k) return;
+  var def = SEQ[P.a].steps[P.k - 1];
+  var on = !!(def && def.split) && !!(NARROW && NARROW.matches);
+  var svg = P.sc.svg;
+  if (svg.classList.contains('stack') !== on) {
+    svg.classList.toggle('stack', on);
+    svg.setAttribute('viewBox', on ? '0 20 500 1040' : '0 0 1000 600');
+  }
+}
+
+/* ---------- 播放器 ---------- */
+var P = {a: 0, k: 0, sc: null, timers: [], auto: false, autoTimer: null};
+var $ = function (id) { return document.getElementById(id); };
+function clearTimers() {
+  P.timers.forEach(clearTimeout); P.timers = [];
+  if (P.autoTimer) { clearTimeout(P.autoTimer); P.autoTimer = null; }
+}
+function capLen(a, k) { return DATA.animations[a - 1].steps[k - 1].caption.replace(/\s/g, '').length; }
+function dwell(a, k) { return Math.min(14000, Math.max(4000, capLen(a, k) * 250)); }
+function seqEnd(a, k) { var e = 0; SEQ[a].steps[k - 1].seq.forEach(function (ev) { e = Math.max(e, ev[0] + ev[1]); }); return e; }
+function playStep(n) {
+  var def = SEQ[P.a].steps[n - 1], sc = P.sc, target = stateAt(P.a, n);
+  setLoops(sc, def.loops);
+  if (STILL) { render(sc, target, 0); return 0; }
+  if (RM) { render(sc, target, 400, true); P.timers.push(setTimeout(function () { render(sc, target, 0); }, 450)); return 450; }
+  var cur = cloneSt(stateAt(P.a, n - 1)), end = 0;
+  def.seq.forEach(function (ev) {
+    end = Math.max(end, ev[0] + ev[1]);
+    P.timers.push(setTimeout(function () {
+      mergeInto(cur, ev[2], P.a);
+      for (var id in ev[2]) paint(sc, id, cur[id], ev[1], false, isLin(ev));
+    }, ev[0] + 30));
+  });
+  P.timers.push(setTimeout(function () { render(sc, target, 0); }, end + 90));
+  return end + 90;
+}
+function go(n, animate) {
+  var N = SEQ[P.a].steps.length;
+  n = Math.max(1, Math.min(N, n));
+  clearTimers();
+  var end = 0;
+  P.k = n;
+  applyLayout();
+  if (animate) { render(P.sc, stateAt(P.a, n - 1), 0); end = playStep(n); }
+  else { render(P.sc, stateAt(P.a, n), 0); setLoops(P.sc, SEQ[P.a].steps[n - 1].loops); }
+  if (P.auto) {
+    if (n >= N) setAuto(false);
+    else P.autoTimer = setTimeout(function () { go(P.k + 1, true); }, end + dwell(P.a, n));
+  }
+  updateUI(); updateURL(); save();
+}
+function restart() {
+  clearTimers();
+  P.k = 0;
+  render(P.sc, stateAt(P.a, 0), 0);
+  go(1, true);
+}
+function setAuto(on) {
+  P.auto = on;
+  var b = $('bAuto');
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  b.innerHTML = on
+    ? '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="4" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="11.5" y="4" width="3.5" height="12" rx="1" fill="currentColor"/></svg>暫停'
+    : '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4l10 6-10 6z" fill="currentColor"/></svg>自動播放';
+  if (!on && P.autoTimer) { clearTimeout(P.autoTimer); P.autoTimer = null; }
+}
+function toggleAuto() {
+  if (P.auto) { setAuto(false); return; }
+  setAuto(true);
+  var N = SEQ[P.a].steps.length;
+  if (P.k >= N) restart();
+  else P.autoTimer = setTimeout(function () { go(P.k + 1, true); }, 700);
+}
+function kw(parent, text, words) {
+  if (!words || !words.length) { parent.appendChild(document.createTextNode(text)); return; }
+  var re = new RegExp('(' + words.map(function (w) { return w.replace(/[()（）]/g, '\\$&'); }).join('|') + ')', 'g');
+  text.split(re).forEach(function (part) {
+    if (!part) return;
+    if (words.indexOf(part) >= 0) { var s = document.createElement('strong'); s.textContent = part; parent.appendChild(s); }
+    else parent.appendChild(document.createTextNode(part));
+  });
+}
+var BOLD = {2: ['一直等不到資源', '兩個程序就可能發生'], 3: ['CPU 時間切成小段', '時間一到就換是分時系統'], 4: ['MMU（記憶體管理單元）'], 5: ['大小相同的頁面（Page）']};
+function updateUI() {
+  var A = DATA.animations[P.a - 1], N = A.steps.length, st = A.steps[P.k - 1], last = P.k === N;
+  $('pSeg').textContent = '第 ' + P.a + ' 段／共 5 段';
+  $('pTitle').textContent = A.title;
+  $('pPages').textContent = '對應' + A.tocPages;
+  $('pStep').textContent = '第 ' + P.k + ' 步／共 ' + N + ' 步';
+  $('sTitle').textContent = st.title;
+  var dots = $('dots'); dots.textContent = '';
+  for (var i = 1; i <= N; i++) { var d = document.createElement('span'); d.className = 'dot' + (i < P.k ? ' done' : '') + (i === P.k ? ' cur' : ''); dots.appendChild(d); }
+  var cap = $('cap'), take = $('take'), more = $('takeMore');
+  more.hidden = true; more.textContent = '';
+  if (last) {
+    cap.hidden = true; cap.textContent = ''; take.hidden = false; take.textContent = '';
+    var h = document.createElement('p'); h.className = 'take-h';
+    var tg = document.createElement('span'); tg.className = 'tag' + (A.takeawayTag === '重點' ? '' : ' soft'); tg.textContent = A.takeawayTag; h.appendChild(tg);
+    if (A.takeawayNote) { var nt = document.createElement('span'); nt.className = 'tnote'; nt.textContent = A.takeawayNote; h.appendChild(nt); }
+    take.appendChild(h);
+    /* 標籤框裡只放標籤說的那一類；「另外」那幾行放在框外，不算在標籤裡 */
+    A.takeaway.forEach(function (it) {
+      var p = document.createElement('p');
+      var b = document.createElement('b');
+      b.textContent = it.extra ? '另外，' + it.label + '：' : (it.lead ? it.lead : it.label + '：');
+      p.appendChild(b);
+      kw(p, it.text, it.extra ? null : BOLD[P.a]);
+      if (it.extra) { more.appendChild(p); more.hidden = false; } else take.appendChild(p);
+    });
+  } else { take.hidden = true; take.textContent = ''; cap.hidden = false; cap.textContent = st.caption; }
+  $('bPrev').disabled = P.k <= 1;
+  $('bNext').disabled = last;
+  var after = $('after'), nb = $('bNextSeg');
+  after.hidden = !last;
+  nb.textContent = P.a < 5 ? '看下一段：第 ' + (P.a + 1) + ' 段' : '回目錄';
+}
+function buildURL(a, s, play) {
+  var q = new URLSearchParams();
+  if (a) { q.set('a', a); if (s) q.set('s', s); if (s && play) q.set('play', '1'); }
+  if (STILL) q.set('still', '1');
+  var str = q.toString();
+  return location.pathname + (str ? '?' + str : '');
+}
+function updateURL() { try { history.replaceState(null, '', buildURL(P.a, P.k)); } catch (e) {} }
+function save() { try { localStorage.setItem('w07anim-last', JSON.stringify({a: P.a, s: P.k})); } catch (e) {} }
+function load() { try { var v = JSON.parse(localStorage.getItem('w07anim-last') || 'null'); if (v && v.a >= 1 && v.a <= 5 && v.s >= 1) return v; } catch (e) {} return null; }
+
+function showToc() {
+  clearTimers(); setAuto(false);
+  if (P.sc) setLoops(P.sc, []);
+  $('player').hidden = true; $('toc').hidden = false;
+  document.title = '第 7 週互動動畫';
+  var last = load(), rs = $('resume');
+  rs.textContent = '';
+  if (last && DATA.animations[last.a - 1] && last.s <= DATA.animations[last.a - 1].steps.length) {
+    rs.appendChild(document.createTextNode('上次看到第 ' + last.a + ' 段第 ' + last.s + ' 步。'));
+    var a = document.createElement('a'); a.href = buildURL(last.a, last.s); a.textContent = '從那裡接著看';
+    a.addEventListener('click', function (e) { e.preventDefault(); nav(last.a, last.s); });
+    rs.appendChild(a); rs.hidden = false;
+  } else rs.hidden = true;
+}
+function openAnim(a, s, play) {
+  clearTimers(); setAuto(false);
+  if (P.sc) setLoops(P.sc, []);
+  $('toc').hidden = true; $('player').hidden = false;
+  var sc = getScene(a);
+  for (var k in SCENES) SCENES[k].svg.style.display = (Number(k) !== a) ? 'none' : '';
+  P.a = a; P.sc = sc;
+  document.title = '第 ' + a + ' 段｜第 7 週互動動畫';
+  var N = SEQ[a].steps.length;
+  if (s >= 1 && s <= N) {
+    if (play && s > 1) {
+      /* 先停在前一步的最後樣子，再自動演這一步 */
+      P.k = s - 1; applyLayout(); render(sc, stateAt(a, s - 1), 0); setLoops(sc, SEQ[a].steps[s - 2].loops);
+      updateUI();
+      P.timers.push(setTimeout(function () { go(s, true); }, 900));
+    } else if (play) restart();
+    else go(s, false);
+  } else restart();
+}
+function nav(a, s, play) {
+  try { history.pushState(null, '', buildURL(a, s, play)); } catch (e) {}
+  if (a) openAnim(a, s, play); else showToc();
+  window.scrollTo(0, 0);
+}
+function parse(search) {
+  var q = new URLSearchParams(search), a = parseInt(q.get('a'), 10), s = parseInt(q.get('s'), 10);
+  if (!(a >= 1 && a <= 5)) return {a: 0, s: 0, play: false};
+  var N = SEQ[a].steps.length;
+  return {a: a, s: (s >= 1 && s <= N) ? s : 0, play: q.get('play') === '1'};
+}
+function route() { var r = parse(location.search); if (r.a) openAnim(r.a, r.s, r.play); else showToc(); }
+
+/* 目錄卡片 */
+function buildToc() {
+  var ol = $('cards');
+  DATA.animations.forEach(function (A, i) {
+    var a = i + 1, li = document.createElement('li'); li.className = 'card';
+    var go1 = document.createElement('a'); go1.className = 'go'; go1.href = buildURL(a, 0);
+    go1.addEventListener('click', function (e) { e.preventDefault(); nav(a, 0); });
+    var n = document.createElement('span'); n.className = 'num'; n.textContent = a; go1.appendChild(n);
+    var box = document.createElement('span');
+    var h = document.createElement('h3'); h.textContent = A.title; box.appendChild(h);
+    var p = document.createElement('p'); p.textContent = A.tocLine; box.appendChild(p);
+    var m = document.createElement('p'); m.className = 'meta'; m.textContent = '對應' + A.tocPages + '・' + A.steps.length + ' 步'; box.appendChild(m);
+    go1.appendChild(box); li.appendChild(go1);
+    (A.tocLinks || []).forEach(function (c) {
+      var sub = document.createElement('a'); sub.className = 'sub'; sub.href = buildURL(a, c.s, true);
+      sub.textContent = c.label;
+      sub.addEventListener('click', function (e) { e.preventDefault(); nav(a, c.s, true); });
+      li.appendChild(sub);
+    });
+    ol.appendChild(li);
+  });
+}
+
+$('bToc').addEventListener('click', function () { nav(0, 0); });
+$('bPrev').addEventListener('click', function () { setAuto(false); if (P.k > 1) go(P.k - 1, false); });
+$('bNext').addEventListener('click', function () { if (P.k < SEQ[P.a].steps.length) go(P.k + 1, true); });
+$('bHome').addEventListener('click', function () { restart(); });
+$('bAuto').addEventListener('click', toggleAuto);
+$('bNextSeg').addEventListener('click', function () { if (P.a < 5) nav(P.a + 1, 0); else nav(0, 0); });
+document.addEventListener('keydown', function (e) {
+  if ($('player').hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); if (P.k < SEQ[P.a].steps.length) go(P.k + 1, true); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); setAuto(false); if (P.k > 1) go(P.k - 1, false); }
+});
+window.addEventListener('popstate', route);
+if (NARROW) {
+  var onNarrow = function () { applyLayout(); };
+  if (NARROW.addEventListener) NARROW.addEventListener('change', onNarrow); else if (NARROW.addListener) NARROW.addListener(onNarrow);
+}
+
+setAuto(false);
+buildToc();
+route();
+
+/* 給測試用的唯讀介面 */
+window.__W07 = {
+  parse: parse,
+  steps: function (a) { return SEQ[a].steps.length; },
+  state: function () { return {a: P.a, k: P.k, still: STILL, auto: P.auto, stack: P.sc ? P.sc.svg.classList.contains('stack') : false}; },
+  show: function (a, s) { openAnim(a, s); return {a: P.a, k: P.k, caption: $('cap').hidden ? $('take').textContent : $('cap').textContent}; },
+  seqEnd: seqEnd, dwell: dwell,
+  timing: function () { var out = []; for (var a = 1; a <= 5; a++) { var t = 0; for (var k = 1; k <= SEQ[a].steps.length; k++) t += seqEnd(a, k) + 90 + dwell(a, k); out.push(t); } return out; }
+};
+})();
+</script>
+</body>
+</html>

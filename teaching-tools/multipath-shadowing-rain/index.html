@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="以自由空間路徑損耗、兩路徑干涉、人體與都市遮蔽、雨衰及頻率靈敏度建立無線傳播直覺。">
+  <title>多路徑與遮蔽｜互動實驗室</title>
+  <style>
+  :root{
+    --ink:#10243b;--muted:#526579;--paper:#f4f7fb;--card:#ffffff;--line:#d7e0ea;
+    --navy:#12365a;--blue:#176b87;--teal:#087f78;--orange:#e16a2b;--gold:#f3b33d;
+    --good:#147a54;--bad:#b43b3b;--soft-blue:#eaf5fb;--soft-teal:#e8f7f3;--soft-orange:#fff2e7;
+    --shadow:0 14px 36px rgba(18,54,90,.10);--radius:20px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.68}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .skip-link{position:fixed;left:1rem;top:-5rem;z-index:99;padding:.7rem 1rem;background:#fff;color:var(--navy);border:2px solid var(--navy);border-radius:10px}
+  .skip-link:focus{top:1rem}
+  :focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(125deg,#0f2e4d 0%,#175b72 58%,#14857b 100%);color:#fff;padding:clamp(2.3rem,6vw,5.5rem) max(1.2rem,calc((100vw - 1180px)/2)) 2.7rem}
+  .hero:after{content:"";position:absolute;width:460px;height:460px;border:76px solid rgba(255,255,255,.07);border-radius:50%;right:-150px;top:-230px}
+  .eyebrow{margin:0 0 .55rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;color:#bceee5;font-size:.88rem}
+  h1{max-width:900px;margin:.1rem 0 .8rem;font-size:clamp(2rem,5vw,3.65rem);line-height:1.14;letter-spacing:-.035em}
+  .lead{max-width:850px;margin:0;font-size:clamp(1rem,2vw,1.2rem);color:#e9f8fa}
+  .hero-chips{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.3rem}
+  .chip{padding:.35rem .72rem;border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.12);border-radius:999px;font-size:.9rem}
+  .top-nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;box-shadow:0 4px 14px rgba(18,54,90,.06)}
+  .top-nav .inner{width:100%;max-width:1180px;margin:auto;display:flex;gap:.35rem;overflow:auto;padding:.65rem 1rem}
+  .top-nav a{white-space:nowrap;text-decoration:none;color:var(--navy);font-weight:750;padding:.45rem .72rem;border-radius:999px}
+  .top-nav a:hover{background:var(--soft-blue)}
+  main{max-width:1180px;margin:auto;padding:1.3rem 1rem 4rem}
+  section{scroll-margin-top:5rem}
+  .section-head{margin:2.2rem 0 1rem}
+  .kicker{color:var(--teal);font-weight:850;letter-spacing:.08em;text-transform:uppercase;font-size:.82rem}
+  h2{font-size:clamp(1.45rem,3vw,2.15rem);line-height:1.25;margin:.25rem 0 .4rem;color:var(--navy)}
+  h3{line-height:1.35;color:var(--navy);margin:.1rem 0 .55rem}
+  p{margin:.45rem 0 .9rem}
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+  .card,.panel,.quiz-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card{padding:1.15rem}
+  .card .icon{display:grid;place-items:center;width:2.6rem;height:2.6rem;border-radius:14px;background:var(--soft-teal);font-size:1.35rem;margin-bottom:.65rem}
+  .lab-grid{display:grid;grid-template-columns:minmax(260px,.82fr) minmax(0,1.55fr);gap:1rem;align-items:start}
+  .lab-grid>*{min-width:0}
+  .controls{padding:1rem;position:sticky;top:4.7rem}
+  .control{padding:.72rem 0;border-bottom:1px dashed var(--line)}
+  .control:last-of-type{border-bottom:0}
+  .control-top{display:flex;justify-content:space-between;gap:.7rem;align-items:baseline}
+  .control label{font-weight:800;color:var(--navy)}
+  output{font-variant-numeric:tabular-nums;color:var(--teal);font-weight:850}
+  input[type="range"]{width:100%;accent-color:var(--teal)}
+  select{width:100%;margin-top:.4rem;padding:.58rem;border:1px solid #aebdca;border-radius:10px;background:#fff;color:var(--ink)}
+  .button-row{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.9rem}
+  .primary,.secondary{border-radius:12px;padding:.62rem .9rem;font-weight:800}
+  .primary{border:0;background:var(--teal);color:#fff}
+  .secondary{border:1px solid var(--navy);background:#fff;color:var(--navy)}
+  .visual-stack{display:grid;gap:1rem;min-width:0}
+  .canvas-card{padding:.8rem}
+  canvas{display:block;width:100%;height:auto;border-radius:15px;background:#071d31;border:1px solid #24455f}
+  .canvas-note{font-size:.9rem;color:var(--muted);margin:.5rem .25rem .1rem}
+  .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
+  .metric{background:#fff;border:1px solid var(--line);border-radius:15px;padding:.8rem;min-height:88px}
+  .metric small{display:block;color:var(--muted);font-weight:700}
+  .metric strong{display:block;color:var(--navy);font-size:1.25rem;font-variant-numeric:tabular-nums;margin-top:.1rem}
+  .live-note{border-left:5px solid var(--orange);background:var(--soft-orange);padding:.85rem 1rem;border-radius:0 14px 14px 0}
+  .formula-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .formula-grid>*{min-width:0}
+  .formula-box{min-width:0;max-width:100%;padding:1rem;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+  .formula-box .why{color:var(--muted);font-size:.94rem}
+  .formula[data-tex]{font-family:inherit;color:inherit}
+  .formula[data-display="true"]{display:block;width:100%;max-width:100%;padding:.25rem 0;overflow-x:auto;overflow-y:hidden;text-align:center;scrollbar-width:thin}
+  .formula[data-display="true"] .katex-display{margin:.35em 0}
+  .formula-box .katex{font-size:1.06em}
+  .compare{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+  .compare th,.compare td{padding:.75rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+  .compare th{background:var(--navy);color:#fff}
+  .compare tr:last-child td{border-bottom:0}
+  .myths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .myth{padding:1rem;border:1px solid #f0c8aa;background:#fff8f2;border-radius:16px}
+  .myth b{color:#a6471f}
+  .software{padding:1.1rem 1.2rem;background:linear-gradient(115deg,#e9f8f4,#edf5fb);border:1px solid #bcded8;border-radius:18px}
+  .quiz-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.8rem}
+  .score{font-weight:850;color:var(--teal);font-variant-numeric:tabular-nums}
+  .quiz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+  .quiz-card{padding:1rem}
+  .quiz-meta{display:flex;gap:.45rem;flex-wrap:wrap;color:var(--muted);font-size:.84rem;margin-bottom:.35rem}
+  .options{display:grid;gap:.5rem;margin-top:.75rem}
+  .option{text-align:left;padding:.65rem .75rem;border:1px solid #b9c7d4;background:#fff;color:var(--ink);border-radius:12px}
+  .option:hover{border-color:var(--teal);background:#f2fbf8}
+  .option[data-state="correct"]{border-color:var(--good);background:#e9f8f1;color:#0d5e40}
+  .option[data-state="wrong"]{border-color:var(--bad);background:#fff0f0;color:#8b2727}
+  .feedback{min-height:3.5rem;margin-top:.7rem;padding:.7rem;border-radius:12px;background:#f4f7fa;color:var(--muted)}
+  .feedback[data-kind="correct"]{background:#e9f8f1;color:#0d5e40}
+  .feedback[data-kind="wrong"]{background:#fff0f0;color:#842929}
+  .footer-note{margin-top:2.2rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @media(max-width:900px){.cards{grid-template-columns:1fr}.lab-grid{grid-template-columns:1fr}.controls{position:static}.formula-grid,.quiz-grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.hero{padding-top:2rem}.myths,.metrics{grid-template-columns:1fr}.compare{font-size:.9rem}.compare th,.compare td{padding:.55rem}.quiz-top{align-items:flex-start;flex-direction:column}}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+  @media print{.top-nav,.controls,.button-row,.quiz-top button{display:none!important}.hero{background:#fff;color:#000;padding:1rem}.lead,.eyebrow{color:#333}.lab-grid{display:block}.card,.panel,.quiz-card,.formula-box{box-shadow:none;break-inside:avoid}}
+</style>
+  
+<!-- ANTENNA_LATEX_CSS_BEGIN
+KaTeX 0.18.4; The MIT License (MIT)
+
+Copyright (c) 2013-2020 Khan Academy and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ANTENNA_LATEX_CSS_END -->
+<style id="embedded-katex-css">@font-face{font-display:block;font-family:KaTeX_AMS;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_AMS-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Caligraphic;font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Caligraphic;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Fraktur;font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Fraktur;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Main-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:italic;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:italic;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Main-RegularItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Main-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Math;font-style:italic;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Math;font-style:italic;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Math-RegularItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:normal;font-weight:700;src:url(../vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2) format("woff2")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:italic;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_SansSerif-RegularItalic.woff2) format("woff2")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Script;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Script-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size1;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size1-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size2;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size2-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size3;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size3-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Size4;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Size4-Regular.woff2) format("woff2")}@font-face{font-display:block;font-family:KaTeX_Typewriter;font-style:normal;font-weight:400;src:url(../vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2) format("woff2")}.katex{font:normal 1.21em KaTeX_Main,Times New Roman,serif;line-height:1.2;position:relative;text-indent:0;text-rendering:auto}.katex *{-ms-high-contrast-adjust:none!important;border-color:currentColor}.katex .katex-version:after{content:"0.18.4"}.katex .katex-mathml{border:0;-webkit-clip-path:inset(50%);clip-path:inset(50%);height:1px;overflow:hidden;padding:0;position:absolute;width:1px}.katex .katex-html>.katex-newline{display:block}.katex .katex-base{position:relative;white-space:nowrap;width:-webkit-min-content;width:-moz-min-content;width:min-content}.katex .katex-base,.katex .katex-strut{display:inline-block}.katex .textbf{font-weight:700}.katex .textit{font-style:italic}.katex .textrm{font-family:KaTeX_Main}.katex .textsf{font-family:KaTeX_SansSerif}.katex .texttt{font-family:KaTeX_Typewriter}.katex .mathnormal{font-family:KaTeX_Math;font-style:italic}.katex .mathit{font-family:KaTeX_Main;font-style:italic}.katex .mathrm{font-style:normal}.katex .mathbf{font-family:KaTeX_Main;font-weight:700}.katex .boldsymbol{font-family:KaTeX_Math;font-style:italic;font-weight:700}.katex .amsrm,.katex .mathbb,.katex .textbb{font-family:KaTeX_AMS}.katex .mathcal{font-family:KaTeX_Caligraphic}.katex .mathfrak,.katex .textfrak{font-family:KaTeX_Fraktur}.katex .mathboldfrak,.katex .textboldfrak{font-family:KaTeX_Fraktur;font-weight:700}.katex .mathtt{font-family:KaTeX_Typewriter}.katex .mathscr,.katex .textscr{font-family:KaTeX_Script}.katex .mathsf,.katex .textsf{font-family:KaTeX_SansSerif}.katex .mathboldsf,.katex .textboldsf{font-family:KaTeX_SansSerif;font-weight:700}.katex .mathitsf,.katex .mathsfit,.katex .textitsf{font-family:KaTeX_SansSerif;font-style:italic}.katex .mainrm{font-family:KaTeX_Main;font-style:normal}.katex .vlist-t{border-collapse:collapse;display:inline-table;table-layout:fixed}.katex .vlist-r{display:table-row}.katex .vlist{display:table-cell;position:relative;vertical-align:bottom}.katex .vlist>span{display:block;height:0;position:relative}.katex .vlist>span>span{display:inline-block}.katex .vlist>span>.pstrut{overflow:hidden;width:0}.katex .vlist-t2{margin-right:-2px}.katex .vlist-s{display:table-cell;font-size:1px;min-width:2px;vertical-align:bottom;width:2px}.katex .katex-vbox{align-items:baseline;display:inline-flex;flex-direction:column}.katex .katex-thinbox{display:inline-flex;flex-direction:row;max-width:0;width:0}.katex .msupsub{text-align:left}.katex .mfrac>span>span{text-align:center}.katex .mfrac .frac-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .katex-hdashline,.katex .katex-hline,.katex .katex-overline .overline-line,.katex .katex-rule,.katex .katex-underline .underline-line,.katex .mfrac .frac-line{min-height:1px}.katex .mspace{display:inline-block}.katex .katex-smash{display:inline;line-height:0}.katex .clap,.katex .llap,.katex .rlap{position:relative;width:0}.katex .clap>.katex-inner,.katex .llap>.katex-inner,.katex .rlap>.katex-inner{position:absolute}.katex .clap>.katex-fix,.katex .llap>.katex-fix,.katex .rlap>.katex-fix{display:inline-block}.katex .llap>.katex-inner{right:0}.katex .clap>.katex-inner,.katex .rlap>.katex-inner{left:0}.katex .clap>.katex-inner>span{margin-left:-50%;margin-right:50%}.katex .katex-rule{border:0 solid;display:inline-block;position:relative}.katex .katex-hline,.katex .katex-overline .overline-line,.katex .katex-underline .underline-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .katex-hdashline{border-bottom-style:dashed;display:inline-block;width:100%}.katex .sqrt>.katex-root{margin-left:.2777777778em;margin-right:-.5555555556em}.katex .fontsize-ensurer.reset-size1.size1,.katex .katex-sizing.reset-size1.size1{font-size:1em}.katex .fontsize-ensurer.reset-size1.size2,.katex .katex-sizing.reset-size1.size2{font-size:1.2em}.katex .fontsize-ensurer.reset-size1.size3,.katex .katex-sizing.reset-size1.size3{font-size:1.4em}.katex .fontsize-ensurer.reset-size1.size4,.katex .katex-sizing.reset-size1.size4{font-size:1.6em}.katex .fontsize-ensurer.reset-size1.size5,.katex .katex-sizing.reset-size1.size5{font-size:1.8em}.katex .fontsize-ensurer.reset-size1.size6,.katex .katex-sizing.reset-size1.size6{font-size:2em}.katex .fontsize-ensurer.reset-size1.size7,.katex .katex-sizing.reset-size1.size7{font-size:2.4em}.katex .fontsize-ensurer.reset-size1.size8,.katex .katex-sizing.reset-size1.size8{font-size:2.88em}.katex .fontsize-ensurer.reset-size1.size9,.katex .katex-sizing.reset-size1.size9{font-size:3.456em}.katex .fontsize-ensurer.reset-size1.size10,.katex .katex-sizing.reset-size1.size10{font-size:4.148em}.katex .fontsize-ensurer.reset-size1.size11,.katex .katex-sizing.reset-size1.size11{font-size:4.976em}.katex .fontsize-ensurer.reset-size2.size1,.katex .katex-sizing.reset-size2.size1{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size2.size2,.katex .katex-sizing.reset-size2.size2{font-size:1em}.katex .fontsize-ensurer.reset-size2.size3,.katex .katex-sizing.reset-size2.size3{font-size:1.1666666667em}.katex .fontsize-ensurer.reset-size2.size4,.katex .katex-sizing.reset-size2.size4{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size2.size5,.katex .katex-sizing.reset-size2.size5{font-size:1.5em}.katex .fontsize-ensurer.reset-size2.size6,.katex .katex-sizing.reset-size2.size6{font-size:1.6666666667em}.katex .fontsize-ensurer.reset-size2.size7,.katex .katex-sizing.reset-size2.size7{font-size:2em}.katex .fontsize-ensurer.reset-size2.size8,.katex .katex-sizing.reset-size2.size8{font-size:2.4em}.katex .fontsize-ensurer.reset-size2.size9,.katex .katex-sizing.reset-size2.size9{font-size:2.88em}.katex .fontsize-ensurer.reset-size2.size10,.katex .katex-sizing.reset-size2.size10{font-size:3.4566666667em}.katex .fontsize-ensurer.reset-size2.size11,.katex .katex-sizing.reset-size2.size11{font-size:4.1466666667em}.katex .fontsize-ensurer.reset-size3.size1,.katex .katex-sizing.reset-size3.size1{font-size:.7142857143em}.katex .fontsize-ensurer.reset-size3.size2,.katex .katex-sizing.reset-size3.size2{font-size:.8571428571em}.katex .fontsize-ensurer.reset-size3.size3,.katex .katex-sizing.reset-size3.size3{font-size:1em}.katex .fontsize-ensurer.reset-size3.size4,.katex .katex-sizing.reset-size3.size4{font-size:1.1428571429em}.katex .fontsize-ensurer.reset-size3.size5,.katex .katex-sizing.reset-size3.size5{font-size:1.2857142857em}.katex .fontsize-ensurer.reset-size3.size6,.katex .katex-sizing.reset-size3.size6{font-size:1.4285714286em}.katex .fontsize-ensurer.reset-size3.size7,.katex .katex-sizing.reset-size3.size7{font-size:1.7142857143em}.katex .fontsize-ensurer.reset-size3.size8,.katex .katex-sizing.reset-size3.size8{font-size:2.0571428571em}.katex .fontsize-ensurer.reset-size3.size9,.katex .katex-sizing.reset-size3.size9{font-size:2.4685714286em}.katex .fontsize-ensurer.reset-size3.size10,.katex .katex-sizing.reset-size3.size10{font-size:2.9628571429em}.katex .fontsize-ensurer.reset-size3.size11,.katex .katex-sizing.reset-size3.size11{font-size:3.5542857143em}.katex .fontsize-ensurer.reset-size4.size1,.katex .katex-sizing.reset-size4.size1{font-size:.625em}.katex .fontsize-ensurer.reset-size4.size2,.katex .katex-sizing.reset-size4.size2{font-size:.75em}.katex .fontsize-ensurer.reset-size4.size3,.katex .katex-sizing.reset-size4.size3{font-size:.875em}.katex .fontsize-ensurer.reset-size4.size4,.katex .katex-sizing.reset-size4.size4{font-size:1em}.katex .fontsize-ensurer.reset-size4.size5,.katex .katex-sizing.reset-size4.size5{font-size:1.125em}.katex .fontsize-ensurer.reset-size4.size6,.katex .katex-sizing.reset-size4.size6{font-size:1.25em}.katex .fontsize-ensurer.reset-size4.size7,.katex .katex-sizing.reset-size4.size7{font-size:1.5em}.katex .fontsize-ensurer.reset-size4.size8,.katex .katex-sizing.reset-size4.size8{font-size:1.8em}.katex .fontsize-ensurer.reset-size4.size9,.katex .katex-sizing.reset-size4.size9{font-size:2.16em}.katex .fontsize-ensurer.reset-size4.size10,.katex .katex-sizing.reset-size4.size10{font-size:2.5925em}.katex .fontsize-ensurer.reset-size4.size11,.katex .katex-sizing.reset-size4.size11{font-size:3.11em}.katex .fontsize-ensurer.reset-size5.size1,.katex .katex-sizing.reset-size5.size1{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size5.size2,.katex .katex-sizing.reset-size5.size2{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size5.size3,.katex .katex-sizing.reset-size5.size3{font-size:.7777777778em}.katex .fontsize-ensurer.reset-size5.size4,.katex .katex-sizing.reset-size5.size4{font-size:.8888888889em}.katex .fontsize-ensurer.reset-size5.size5,.katex .katex-sizing.reset-size5.size5{font-size:1em}.katex .fontsize-ensurer.reset-size5.size6,.katex .katex-sizing.reset-size5.size6{font-size:1.1111111111em}.katex .fontsize-ensurer.reset-size5.size7,.katex .katex-sizing.reset-size5.size7{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size5.size8,.katex .katex-sizing.reset-size5.size8{font-size:1.6em}.katex .fontsize-ensurer.reset-size5.size9,.katex .katex-sizing.reset-size5.size9{font-size:1.92em}.katex .fontsize-ensurer.reset-size5.size10,.katex .katex-sizing.reset-size5.size10{font-size:2.3044444444em}.katex .fontsize-ensurer.reset-size5.size11,.katex .katex-sizing.reset-size5.size11{font-size:2.7644444444em}.katex .fontsize-ensurer.reset-size6.size1,.katex .katex-sizing.reset-size6.size1{font-size:.5em}.katex .fontsize-ensurer.reset-size6.size2,.katex .katex-sizing.reset-size6.size2{font-size:.6em}.katex .fontsize-ensurer.reset-size6.size3,.katex .katex-sizing.reset-size6.size3{font-size:.7em}.katex .fontsize-ensurer.reset-size6.size4,.katex .katex-sizing.reset-size6.size4{font-size:.8em}.katex .fontsize-ensurer.reset-size6.size5,.katex .katex-sizing.reset-size6.size5{font-size:.9em}.katex .fontsize-ensurer.reset-size6.size6,.katex .katex-sizing.reset-size6.size6{font-size:1em}.katex .fontsize-ensurer.reset-size6.size7,.katex .katex-sizing.reset-size6.size7{font-size:1.2em}.katex .fontsize-ensurer.reset-size6.size8,.katex .katex-sizing.reset-size6.size8{font-size:1.44em}.katex .fontsize-ensurer.reset-size6.size9,.katex .katex-sizing.reset-size6.size9{font-size:1.728em}.katex .fontsize-ensurer.reset-size6.size10,.katex .katex-sizing.reset-size6.size10{font-size:2.074em}.katex .fontsize-ensurer.reset-size6.size11,.katex .katex-sizing.reset-size6.size11{font-size:2.488em}.katex .fontsize-ensurer.reset-size7.size1,.katex .katex-sizing.reset-size7.size1{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size7.size2,.katex .katex-sizing.reset-size7.size2{font-size:.5em}.katex .fontsize-ensurer.reset-size7.size3,.katex .katex-sizing.reset-size7.size3{font-size:.5833333333em}.katex .fontsize-ensurer.reset-size7.size4,.katex .katex-sizing.reset-size7.size4{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size7.size5,.katex .katex-sizing.reset-size7.size5{font-size:.75em}.katex .fontsize-ensurer.reset-size7.size6,.katex .katex-sizing.reset-size7.size6{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size7.size7,.katex .katex-sizing.reset-size7.size7{font-size:1em}.katex .fontsize-ensurer.reset-size7.size8,.katex .katex-sizing.reset-size7.size8{font-size:1.2em}.katex .fontsize-ensurer.reset-size7.size9,.katex .katex-sizing.reset-size7.size9{font-size:1.44em}.katex .fontsize-ensurer.reset-size7.size10,.katex .katex-sizing.reset-size7.size10{font-size:1.7283333333em}.katex .fontsize-ensurer.reset-size7.size11,.katex .katex-sizing.reset-size7.size11{font-size:2.0733333333em}.katex .fontsize-ensurer.reset-size8.size1,.katex .katex-sizing.reset-size8.size1{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size8.size2,.katex .katex-sizing.reset-size8.size2{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size8.size3,.katex .katex-sizing.reset-size8.size3{font-size:.4861111111em}.katex .fontsize-ensurer.reset-size8.size4,.katex .katex-sizing.reset-size8.size4{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size8.size5,.katex .katex-sizing.reset-size8.size5{font-size:.625em}.katex .fontsize-ensurer.reset-size8.size6,.katex .katex-sizing.reset-size8.size6{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size8.size7,.katex .katex-sizing.reset-size8.size7{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size8.size8,.katex .katex-sizing.reset-size8.size8{font-size:1em}.katex .fontsize-ensurer.reset-size8.size9,.katex .katex-sizing.reset-size8.size9{font-size:1.2em}.katex .fontsize-ensurer.reset-size8.size10,.katex .katex-sizing.reset-size8.size10{font-size:1.4402777778em}.katex .fontsize-ensurer.reset-size8.size11,.katex .katex-sizing.reset-size8.size11{font-size:1.7277777778em}.katex .fontsize-ensurer.reset-size9.size1,.katex .katex-sizing.reset-size9.size1{font-size:.2893518519em}.katex .fontsize-ensurer.reset-size9.size2,.katex .katex-sizing.reset-size9.size2{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size9.size3,.katex .katex-sizing.reset-size9.size3{font-size:.4050925926em}.katex .fontsize-ensurer.reset-size9.size4,.katex .katex-sizing.reset-size9.size4{font-size:.462962963em}.katex .fontsize-ensurer.reset-size9.size5,.katex .katex-sizing.reset-size9.size5{font-size:.5208333333em}.katex .fontsize-ensurer.reset-size9.size6,.katex .katex-sizing.reset-size9.size6{font-size:.5787037037em}.katex .fontsize-ensurer.reset-size9.size7,.katex .katex-sizing.reset-size9.size7{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size9.size8,.katex .katex-sizing.reset-size9.size8{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size9.size9,.katex .katex-sizing.reset-size9.size9{font-size:1em}.katex .fontsize-ensurer.reset-size9.size10,.katex .katex-sizing.reset-size9.size10{font-size:1.2002314815em}.katex .fontsize-ensurer.reset-size9.size11,.katex .katex-sizing.reset-size9.size11{font-size:1.4398148148em}.katex .fontsize-ensurer.reset-size10.size1,.katex .katex-sizing.reset-size10.size1{font-size:.2410800386em}.katex .fontsize-ensurer.reset-size10.size2,.katex .katex-sizing.reset-size10.size2{font-size:.2892960463em}.katex .fontsize-ensurer.reset-size10.size3,.katex .katex-sizing.reset-size10.size3{font-size:.337512054em}.katex .fontsize-ensurer.reset-size10.size4,.katex .katex-sizing.reset-size10.size4{font-size:.3857280617em}.katex .fontsize-ensurer.reset-size10.size5,.katex .katex-sizing.reset-size10.size5{font-size:.4339440694em}.katex .fontsize-ensurer.reset-size10.size6,.katex .katex-sizing.reset-size10.size6{font-size:.4821600771em}.katex .fontsize-ensurer.reset-size10.size7,.katex .katex-sizing.reset-size10.size7{font-size:.5785920926em}.katex .fontsize-ensurer.reset-size10.size8,.katex .katex-sizing.reset-size10.size8{font-size:.6943105111em}.katex .fontsize-ensurer.reset-size10.size9,.katex .katex-sizing.reset-size10.size9{font-size:.8331726133em}.katex .fontsize-ensurer.reset-size10.size10,.katex .katex-sizing.reset-size10.size10{font-size:1em}.katex .fontsize-ensurer.reset-size10.size11,.katex .katex-sizing.reset-size10.size11{font-size:1.1996142719em}.katex .fontsize-ensurer.reset-size11.size1,.katex .katex-sizing.reset-size11.size1{font-size:.2009646302em}.katex .fontsize-ensurer.reset-size11.size2,.katex .katex-sizing.reset-size11.size2{font-size:.2411575563em}.katex .fontsize-ensurer.reset-size11.size3,.katex .katex-sizing.reset-size11.size3{font-size:.2813504823em}.katex .fontsize-ensurer.reset-size11.size4,.katex .katex-sizing.reset-size11.size4{font-size:.3215434084em}.katex .fontsize-ensurer.reset-size11.size5,.katex .katex-sizing.reset-size11.size5{font-size:.3617363344em}.katex .fontsize-ensurer.reset-size11.size6,.katex .katex-sizing.reset-size11.size6{font-size:.4019292605em}.katex .fontsize-ensurer.reset-size11.size7,.katex .katex-sizing.reset-size11.size7{font-size:.4823151125em}.katex .fontsize-ensurer.reset-size11.size8,.katex .katex-sizing.reset-size11.size8{font-size:.578778135em}.katex .fontsize-ensurer.reset-size11.size9,.katex .katex-sizing.reset-size11.size9{font-size:.6945337621em}.katex .fontsize-ensurer.reset-size11.size10,.katex .katex-sizing.reset-size11.size10{font-size:.8336012862em}.katex .fontsize-ensurer.reset-size11.size11,.katex .katex-sizing.reset-size11.size11{font-size:1em}.katex .delimsizing.size1{font-family:KaTeX_Size1}.katex .delimsizing.size2{font-family:KaTeX_Size2}.katex .delimsizing.size3{font-family:KaTeX_Size3}.katex .delimsizing.size4{font-family:KaTeX_Size4}.katex .delimsizing.mult .delim-size1>span{font-family:KaTeX_Size1}.katex .delimsizing.mult .delim-size4>span{font-family:KaTeX_Size4}.katex .nulldelimiter{display:inline-block;width:.12em}.katex .delimcenter,.katex .op-symbol{position:relative}.katex .op-symbol.small-op{font-family:KaTeX_Size1}.katex .op-symbol.large-op{font-family:KaTeX_Size2}.katex .katex-accent>.vlist-t,.katex .op-limits>.vlist-t{text-align:center}.katex .katex-accent .accent-body{position:relative}.katex .katex-accent .accent-body:not(.accent-full){width:0}.katex .katex-overlay{display:block}.katex .mtable .vertical-separator{display:inline-block;min-width:1px}.katex .mtable .arraycolsep{display:inline-block}.katex .mtable .col-align-c>.vlist-t{text-align:center}.katex .mtable .col-align-l>.vlist-t{text-align:left}.katex .mtable .col-align-r>.vlist-t{text-align:right}.katex .svg-align{text-align:left}.katex svg{fill:currentColor;stroke:currentColor;display:block;height:inherit;position:absolute;width:100%}.katex svg path{stroke:none}.katex svg{fill-rule:nonzero;fill-opacity:1;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1}.katex img{border-style:none;max-height:none;max-width:none;min-height:0;min-width:0}.katex .katex-stretchy{display:block;overflow:hidden;position:relative;width:100%}.katex .katex-stretchy:after,.katex .katex-stretchy:before{content:""}.katex .hide-tail{overflow:hidden;position:relative;width:100%}.katex .halfarrow-left{left:0;overflow:hidden;position:absolute;width:50.2%}.katex .halfarrow-right{overflow:hidden;position:absolute;right:0;width:50.2%}.katex .brace-left{left:0;overflow:hidden;position:absolute;width:25.1%}.katex .brace-center{left:25%;overflow:hidden;position:absolute;width:50%}.katex .brace-right{overflow:hidden;position:absolute;right:0;width:25.1%}.katex .x-arrow-pad{padding:0 .5em}.katex .cd-arrow-pad{padding:0 .55556em 0 .27778em}.katex .mover,.katex .munder,.katex .x-arrow{text-align:center}.katex .boxpad{padding:0 .3em}.katex .fbox,.katex .fcolorbox{border:.04em solid;box-sizing:border-box}.katex .cancel-pad{padding:0 .2em}.katex .cancel-lap{margin-left:-.2em;margin-right:-.2em}.katex .katex-sout{border-bottom-style:solid;border-bottom-width:.08em}.katex .angl{border-right:.049em solid;border-top:.049em solid;box-sizing:border-box;margin-right:.03889em}.katex .anglpad{padding:0 .03889em}.katex .eqn-num:before{content:"(" counter(katexEqnNo) ")";counter-increment:katexEqnNo}.katex .mml-eqn-num:before{content:"(" counter(mmlEqnNo) ")";counter-increment:mmlEqnNo}.katex .mtr-glue{width:50%}.katex .cd-vert-arrow{display:inline-block;position:relative}.katex .cd-label-left{display:inline-block;position:absolute;right:calc(50% + .3em);text-align:left}.katex .cd-label-right{display:inline-block;left:calc(50% + .3em);position:absolute;text-align:right}.katex-display{display:block;margin:1em 0;text-align:center}.katex-display>.katex{display:block;text-align:center;white-space:nowrap}.katex-display>.katex>.katex-html{display:block;position:relative}.katex-display>.katex>.katex-html>.katex-tag{position:absolute;right:0}.katex-display.leqno>.katex>.katex-html>.katex-tag{left:0;right:auto}.katex-display.fleqn>.katex{padding-left:2em;text-align:left}body{counter-reset:katexEqnNo mmlEqnNo}
+
+.formula[data-tex] .katex{font-size:1.06em}
+.formula[data-display="true"] .katex-display>.katex{white-space:nowrap}
+@media(max-width:600px){.formula[data-display="true"] .katex{font-size:.96em}}
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要內容</a>
+  <header class="hero">
+    <p class="eyebrow">互動實驗室</p>
+    <h1>多路徑與遮蔽：訊號為什麼忽強忽弱？</h1>
+    <p class="lead">從手機走動一小步的經驗出發，操作距離、頻率、天線高度、反射與環境，親眼看見相長、相消與額外衰減。</p>
+    <div class="hero-chips" aria-label="教材特色"><span class="chip">先直覺，再公式</span><span class="chip">即時圖表</span><span class="chip">六題自我檢查</span><span class="chip">單檔離線可用</span></div>
+  </header>
+  
+  <nav class="top-nav" aria-label="頁內導覽"><div class="inner">
+    <a href="#intuition">生活直覺</a><a href="#lab">互動實驗</a><a href="#equations">核心公式</a><a href="#scenarios">環境判讀</a><a href="#quiz">自我檢查</a>
+  </div></nav>
+  <main id="main">
+    <section id="intuition" aria-labelledby="intuitionTitle">
+      <div class="section-head"><span class="kicker">01 · 生活錨點</span><h2 id="intuitionTitle">同一支手機，多走一步就可能多一格或少一格</h2><p>訊號不只走最短直線，也會從地面、牆面與車體反射。兩條路徑抵達時若步調一致就相長；若幾乎反向就相消。</p></div>
+      <div class="cards">
+        <article class="card"><div class="icon" aria-hidden="true">📱</div><h3>走動造成快速衰落</h3><p>在室內慢慢移動手機，場強可能忽高忽低。不是基地台突然改功率，而是路徑差改變了相位。</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🚶</div><h3>人體就是移動遮蔽物</h3><p>身體含水量高，會吸收、散射並改變路徑。把手機握法或站位換一下，鏈路就可能不同。</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🌧️</div><h3>頻率愈高，雨衰愈值得檢查</h3><p>微波與毫米波系統要把雨率、距離與頻率一起看；本頁用教學用估算式建立靈敏度直覺。</p></article>
+      </div>
+    </section>
+
+    <section id="lab" aria-labelledby="labTitle">
+      <div class="section-head"><span class="kicker">02 · 動手試試看</span><h2 id="labTitle">兩路徑與遮蔽互動實驗</h2><p>先改距離，再改頻率或反射相位。請觀察「自由空間基準」與「兩路徑結果」如何分開。</p></div>
+      <div class="lab-grid">
+        <form class="panel controls" id="controlPanel" aria-label="多路徑模型控制">
+          <div class="control"><label for="scenario">環境情境</label><select id="scenario"><option value="clear">開闊視距（LOS）</option><option value="body">人體遮蔽</option><option value="urban">都市遮蔽</option><option value="rain">降雨路徑</option></select></div>
+          <div class="control"><div class="control-top"><label for="frequency">頻率 f</label><output id="frequencyOut" for="frequency">3.50 GHz</output></div><input id="frequency" type="range" min="0.7" max="60" step="0.1" value="3.5"></div>
+          <div class="control"><div class="control-top"><label for="distance">水平距離 d</label><output id="distanceOut" for="distance">60 m</output></div><input id="distance" type="range" min="2" max="200" step="1" value="60"></div>
+          <div class="control"><div class="control-top"><label for="txHeight">發射高度 hₜ</label><output id="txHeightOut" for="txHeight">10.0 m</output></div><input id="txHeight" type="range" min="1" max="20" step="0.5" value="10"></div>
+          <div class="control"><div class="control-top"><label for="rxHeight">接收高度 hᵣ</label><output id="rxHeightOut" for="rxHeight">1.5 m</output></div><input id="rxHeight" type="range" min="0.5" max="5" step="0.1" value="1.5"></div>
+          <div class="control"><div class="control-top"><label for="reflection">反射幅度 |Γ|</label><output id="reflectionOut" for="reflection">0.65</output></div><input id="reflection" type="range" min="0" max="1" step="0.01" value="0.65"></div>
+          <div class="control"><div class="control-top"><label for="phase">反射相位 ∠Γ</label><output id="phaseOut" for="phase">180°</output></div><input id="phase" type="range" min="-180" max="180" step="1" value="180"></div>
+          <div class="control"><div class="control-top"><label for="shadowLoss">遮蔽損耗</label><output id="shadowLossOut" for="shadowLoss">12.0 dB</output></div><input id="shadowLoss" type="range" min="0" max="25" step="0.5" value="12"></div>
+          <div class="control"><div class="control-top"><label for="rainRate">雨率</label><output id="rainRateOut" for="rainRate">25 mm/h</output></div><input id="rainRate" type="range" min="0" max="100" step="1" value="25"></div>
+          <div class="button-row"><button class="secondary" type="button" id="resetLab">回到建議起點</button></div>
+        </form>
+
+        <div class="visual-stack">
+          <div class="panel canvas-card"><canvas id="multipathCanvas" width="1000" height="620" tabindex="0" aria-label="上半部顯示直達與地面反射路徑，下半部比較純自由空間基準與兩路徑加環境損耗後的接收功率曲線。" aria-describedby="canvasHelp">直達波與反射波會隨路徑差產生相長或相消。</canvas><p class="canvas-note" id="canvasHelp">黃線是純自由空間基準：20 dBm＋3 dBi＋3 dBi−FSPL，不含人體、都市或雨衰等額外環境損耗；青線才加入兩路徑與環境項。鍵盤提示：聚焦圖表後，左右鍵改變距離，上下鍵改變頻率。</p></div>
+          <div class="metrics" aria-label="即時計算結果">
+            <div class="metric"><small>波長 λ</small><strong id="lambdaMetric">—</strong></div>
+            <div class="metric"><small>自由空間路徑損耗</small><strong id="fsplMetric">—</strong></div>
+            <div class="metric"><small>自由空間接收基準</small><strong id="freePowerMetric">—</strong></div>
+            <div class="metric"><small>路徑差 ΔR</small><strong id="deltaMetric">—</strong></div>
+            <div class="metric"><small>兩路徑同調增益</small><strong id="interferenceMetric">—</strong></div>
+            <div class="metric"><small>額外環境損耗</small><strong id="extraMetric">—</strong></div>
+            <div class="metric"><small>估計接收功率</small><strong id="powerMetric">—</strong></div>
+          </div>
+          <div class="live-note" id="liveInterpretation" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="equations" aria-labelledby="equationTitle">
+      <div class="section-head"><span class="kicker">03 · 數學急救包</span><h2 id="equationTitle">每次只抓一個物理量</h2><p>本頁固定發射功率 20 dBm、兩端天線增益各 3 dBi。公式採 SI 單位；GHz、mm/h 會在程式內先換算。</p></div>
+      <div class="formula-grid">
+        <article class="formula-box"><h3>① 頻率先換波長</h3><span class="formula" data-tex="\lambda=\frac{c}{f},\qquad [\lambda]=\mathrm m,\ [f]=\mathrm{Hz}" data-display="true" tabindex="0">λ=c/f；λ 單位 m、f 單位 Hz</span><p class="why">同距離且天線增益固定時，頻率加倍會讓自由空間路徑損耗增加約 6.02 dB。</p></article>
+        <article class="formula-box"><h3>② 自由空間路徑損耗</h3><span class="formula" data-tex="\mathrm{FSPL}_{\mathrm{dB}}=20\log_{10}\!\left(\frac{4\pi R_1}{\lambda}\right),\quad [R_1]=[\lambda]=\mathrm m" data-display="true" tabindex="0">FSPL=20log₁₀(4πR₁/λ)，R₁與λ都用 m</span><p class="why">對數裡必須是無因次比值；不要把公尺與公里直接混用。</p></article>
+        <article class="formula-box"><h3>③ 直達與反射幾何</h3><span class="formula" data-tex="\begin{aligned}R_1&amp;=\sqrt{d^2+(h_t-h_r)^2}\\R_2&amp;=\sqrt{d^2+(h_t+h_r)^2}\\\Delta R&amp;=R_2-R_1\end{aligned}\qquad [d,h_t,h_r,R_1,R_2]=\mathrm m" data-display="true" tabindex="0">R₁、R₂與路徑差 ΔR</span><p class="why">地面反射可用「映像天線」想像，所以反射路徑用高度相加。</p></article>
+        <article class="formula-box"><h3>④ 兩個相量先相加再平方</h3><span class="formula" data-tex="F=\left|1+|\Gamma|\frac{R_1}{R_2}e^{\mathrm j(k\Delta R+\angle\Gamma)}\right|^2,\qquad G_{\mathrm{mp}}=10\log_{10}F\ \mathrm{dB}" data-display="true" tabindex="0">F=|1+反射相量|²；Gmp=10log₁₀F dB</span><p class="why">F 大於 1 是相長，小於 1 是相消；反射強不代表一定變好，還要看相位。</p></article>
+        <article class="formula-box"><h3>⑤ 鏈路預算</h3><span class="formula" data-tex="P_{r,\mathrm{dBm}}=P_{t,\mathrm{dBm}}+G_{t,\mathrm{dBi}}+G_{r,\mathrm{dBi}}-\mathrm{FSPL}_{\mathrm{dB}}+G_{\mathrm{mp,dB}}-L_{\mathrm{env,dB}}" data-display="true" tabindex="0">接收功率＝發射＋增益−路損＋多路徑增益−環境損耗</span><p class="why">dBm 是功率，dBi 是天線增益，dB 是比值；放在鏈路預算中才能直接加減。</p></article>
+        <article class="formula-box"><h3>⑥ 雨衰教學用估算式</h3><span class="formula" data-tex="L_{\mathrm{rain}}=\gamma_R d_{\mathrm{km}},\qquad \gamma_R\approx3.5\times10^{-4}f_{\mathrm{GHz}}^{1.6}R_{\mathrm{rain}}^{0.9}\ \mathrm{dB/km}" data-display="true" tabindex="0">Lrain=γR·距離；γR 為 dB/km</span><p class="why">這是靈敏度示意，不替代 ITU-R 區域雨衰模型；工程設計要再代入所在地的雨率統計資料。</p></article>
+      </div>
+    </section>
+
+    <section id="scenarios" aria-labelledby="scenarioTitle">
+      <div class="section-head"><span class="kicker">04 · 工程判讀</span><h2 id="scenarioTitle">人體、都市與雨：損耗來源不同</h2></div>
+      <table class="compare"><thead><tr><th>情境</th><th>主要現象</th><th>頻率靈敏度</th><th>本頁怎麼表示</th></tr></thead><tbody>
+        <tr><td>開闊視距（LOS）</td><td>自由空間擴散＋地面兩路徑</td><td>固定增益時 FSPL 隨頻率上升</td><td>額外損耗設為 0 dB</td></tr>
+        <tr><td>人體遮蔽</td><td>吸收、繞射、散射與天線握持改變</td><td>通常高頻更不易繞過人體</td><td>用遮蔽損耗滑桿做鏈路餘裕試算</td></tr>
+        <tr><td>都市遮蔽</td><td>建築阻擋、多次反射與街谷傳播</td><td>不同頻帶的穿透、繞射能力不同</td><td>遮蔽滑桿再加 8 dB 都市基準</td></tr>
+        <tr><td>降雨路徑</td><td>雨滴吸收與散射</td><td>微波高頻與毫米波更需要納入</td><td>用雨率、頻率、公里距離估算</td></tr>
+      </tbody></table>
+
+      <div class="section-head"><span class="kicker">常見迷思</span><h2>你是不是這樣想的？</h2></div>
+      <div class="myths">
+        <article class="myth"><h3><b>迷思：</b>反射愈強，接收一定愈強</h3><p>反射幅度只是其中一半；若抵達時接近反相，反而會形成深衰落。</p></article>
+        <article class="myth"><h3><b>迷思：</b>自由空間路徑損耗已經包含所有環境</h3><p>FSPL 是理想基準。人體、牆面、雨、植被與多重散射要另行建立模型或量測。</p></article>
+        <article class="myth"><h3><b>迷思：</b>頻率高就一定不能通訊</h3><p>系統還能用較高天線增益、波束成形與更密集站點補償；要看完整鏈路預算。</p></article>
+        <article class="myth"><h3><b>迷思：</b>兩路徑模型可以代表所有城市場景</h3><p>兩路徑只適合建立直覺。複雜環境要用射線追蹤、全波模擬或實地量測交叉驗證。</p></article>
+      </div>
+      <div class="software"><h3>延伸實作：把直覺帶進模擬器</h3><p>鼓勵使用 Ansys HFSS、HFSS SBR+、CST 或其他可信工具建立地面、人體等效模型與建築模型，比較場分布、接收功率及頻率掃描。先用本頁預測趨勢，再用模擬結果解釋差異，學習效果最好。</p></div>
+    </section>
+
+    <section id="quiz" aria-labelledby="quizTitle">
+      <div class="section-head"><span class="kicker">05 · 即時回饋</span><h2 id="quizTitle">六題自我檢查</h2><p>每題四選一。答錯時先看回饋指出的迷思，再回到上方調一個控制量驗證。</p></div>
+      <div class="quiz-top"><div class="score" id="quizScore" role="status" aria-live="polite">已作答 0／6｜答對 0</div><button class="secondary" id="resetQuiz" type="button">重新作答</button></div>
+      <div class="quiz-grid" id="quizGrid"></div>
+    </section>
+    <p class="footer-note">模型邊界：本頁以自由空間＋單一地面反射建立教學直覺，雨衰式為靈敏度估算。真正部署請使用量測、標準模型與電磁模擬交叉驗證。</p>
+  </main>
+  
+<!-- ANTENNA_LATEX_JS_BEGIN: self-contained KaTeX 0.18.4, no CDN -->
+<script src="../vendor/katex/katex.min.js"></script>
+<script id="antenna-latex-renderer">(function(){
+  'use strict';
+  function pending(root){
+    var nodes=[];
+    if(root&&root.matches&&root.matches('.formula[data-tex]:not([data-katex-rendered="true"])'))nodes.push(root);
+    if(root&&root.querySelectorAll)root.querySelectorAll('.formula[data-tex]:not([data-katex-rendered="true"])').forEach(function(node){nodes.push(node);});
+    return nodes;
+  }
+  window.renderAntennaLatex=function(root){
+    if(!window.katex)return;
+    pending(root||document).forEach(function(node){
+      try{
+        window.katex.render(node.getAttribute('data-tex')||'',node,{displayMode:node.getAttribute('data-display')==='true',throwOnError:true,strict:'error',trust:false,output:'htmlAndMathml'});
+        node.setAttribute('data-katex-rendered','true');
+      }catch(error){node.removeAttribute('data-katex-rendered');node.setAttribute('data-katex-error',error.message);console.error('LaTeX render failed',error);}
+    });
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    window.renderAntennaLatex(document);
+    var queued=false;
+    new MutationObserver(function(){
+      if(queued)return;queued=true;
+      requestAnimationFrame(function(){queued=false;window.renderAntennaLatex(document);});
+    }).observe(document.body,{childList:true,subtree:true});
+  });
+})();</script>
+<!-- ANTENNA_LATEX_JS_END -->
+  <script>(function(){
+    'use strict';
+    var C=299792458,STORE='isu-rp-multipath-lab-v1';
+    var defaults={scenario:'clear',frequency:3.5,distance:60,txHeight:10,rxHeight:1.5,reflection:.65,phase:180,shadowLoss:12,rainRate:25};
+    var state=Object.assign({},defaults);
+    var ids=['frequency','distance','txHeight','rxHeight','reflection','phase','shadowLoss','rainRate'];
+    function byId(id){return document.getElementById(id)}
+    function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+    function load(){try{var raw=localStorage.getItem(STORE),saved=raw&&JSON.parse(raw);if(saved&&typeof saved==='object')Object.keys(defaults).forEach(function(k){if(typeof saved[k]===typeof defaults[k])state[k]=saved[k]})}catch(_){}}
+    function save(){try{localStorage.setItem(STORE,JSON.stringify(state))}catch(_){}}
+    function sync(){byId('scenario').value=state.scenario;ids.forEach(function(id){byId(id).value=state[id]})}
+    function fmt(v,n){return Number(v).toFixed(n)}
+    function environmentLoss(distance){
+      if(state.scenario==='body')return state.shadowLoss;
+      if(state.scenario==='urban')return state.shadowLoss+8;
+      if(state.scenario==='rain'){
+        var gamma=3.5e-4*Math.pow(state.frequency,1.6)*Math.pow(Math.max(state.rainRate,.01),.9);
+        return gamma*(distance/1000);
+      }
+      return 0;
+    }
+    function calculate(distance){
+      var lambda=C/(state.frequency*1e9),r1=Math.hypot(distance,state.txHeight-state.rxHeight),r2=Math.hypot(distance,state.txHeight+state.rxHeight);
+      var delta=r2-r1,k=2*Math.PI/lambda,phase=k*delta+state.phase*Math.PI/180,a=state.reflection*r1/r2;
+      var factor=Math.max(1e-8,1+a*a+2*a*Math.cos(phase)),mp=10*Math.log10(factor),fspl=20*Math.log10(4*Math.PI*r1/lambda),extra=environmentLoss(distance);
+      return{lambda:lambda,r1:r1,r2:r2,delta:delta,phase:phase,factor:factor,mp:mp,fspl:fspl,extra:extra,power:20+3+3-fspl+mp-extra,freePower:20+3+3-fspl};
+    }
+    function setOutputs(z){
+      byId('frequencyOut').textContent=fmt(state.frequency,2)+' GHz';byId('distanceOut').textContent=fmt(state.distance,0)+' m';
+      byId('txHeightOut').textContent=fmt(state.txHeight,1)+' m';byId('rxHeightOut').textContent=fmt(state.rxHeight,1)+' m';
+      byId('reflectionOut').textContent=fmt(state.reflection,2);byId('phaseOut').textContent=fmt(state.phase,0)+'°';
+      byId('shadowLossOut').textContent=fmt(state.shadowLoss,1)+' dB';byId('rainRateOut').textContent=fmt(state.rainRate,0)+' mm/h';
+      byId('lambdaMetric').textContent=fmt(z.lambda,4)+' m';byId('fsplMetric').textContent=fmt(z.fspl,2)+' dB';byId('freePowerMetric').textContent=fmt(z.freePower,2)+' dBm';
+      byId('deltaMetric').textContent=z.delta<.01?fmt(z.delta*1000,2)+' mm':fmt(z.delta,4)+' m';
+      byId('interferenceMetric').textContent=(z.mp>=0?'+':'')+fmt(z.mp,2)+' dB';byId('extraMetric').textContent=fmt(z.extra,2)+' dB';
+      byId('powerMetric').textContent=fmt(z.power,2)+' dBm';
+      byId('shadowLoss').disabled=state.scenario==='clear'||state.scenario==='rain';byId('rainRate').disabled=state.scenario!=='rain';
+      var relation=z.mp>3?'明顯相長':z.mp<-6?'深度相消':z.mp<0?'輕度相消':'輕度相長';
+      var env={clear:'開闊視距（LOS）只計入兩路徑。',body:'人體遮蔽另外扣除 '+fmt(z.extra,1)+' dB。',urban:'都市情境用固定基準加遮蔽滑桿，代表建築阻擋的鏈路餘裕。',rain:'此頻率、雨率與距離的雨衰估計值為 '+fmt(z.extra,2)+' dB。'}[state.scenario];
+      byId('liveInterpretation').textContent='純自由空間接收基準為 '+fmt(z.freePower,2)+' dBm；此值只由發射功率、天線增益與 FSPL 決定。'+relation+'：目前兩路徑項為 '+(z.mp>=0?'+':'')+fmt(z.mp,2)+' dB。'+env+' 試著把距離只改 1 m，觀察相位是否翻轉。';
+    }
+    function canvasSpace(canvas){var rect=canvas.getBoundingClientRect(),w=Math.max(320,rect.width),h=w<620?560:620,dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);var g=canvas.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return{g:g,w:w,h:h}}
+    function line(g,x1,y1,x2,y2,color,width,dash){g.save();g.strokeStyle=color;g.lineWidth=width||2;g.setLineDash(dash||[]);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.restore()}
+    function label(g,text,x,y,color){g.save();g.font='700 13px system-ui';var m=g.measureText(text).width;g.fillStyle='rgba(7,29,49,.88)';g.fillRect(x-5,y-17,m+10,22);g.fillStyle=color||'#eaf8ff';g.fillText(text,x,y);g.restore()}
+    function draw(z){
+      var c=byId('multipathCanvas'),s=canvasSpace(c),g=s.g,w=s.w,h=s.h;g.clearRect(0,0,w,h);g.fillStyle='#071d31';g.fillRect(0,0,w,h);
+      var pad=48,topH=Math.min(245,h*.42),ground=topH-38,txX=pad+25,rxX=w-pad-25,maxH=Math.max(state.txHeight,state.rxHeight,4),scale=(ground-38)/maxH,txY=ground-state.txHeight*scale,rxY=ground-state.rxHeight*scale,refX=txX+(rxX-txX)*state.txHeight/(state.txHeight+state.rxHeight);
+      g.fillStyle='#173c3c';g.fillRect(pad,ground,w-2*pad,5);line(g,txX,txY,rxX,rxY,'#f7b84b',3);line(g,txX,txY,refX,ground,'#39c6bb',2,[8,5]);line(g,refX,ground,rxX,rxY,'#39c6bb',2,[8,5]);
+      g.fillStyle='#f7b84b';g.beginPath();g.arc(txX,txY,8,0,Math.PI*2);g.fill();g.fillStyle='#73d9d0';g.beginPath();g.arc(rxX,rxY,8,0,Math.PI*2);g.fill();
+      label(g,'Tx '+fmt(state.txHeight,1)+' m',txX-8,txY-14,'#ffd88a');label(g,'Rx '+fmt(state.rxHeight,1)+' m',rxX-72,rxY-14,'#9df1e9');label(g,'直達 R₁ '+fmt(z.r1,2)+' m',(txX+rxX)/2-65,(txY+rxY)/2-10,'#ffd88a');label(g,'反射 R₂ '+fmt(z.r2,2)+' m',refX-45,ground+27,'#9df1e9');
+      g.fillStyle='#dcecf8';g.font='800 15px system-ui';g.fillText('路徑幾何',pad,26);g.font='13px system-ui';g.fillStyle='#9fb5c6';g.fillText('黃：直達　青：地面反射　反射點由映像法幾何求得',pad,48);
+      var chartTop=topH+24,chartBottom=h-52,chartLeft=58,chartRight=w-22,yMin=-135,yMax=-25;
+      g.fillStyle='#dcecf8';g.font='800 15px system-ui';g.fillText('接收功率對距離（發射 20 dBm、Gt=Gr=3 dBi）',pad,chartTop-10);
+      for(var db=-130;db<=-30;db+=20){var yy=chartBottom-(db-yMin)/(yMax-yMin)*(chartBottom-chartTop);line(g,chartLeft,yy,chartRight,yy,'#1f4058',1);g.fillStyle='#89a5b8';g.font='12px system-ui';g.fillText(db+' dBm',8,yy+4)}
+      for(var d=20;d<=200;d+=20){var xx=chartLeft+(d-2)/(198)*(chartRight-chartLeft);line(g,xx,chartTop,xx,chartBottom,'#15364e',1);g.fillStyle='#89a5b8';g.fillText(d+' m',xx-12,chartBottom+20)}
+      function px(d){return chartLeft+(d-2)/198*(chartRight-chartLeft)}function py(p){return chartBottom-(clamp(p,yMin,yMax)-yMin)/(yMax-yMin)*(chartBottom-chartTop)}
+      function curve(key,color,width,dash){g.save();g.beginPath();for(var d=2;d<=200;d+=.5){var q=calculate(d),x=px(d),y=py(q[key]);if(d===2)g.moveTo(x,y);else g.lineTo(x,y)}g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash||[]);g.stroke();g.restore()}
+      curve('power','#39c6bb',2.4);curve('freePower','#f7b84b',2,[7,5]);var cx=px(state.distance),cy=py(z.power);line(g,cx,chartTop,cx,chartBottom,'#ffffff',1,[4,5]);g.fillStyle='#fff';g.beginPath();g.arc(cx,cy,5,0,Math.PI*2);g.fill();
+      label(g,'自由空間基準',chartLeft+8,chartTop+22,'#ffd88a');label(g,'兩路徑＋環境',chartLeft+145,chartTop+22,'#9df1e9');label(g,fmt(z.power,1)+' dBm',Math.min(cx+8,chartRight-90),Math.max(chartTop+48,cy-8),'#fff');
+    }
+    function update(){var z=calculate(state.distance);setOutputs(z);draw(z);save()}
+    function bind(){
+      byId('scenario').addEventListener('change',function(){state.scenario=this.value;update()});
+      ids.forEach(function(id){byId(id).addEventListener('input',function(){state[id]=Number(this.value);update()})});
+      byId('resetLab').addEventListener('click',function(){state=Object.assign({},defaults);sync();update()});
+      byId('multipathCanvas').addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowRight'){state.distance=clamp(state.distance+(e.key==='ArrowRight'?1:-1),2,200);byId('distance').value=state.distance;e.preventDefault();update()}else if(e.key==='ArrowUp'||e.key==='ArrowDown'){state.frequency=clamp(Math.round((state.frequency+(e.key==='ArrowUp' ? 0.1 : -0.1))*10)/10,.7,60);byId('frequency').value=state.frequency;e.preventDefault();update()}});
+      window.addEventListener('resize',function(){draw(calculate(state.distance))});
+    }
+    var quiz=[
+      {level:'★ 基礎',bloom:'理解',q:'距離不變、天線增益固定時，頻率從 3 GHz 加倍到 6 GHz，FSPL 約增加多少？',a:2,o:[['0 dB','你忽略了波長變成一半；FSPL 中有 20log₁₀(1/λ)。'],['3.01 dB','3.01 dB 對應功率減半，但頻率加倍使 (4πR/λ) 加倍。'],['6.02 dB','正確。20log₁₀2≈6.02 dB。'],['12.04 dB','12.04 dB 是距離加倍在雷達 R⁻⁴ 問題常見的變化，不是單程 FSPL。']]},
+      {level:'★ 基礎',bloom:'理解',q:'反射波幅度很強時，接收功率一定上升嗎？',a:1,o:[['一定上升','只看幅度會漏掉相位；強反射也可能抵消直達波。'],['不一定，還要看路徑差與反射相位','正確。相量要先相加，再取幅度平方。'],['一定下降','相位同向時反射可造成相長，並非一定下降。'],['只由發射功率決定','發射功率改變整體尺度，但相長或相消由相對幅度與相位決定。']]},
+      {level:'★★ 中等',bloom:'應用',q:'若兩個等幅波抵達時相位差接近 180°，最可能看到什麼？',a:3,o:[['穩定增加 3 dB','等幅同相相加才會得到約 6 dB 的兩個場同調相加時的功率提升。'],['完全沒有變化','相對相位正是兩路徑結果的核心。'],['頻率自動降低','介質與訊號源決定頻率，干涉不會自動改變載波頻率。'],['深度相消','正確。理想等幅反相可接近完全抵消；實際環境通常留下殘餘能量。']]},
+      {level:'★ 基礎',bloom:'理解',q:'人體擋在手機與基地台之間，哪個說法較完整？',a:0,o:[['會帶來吸收、散射、繞射與天線握持效應','正確。人體不是單一固定電阻，而是會改變多種傳播機制。'],['只會讓自由空間距離多 30 公分','人體造成的主要影響不是單純幾何距離增加。'],['所有頻率損耗完全相同','人體尺寸、含水介質與波長的相對關係都隨頻率改變。'],['只改變聲音，不改變無線鏈路','行動裝置的無線鏈路確實會受人體遮蔽與握持影響。']]},
+      {level:'★★ 中等',bloom:'分析',q:'雨衰估算時，哪三個量應一起檢查？',a:1,o:[['只有天線顏色、手機品牌、時間','這些不是雨滴吸收與散射模型的主要輸入。'],['頻率、雨率與降雨路徑長度','正確。比衰減乘上雨區內的有效距離才得到總雨衰。'],['只有發射功率','提高功率可增加餘裕，但不能描述雨本身造成多少衰減。'],['只有自由空間路徑損耗','FSPL 不包含雨滴造成的額外吸收與散射。']]},
+      {level:'★★★ 挑戰',bloom:'分析',q:'什麼時候應把本頁兩路徑模型升級成 HFSS、射線追蹤或量測？',a:2,o:[['只要算式出現小數','小數不是升級模型的物理理由。'],['永遠不需要','複雜建物、人體近場與多次反射常超出兩路徑模型。'],['場景包含複雜幾何、材料、多次反射或需要高精度時','正確。先用簡化模型抓趨勢，再用高擬真工具與量測驗證。'],['只有訊號很強時','模型選擇看場景與精度需求，不只看訊號強弱。']]}
+    ];
+    var answered=0,correct=0;
+    function renderQuiz(){var grid=byId('quizGrid');grid.textContent='';quiz.forEach(function(q,qi){var card=document.createElement('article');card.className='quiz-card';var meta=document.createElement('div');meta.className='quiz-meta';meta.textContent='第 '+(qi+1)+' 題｜'+q.level+'｜Bloom：'+q.bloom;var title=document.createElement('h3');title.textContent=q.q;var opts=document.createElement('div');opts.className='options';opts.setAttribute('role','group');opts.setAttribute('aria-label','第 '+(qi+1)+' 題選項');var fb=document.createElement('div');fb.className='feedback';fb.setAttribute('role','status');fb.setAttribute('aria-live','polite');fb.textContent='選一個答案後，這裡會顯示原因。';q.o.forEach(function(o,oi){var b=document.createElement('button');b.type='button';b.className='option';b.textContent=String.fromCharCode(65+oi)+'　'+o[0];b.addEventListener('click',function(){if(card.dataset.done)return;card.dataset.done='true';answered++;var ok=oi===q.a;if(ok)correct++;Array.prototype.forEach.call(opts.children,function(x,j){x.disabled=true;if(j===q.a)x.dataset.state='correct'});if(!ok)b.dataset.state='wrong';fb.dataset.kind=ok?'correct':'wrong';fb.textContent=(ok?'答對了。':'再想一步。')+o[1]+(ok?'':' 正確觀念：'+q.o[q.a][1]);byId('quizScore').textContent='已作答 '+answered+'／6｜答對 '+correct;});opts.appendChild(b)});card.appendChild(meta);card.appendChild(title);card.appendChild(opts);card.appendChild(fb);grid.appendChild(card)})}
+    byId('resetQuiz').addEventListener('click',function(){answered=0;correct=0;byId('quizScore').textContent='已作答 0／6｜答對 0';renderQuiz();byId('quizGrid').querySelector('button').focus()});
+    load();sync();bind();renderQuiz();update();
+  })();</script>
+</body>
+</html>
